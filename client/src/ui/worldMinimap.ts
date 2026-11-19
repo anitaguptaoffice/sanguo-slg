@@ -61,6 +61,25 @@ export function marchShowsDestOnMinimap(m: MarchSummary): boolean {
   return p === 1 || p === 2 || p === 3 || p === 4;
 }
 
+/** 进行中的军情行军条数（与 minimap 目的点口径一致）。 */
+export function countIntelInProgressMarches(marches: MarchSummary[]): number {
+  let n = 0;
+  for (const m of marches) {
+    if (marchShowsDestOnMinimap(m)) n++;
+  }
+  return n;
+}
+
+/** 首条进行中军情行军的 march_id（无则 0）。 */
+export function findFirstIntelInProgressMarchId(marches: MarchSummary[]): number {
+  for (const m of marches) {
+    if (!marchShowsDestOnMinimap(m)) continue;
+    const id = m.march_id ?? 0;
+    if (id > 0) return id;
+  }
+  return 0;
+}
+
 export function collectMinimapDestMarkers(marches: MarchSummary[]): MinimapMarker[] {
   const out: MinimapMarker[] = [];
   for (const m of marches) {

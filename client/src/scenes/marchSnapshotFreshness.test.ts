@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { MainCityScene } from "./MainCityScene";
 import { MarchListPanel } from "@/ui/MarchListPanel";
 import { MarchArrivalPoll } from "@/net/marchArrivalPoll";
-import { countIntelInProgressMarches } from "@/net/hudMilitaryTodoSweep";
+import { countIntelInProgressMarches } from "@/ui/worldMinimap";
 
 const returned = { march_id: 7, phase: 5, to_x: 5, to_y: 5, hero_id: 11, return_finish_at_ms: 0 };
 function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>(r => { resolve = r; }); return { promise, resolve }; }

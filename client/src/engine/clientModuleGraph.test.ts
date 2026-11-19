@@ -13,12 +13,4 @@ describe("client startup module graph", () => {
     });
     expect(output).toHaveProperty("output");
   }, 30_000);
-
-  it("evaluates the latest manifest chain without unbound re-exports", async () => {
-    const manifest = await import("./wave59WorldIntelBattleReportMailShopRankNarrowManifest");
-    expect(Object.keys(manifest).length).toBeGreaterThan(0);
-    const inherited = await import("./wave55WorldIntelBattleReportMailShopRankNarrowManifest");
-    expect(inherited.INTEL_MARCH_PREFILL_RESIDUAL_DEEPEST_DEEPEST_DEEPER_LINE_CLASS)
-      .toBe("intel-march-prefill-residual-deepest-deepest-deeper-line");
-  }, 30_000);
 });

@@ -1,7 +1,6 @@
 import type { BagStack } from "@/net/bagState";
 import { itemLabel } from "@/net/contentFormat";
 import { validateUseConsumable } from "@/net/contentFormValidation";
-import { HERO_GOTO_BAG_CULTIVATION_LABEL } from "@/net/heroDetailBagDeepLink";
 import {
   HERO_CULTIVATION_CONSUMABLE_CFG_IDS,
   filterHeroCultivationBagItemIds,
@@ -15,6 +14,8 @@ import {
 } from "@/net/useConsumableSubmitFeedback";
 
 export const HERO_DETAIL_CULTIVATION_USE_DEFAULT_LABEL = "使用养成道具";
+/** 详情区「前往背包使用养成道具」按钮文案。 */
+export const HERO_GOTO_BAG_CULTIVATION_LABEL = "前往背包使用养成道具";
 export const HERO_DETAIL_STAT_PULSE_CLASS = "hero-detail-stat-pulse";
 /** 详情区等级/忠诚变化脉冲时长（与背包行脉冲同量级）。 */
 export const HERO_DETAIL_STAT_PULSE_MS = 3000;

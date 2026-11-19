@@ -65,7 +65,7 @@ try {
   await form.locator('input[name="password"]').fill(password);
   await page.waitForFunction(() => !document.querySelector('[data-action="submit-first-city"]')?.disabled);
   const fx = String(process.env.QA_FC_X ?? (40 + (stamp % 80)));
-  const fy = String(process.env.QA_FC_Y ?? (40 + ((stamp >> 3) % 80)));
+  const fy = String(process.env.QA_FC_Y ?? (40 + (Math.floor(stamp / 8) % 80)));
   await page.locator('input[name="fc-x"]').fill(fx);
   await page.locator('input[name="fc-y"]').fill(fy);
   await page.locator('input[name="fc-name"]').fill(cityName);

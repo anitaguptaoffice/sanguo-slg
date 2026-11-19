@@ -56,20 +56,6 @@ import {
 } from "@/net/bagShopReturnHighlight";
 import { highlightBagShopCategoryScanRow } from "@/net/bagShopCategoryScan";
 import {
-  findBagShopInlineStateResidualTarget,
-  shouldBagShopInlineStateResidualRing,
-} from "@/net/bagShopInlineStateResidual";
-import { pulseBagShopInlineStateResidualRings } from "@/net/bagShopInlineStateResidualDeep";
-import {
-  clearPanelReturnSourceSession,
-  findPanelReturnSourceCategoryTab,
-  readPanelReturnSourceSession,
-  writePanelReturnSourceSession,
-  type PanelReturnSourceKind,
-  type PanelReturnSourcePayload,
-} from "@/net/panelReturnSourceHighlightResidual";
-import { pulsePanelReturnSourceCategoryResidualHighlights } from "@/net/panelReturnSourceHighlightResidualDeep";
-import {
   bagEmptyListClass,
   formatBagStackRowLabel,
 } from "@/net/panelDensity";
@@ -91,7 +77,6 @@ import {
   SHOP_PRICE_WALLET_GAP_LINE_CLASS,
   syncShopWalletCompareLine,
 } from "@/net/shopTabCurrency";
-import { SHOP_OFFER_AFFORD_INLINE_CLASS } from "@/engine/mainCityWave30NarrowManifest";
 import {
   PANEL_STATE_LOADING_MESSAGE,
   renderPanelStateListRow,
@@ -122,7 +107,6 @@ import {
   type UseConsumableSubmitState,
   useConsumableSubmitStateMachine,
 } from "@/net/useConsumableSubmitFeedback";
-import { BAG_ITEM_CFG_SUMMARY_CLASS } from "@/engine/wave33IntelBattleMailBagDailyNarrowManifest";
 import { formatBagItemCfgSummary } from "@/net/bagItemCfgSummary";
 import {
   BAG_ROW_INLINE_STATE_CLASS,
@@ -143,6 +127,106 @@ import {
 } from "@/net/heroDetailBagDeepLink";
 import { BAG_HERO_ITEM_GAP_HIGHLIGHT_CLASS } from "@/net/recruitFormInlineHint";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
+
+/** 商城行内可购提示（`shop-offer-afford-inline`）。 */
+const SHOP_OFFER_AFFORD_INLINE_CLASS = "shop-offer-afford-inline";
+
+/** 背包行道具配置摘要（`bag-item-cfg-summary`）。 */
+const BAG_ITEM_CFG_SUMMARY_CLASS = "bag-item-cfg-summary";
+
+/** CLIENT-256：自排行/军情返回背包或商城时分类 tab 高亮。 */
+const PANEL_RETURN_SOURCE_HIGHLIGHT_CLASS = "panel-return-source-highlight";
+const PANEL_RETURN_SOURCE_HIGHLIGHT_MS = 2000;
+const PANEL_RETURN_SOURCE_SESSION_KEY = "panel-return-source-v1";
+
+export type PanelReturnSourceKind = "rank" | "intel";
+export type PanelReturnTargetPanel = "bag" | "shop";
+
+export type PanelReturnSourcePayload = {
+  targetPanel: PanelReturnTargetPanel;
+  categoryId: string;
+  sourceKind: PanelReturnSourceKind;
+};
+
+let panelReturnSourceHighlightTimer: ReturnType<typeof setTimeout> | null = null;
+
+function writePanelReturnSourceSession(payload: PanelReturnSourcePayload): void {
+  if (typeof sessionStorage === "undefined") return;
+  try {
+    sessionStorage.setItem(PANEL_RETURN_SOURCE_SESSION_KEY, JSON.stringify(payload));
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+function readPanelReturnSourceSession(): PanelReturnSourcePayload | null {
+  if (typeof sessionStorage === "undefined") return null;
+  let raw: string | null = null;
+  try {
+    raw = sessionStorage.getItem(PANEL_RETURN_SOURCE_SESSION_KEY);
+  } catch {
+    return null;
+  }
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as {
+      targetPanel?: unknown;
+      categoryId?: unknown;
+      sourceKind?: unknown;
+    };
+    if (parsed.targetPanel !== "bag" && parsed.targetPanel !== "shop") return null;
+    if (parsed.sourceKind !== "rank" && parsed.sourceKind !== "intel") return null;
+    const categoryId = String(parsed.categoryId ?? "").trim();
+    if (!categoryId) return null;
+    return { targetPanel: parsed.targetPanel, categoryId, sourceKind: parsed.sourceKind };
+  } catch {
+    return null;
+  }
+}
+
+function clearPanelReturnSourceSession(): void {
+  if (typeof sessionStorage === "undefined") return;
+  try {
+    sessionStorage.removeItem(PANEL_RETURN_SOURCE_SESSION_KEY);
+  } catch {
+    /* private mode */
+  }
+}
+
+function findPanelReturnSourceCategoryTab(
+  panelRoot: ParentNode | null | undefined,
+  targetPanel: PanelReturnTargetPanel,
+  categoryId: string,
+): HTMLElement | null {
+  if (!panelRoot) return null;
+  const selector =
+    targetPanel === "bag"
+      ? `[data-bag-category="${categoryId}"]`
+      : `[data-shop-category="${categoryId}"]`;
+  return panelRoot.querySelector<HTMLElement>(selector);
+}
+
+/** 分类 tab 附加 `panel-return-source-highlight` 2s。 */
+function highlightPanelReturnSourceCategory(
+  tab: HTMLElement | null | undefined,
+  panelRoot: ParentNode | null | undefined,
+): boolean {
+  if (!tab) return false;
+  panelRoot
+    ?.querySelectorAll<HTMLElement>(`.${PANEL_RETURN_SOURCE_HIGHLIGHT_CLASS}`)
+    .forEach((el) => el.classList.remove(PANEL_RETURN_SOURCE_HIGHLIGHT_CLASS));
+  if (panelReturnSourceHighlightTimer != null) {
+    clearTimeout(panelReturnSourceHighlightTimer);
+    panelReturnSourceHighlightTimer = null;
+  }
+  tab.classList.add(PANEL_RETURN_SOURCE_HIGHLIGHT_CLASS);
+  void tab.offsetWidth;
+  panelReturnSourceHighlightTimer = setTimeout(() => {
+    tab.classList.remove(PANEL_RETURN_SOURCE_HIGHLIGHT_CLASS);
+    panelReturnSourceHighlightTimer = null;
+  }, PANEL_RETURN_SOURCE_HIGHLIGHT_MS);
+  return true;
+}
 
 type QuestProgress = {
   quest_cfg_id?: number;
@@ -276,7 +360,7 @@ export class ContentPanels {
       if (shopReturnItemId) {
         scheduleBagRowReturnHighlight(this.bagPanel, shopReturnItemId);
       }
-      this.applyPanelReturnSourceHighlightResidual("bag");
+      this.applyPanelReturnSourceHighlight("bag");
     });
   }
 
@@ -326,34 +410,12 @@ export class ContentPanels {
     }
   }
 
-  private applyPanelReturnSourceHighlightResidual(targetPanel: "bag" | "shop"): void {
+  private applyPanelReturnSourceHighlight(targetPanel: "bag" | "shop"): void {
     const payload = this.takePendingPanelReturnSourceHighlight(targetPanel);
     if (!payload) return;
     const root = targetPanel === "bag" ? this.bagPanel : this.shopPanel;
     const tab = findPanelReturnSourceCategoryTab(root, targetPanel, payload.categoryId);
-    pulsePanelReturnSourceCategoryResidualHighlights(tab, root);
-  }
-
-  private syncBagInlineStateResidualRing(): void {
-    const bag = this.getSession()?.bag ?? [];
-    const row = bag.find((r) => r.item_cfg_id === this.selectedItemId) ?? null;
-    if (!shouldBagShopInlineStateResidualRing("bag", row, undefined, null)) return;
-    const li = this.bagPanel.querySelector<HTMLElement>(
-      `li[data-item-cfg-id="${this.selectedItemId}"]`,
-    );
-    const target = findBagShopInlineStateResidualTarget(li, "bag");
-    pulseBagShopInlineStateResidualRings(target, this.bagPanel);
-  }
-
-  private syncShopInlineStateResidualRing(): void {
-    const wallet = this.sessionWallet();
-    const offer = this.selectedVisibleShopOffer() ?? null;
-    if (!shouldBagShopInlineStateResidualRing("shop", null, wallet, offer)) return;
-    const li = this.shopPanel.querySelector<HTMLElement>(
-      `li[data-offer-id="${this.selectedOfferId}"]`,
-    );
-    const target = findBagShopInlineStateResidualTarget(li, "shop");
-    pulseBagShopInlineStateResidualRings(target, this.shopPanel);
+    highlightPanelReturnSourceCategory(tab, root);
   }
 
   /** 日常战备：打开背包并高亮指定 item_cfg_id（如 march_ration=2020）。 */
@@ -494,7 +556,7 @@ export class ContentPanels {
     resetCenterPanelViewportScroll(this.shopPanel);
     void this.refreshShop().then(() => {
       if (shopOpenGeneration !== this.shopOpenGeneration) return;
-      this.applyPanelReturnSourceHighlightResidual("shop");
+      this.applyPanelReturnSourceHighlight("shop");
     });
   }
 
@@ -940,7 +1002,6 @@ export class ContentPanels {
       renderPanelStateListRow(ul, "empty", msg, { legacyClass: bagEmptyListClass() });
     }
     this.syncBagWalletGap();
-    this.syncBagInlineStateResidualRing();
   }
 
   private renderShopCategoryTabs(): void {
@@ -1053,7 +1114,6 @@ export class ContentPanels {
       renderPanelStateListRow(ul, "empty", msg, { legacyClass: "shop-empty" });
     }
     this.syncShopWalletGap();
-    this.syncShopInlineStateResidualRing();
   }
 
   private async refreshQuests(): Promise<void> {
@@ -1515,7 +1575,6 @@ export class ContentPanels {
     if (t.getAttribute("data-field") === "offer-id") {
       this.selectedOfferId = Number((t as HTMLSelectElement).value) || 1001;
       this.syncShopWalletGap();
-      this.syncShopInlineStateResidualRing();
     }
   }
 

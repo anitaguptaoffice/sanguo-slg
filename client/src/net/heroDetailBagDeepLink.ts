@@ -6,9 +6,14 @@ import {
   parseBagOpenSource,
   type BagOpenSource,
 } from "@/net/bagOpenSource";
-import { pickHeroCultivationUseItemCfgId, validateHeroDetailCultivationUse } from "@/net/heroDetailCultivationUse";
+import {
+  HERO_GOTO_BAG_CULTIVATION_LABEL,
+  pickHeroCultivationUseItemCfgId,
+  validateHeroDetailCultivationUse,
+} from "@/net/heroDetailCultivationUse";
 
-export const HERO_GOTO_BAG_CULTIVATION_LABEL = "前往背包使用养成道具";
+/** 详情区「前往背包使用养成道具」按钮文案（定义在 `heroDetailCultivationUse`，此处保持既有导出面）。 */
+export { HERO_GOTO_BAG_CULTIVATION_LABEL };
 
 /** sessionStorage：将领详情 → 背包深链 query（CLIENT-165 / CLIENT-134 模式）。 */
 export const HERO_BAG_DEEP_LINK_QUERY_SESSION_KEY = "hero-bag-deep-link-query-v1";

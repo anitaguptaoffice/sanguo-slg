@@ -87,61 +87,6 @@ import {
   QUEUE_NEXT_FINISH_PREVIEW_ACTION,
   QUEUE_NEXT_FINISH_PREVIEW_CLASS,
 } from "@/net/nextQueueFinishPreview";
-import {
-  formatNextQueueFinishPreviewResidualLine,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_ACTION,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_CLASS,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_ROLE,
-} from "@/net/nextQueueFinishPreviewResidual";
-import {
-  formatNextQueueFinishPreviewResidualDeepLine,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEP_ACTION,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEP_CLASS,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEP_ROLE,
-} from "@/net/nextQueueFinishPreviewResidualDeep";
-import {
-  formatNextQueueFinishPreviewResidualDeeperLine,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPER_ACTION,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPER_CLASS,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPER_ROLE,
-} from "@/net/nextQueueFinishPreviewResidualDeeper";
-import {
-  formatNextQueueFinishPreviewResidualDeepestLine,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_ACTION,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_CLASS,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_ROLE,
-} from "@/net/nextQueueFinishPreviewResidualDeepest";
-import {
-  formatNextQueueFinishPreviewResidualDeepestDeeperLine,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ACTION,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_CLASS,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ROLE,
-} from "@/net/nextQueueFinishPreviewResidualDeepestDeeper";
-import {
-  formatNextQueueFinishPreviewResidualDeepestDeepestDeeperLine,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_ACTION,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_CLASS,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_ROLE,
-} from "@/net/nextQueueFinishPreviewResidualDeepestDeepestDeeper";
-import {
-  formatNextQueueFinishPreviewResidualDeepestDeepestDeepestLine,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_ACTION,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_CLASS,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_ROLE,
-} from "@/net/nextQueueFinishPreviewResidualDeepestDeepestDeepest";
-import {
-  formatNextQueueFinishPreviewResidualDeepestDeepestDeepestDeeperLine,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_ACTION,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_CLASS,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_ROLE,
-} from "@/net/nextQueueFinishPreviewResidualDeepestDeepestDeepestDeeper";
-import {
-  formatNextQueueFinishPreviewResidualDeepestDeepestDeepestDeepestDeeperLine,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_ACTION,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_CLASS,
-  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_ROLE,
-} from "@/net/nextQueueFinishPreviewResidualDeepestDeepestDeepestDeepestDeeper";
-
 export const QUEUE_DAILY_NEXT_BUTTON_LABEL = "日常：下一步";
 
 export { DAILY_QUEUE_ANCHOR_HIGHLIGHT_CLASS } from "@/net/dailyQueueAnchor";
@@ -204,17 +149,6 @@ export class QueuePanels {
     private readonly onLocateCitySlotFromQueue?: (slotKey: string) => void,
     private readonly onRecruitQueueJustCompleted?: (queueIds: number[]) => void,
     private readonly onQueueVisibilityChange?: (open: boolean) => void,
-    private readonly onPreviewMarginResidualRing?: (slotKey: string) => void,
-    private readonly onPreviewCrossLinkResidualDeepRing?: (slotKey: string) => void,
-    private readonly onPreviewCrossLinkResidualDeeperRing?: (slotKey: string) => void,
-    private readonly onPreviewCrossLinkResidualDeepestRing?: (slotKey: string) => void,
-    private readonly onPreviewCrossLinkResidualDeepestDeeperRing?: (slotKey: string) => void,
-    private readonly onPreviewCrossLinkResidualDeepestDeepestDeeperRing?: (slotKey: string) => void,
-    private readonly onPreviewCrossLinkResidualDeepestDeepestDeepestRing?: (slotKey: string) => void,
-    private readonly onPreviewCrossLinkResidualDeepestDeepestDeepestDeeperRing?: (slotKey: string) => void,
-    private readonly onPreviewCrossLinkResidualDeepestDeepestDeepestDeepestDeeperRing?: (
-      slotKey: string,
-    ) => void,
   ) {}
 
   attach(): void {
@@ -555,15 +489,6 @@ export class QueuePanels {
       <h3>队列</h3>
       <p class="queue-panel-overview" data-role="queue-overview"></p>
       <p class="${QUEUE_NEXT_FINISH_PREVIEW_CLASS} hidden" data-role="queue-next-finish-preview" data-action="${QUEUE_NEXT_FINISH_PREVIEW_ACTION}" role="button" tabindex="0" hidden></p>
-      <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_ACTION}" role="button" tabindex="0" hidden></p>
-      <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEP_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEP_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEP_ACTION}" role="button" tabindex="0" hidden></p>
-      <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPER_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPER_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPER_ACTION}" role="button" tabindex="0" hidden></p>
-      <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_ACTION}" role="button" tabindex="0" hidden></p>
-      <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ACTION}" role="button" tabindex="0" hidden></p>
-      <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_ACTION}" role="button" tabindex="0" hidden></p>
-      <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_ACTION}" role="button" tabindex="0" hidden></p>
-      <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_ACTION}" role="button" tabindex="0" hidden></p>
-      <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_ACTION}" role="button" tabindex="0" hidden></p>
       <div class="queue-build-matrix" data-role="queue-build-matrix" aria-label="七槽建造状态"></div>
       <p class="queue-panel-hint">内政升级与募兵排队（打开时每秒刷新）。进行中建造可使用短促工符加速。</p>
       <div class="content-panel-actions">
@@ -640,19 +565,7 @@ export class QueuePanels {
     }
   }
 
-  private renderNextQueueFinishPreview(
-    previewEl: Element | null,
-    residualEl: Element | null,
-    residualDeepEl: Element | null,
-    residualDeeperEl: Element | null,
-    residualDeepestEl: Element | null,
-    residualDeepestDeeperEl: Element | null,
-    residualDeepestDeepestDeeperEl: Element | null,
-    residualDeepestDeepestDeepestEl: Element | null,
-    residualDeepestDeepestDeepestDeeperEl: Element | null,
-    residualDeepestDeepestDeepestDeepestDeeperEl: Element | null,
-    nowMs: number,
-  ): void {
+  private renderNextQueueFinishPreview(previewEl: Element | null, nowMs: number): void {
     if (!(previewEl instanceof HTMLElement)) return;
     const dailyRows = this.getDailyChainRows?.() ?? [];
     const preview = formatNextQueueFinishPreviewLine(
@@ -662,140 +575,12 @@ export class QueuePanels {
       dailyRows,
       nowMs,
     );
-    const residual = formatNextQueueFinishPreviewResidualLine(
-      this.buildings(),
-      this.recruits,
-      this.slotLabels,
-      dailyRows,
-      nowMs,
-    );
-    const residualDeep = formatNextQueueFinishPreviewResidualDeepLine(
-      this.buildings(),
-      this.recruits,
-      this.slotLabels,
-      dailyRows,
-      nowMs,
-    );
-    const residualDeeper = formatNextQueueFinishPreviewResidualDeeperLine(
-      this.buildings(),
-      this.recruits,
-      this.slotLabels,
-      dailyRows,
-      nowMs,
-    );
-    const residualDeepest = formatNextQueueFinishPreviewResidualDeepestLine(
-      this.buildings(),
-      this.recruits,
-      this.slotLabels,
-      dailyRows,
-      nowMs,
-    );
-    const residualDeepestDeeper = formatNextQueueFinishPreviewResidualDeepestDeeperLine(
-      this.buildings(),
-      this.recruits,
-      this.slotLabels,
-      dailyRows,
-      nowMs,
-    );
-    const residualDeepestDeepestDeeper = formatNextQueueFinishPreviewResidualDeepestDeepestDeeperLine(
-      this.buildings(),
-      this.recruits,
-      this.slotLabels,
-      dailyRows,
-      nowMs,
-    );
-    const residualDeepestDeepestDeepest = formatNextQueueFinishPreviewResidualDeepestDeepestDeepestLine(
-      this.buildings(),
-      this.recruits,
-      this.slotLabels,
-      dailyRows,
-      nowMs,
-    );
-    const residualDeepestDeepestDeepestDeeper =
-      formatNextQueueFinishPreviewResidualDeepestDeepestDeepestDeeperLine(
-        this.buildings(),
-        this.recruits,
-        this.slotLabels,
-        dailyRows,
-        nowMs,
-      );
-    const residualDeepestDeepestDeepestDeepestDeeper =
-      formatNextQueueFinishPreviewResidualDeepestDeepestDeepestDeepestDeeperLine(
-        this.buildings(),
-        this.recruits,
-        this.slotLabels,
-        dailyRows,
-        nowMs,
-      );
     if (!preview) {
       previewEl.hidden = true;
       previewEl.classList.add("hidden");
       previewEl.textContent = "";
       previewEl.removeAttribute("data-quest-cfg-id");
       previewEl.removeAttribute("title");
-      if (residualEl instanceof HTMLElement) {
-        residualEl.hidden = true;
-        residualEl.classList.add("hidden");
-        residualEl.textContent = "";
-        residualEl.removeAttribute("data-slot-key");
-        residualEl.removeAttribute("title");
-      }
-      if (residualDeepEl instanceof HTMLElement) {
-        residualDeepEl.hidden = true;
-        residualDeepEl.classList.add("hidden");
-        residualDeepEl.textContent = "";
-        residualDeepEl.removeAttribute("data-slot-key");
-        residualDeepEl.removeAttribute("title");
-      }
-      if (residualDeeperEl instanceof HTMLElement) {
-        residualDeeperEl.hidden = true;
-        residualDeeperEl.classList.add("hidden");
-        residualDeeperEl.textContent = "";
-        residualDeeperEl.removeAttribute("data-slot-key");
-        residualDeeperEl.removeAttribute("title");
-      }
-      if (residualDeepestEl instanceof HTMLElement) {
-        residualDeepestEl.hidden = true;
-        residualDeepestEl.classList.add("hidden");
-        residualDeepestEl.textContent = "";
-        residualDeepestEl.removeAttribute("data-slot-key");
-        residualDeepestEl.removeAttribute("title");
-      }
-      if (residualDeepestDeeperEl instanceof HTMLElement) {
-        residualDeepestDeeperEl.hidden = true;
-        residualDeepestDeeperEl.classList.add("hidden");
-        residualDeepestDeeperEl.textContent = "";
-        residualDeepestDeeperEl.removeAttribute("data-slot-key");
-        residualDeepestDeeperEl.removeAttribute("title");
-      }
-      if (residualDeepestDeepestDeeperEl instanceof HTMLElement) {
-        residualDeepestDeepestDeeperEl.hidden = true;
-        residualDeepestDeepestDeeperEl.classList.add("hidden");
-        residualDeepestDeepestDeeperEl.textContent = "";
-        residualDeepestDeepestDeeperEl.removeAttribute("data-slot-key");
-        residualDeepestDeepestDeeperEl.removeAttribute("title");
-      }
-      if (residualDeepestDeepestDeepestEl instanceof HTMLElement) {
-        residualDeepestDeepestDeepestEl.hidden = true;
-        residualDeepestDeepestDeepestEl.classList.add("hidden");
-        residualDeepestDeepestDeepestEl.textContent = "";
-        residualDeepestDeepestDeepestEl.removeAttribute("data-slot-key");
-        residualDeepestDeepestDeepestEl.removeAttribute("title");
-      }
-      if (residualDeepestDeepestDeepestDeeperEl instanceof HTMLElement) {
-        residualDeepestDeepestDeepestDeeperEl.hidden = true;
-        residualDeepestDeepestDeepestDeeperEl.classList.add("hidden");
-        residualDeepestDeepestDeepestDeeperEl.textContent = "";
-        residualDeepestDeepestDeepestDeeperEl.removeAttribute("data-slot-key");
-        residualDeepestDeepestDeepestDeeperEl.removeAttribute("title");
-      }
-      if (residualDeepestDeepestDeepestDeepestDeeperEl instanceof HTMLElement) {
-        residualDeepestDeepestDeepestDeepestDeeperEl.hidden = true;
-        residualDeepestDeepestDeepestDeepestDeeperEl.classList.add("hidden");
-        residualDeepestDeepestDeepestDeepestDeeperEl.textContent = "";
-        residualDeepestDeepestDeepestDeepestDeeperEl.removeAttribute("data-slot-key");
-        residualDeepestDeepestDeepestDeepestDeeperEl.removeAttribute("title");
-      }
       return;
     }
     previewEl.hidden = false;
@@ -807,143 +592,6 @@ export class QueuePanels {
     } else {
       previewEl.removeAttribute("data-quest-cfg-id");
       previewEl.title = "下一队列完成预览（只读）";
-    }
-    if (residualEl instanceof HTMLElement) {
-      if (!residual) {
-        residualEl.hidden = true;
-        residualEl.classList.add("hidden");
-        residualEl.textContent = "";
-        residualEl.removeAttribute("data-slot-key");
-        residualEl.removeAttribute("title");
-      } else {
-        residualEl.hidden = false;
-        residualEl.classList.remove("hidden");
-        residualEl.textContent = residual.line;
-        residualEl.dataset.slotKey = residual.slotKey;
-        residualEl.title = `定位七槽 ${residual.slotKey}（余量对照）`;
-      }
-    }
-    if (residualDeepEl instanceof HTMLElement) {
-      if (!residualDeep) {
-        residualDeepEl.hidden = true;
-        residualDeepEl.classList.add("hidden");
-        residualDeepEl.textContent = "";
-        residualDeepEl.removeAttribute("data-slot-key");
-        residualDeepEl.removeAttribute("title");
-      } else {
-        residualDeepEl.hidden = false;
-        residualDeepEl.classList.remove("hidden");
-        residualDeepEl.textContent = residualDeep.line;
-        residualDeepEl.dataset.slotKey = residualDeep.slotKey;
-        residualDeepEl.title = `深链七槽 ${residualDeep.slotKey}（双队列巩固）`;
-      }
-    }
-    if (residualDeeperEl instanceof HTMLElement) {
-      if (!residualDeeper) {
-        residualDeeperEl.hidden = true;
-        residualDeeperEl.classList.add("hidden");
-        residualDeeperEl.textContent = "";
-        residualDeeperEl.removeAttribute("data-slot-key");
-        residualDeeperEl.removeAttribute("title");
-      } else {
-        residualDeeperEl.hidden = false;
-        residualDeeperEl.classList.remove("hidden");
-        residualDeeperEl.textContent = residualDeeper.line;
-        residualDeeperEl.dataset.slotKey = residualDeeper.slotKey;
-        residualDeeperEl.title = `更深链七槽 ${residualDeeper.slotKey}（巩固再加深）`;
-      }
-    }
-    if (residualDeepestEl instanceof HTMLElement) {
-      if (!residualDeepest) {
-        residualDeepestEl.hidden = true;
-        residualDeepestEl.classList.add("hidden");
-        residualDeepestEl.textContent = "";
-        residualDeepestEl.removeAttribute("data-slot-key");
-        residualDeepestEl.removeAttribute("title");
-      } else {
-        residualDeepestEl.hidden = false;
-        residualDeepestEl.classList.remove("hidden");
-        residualDeepestEl.textContent = residualDeepest.line;
-        residualDeepestEl.dataset.slotKey = residualDeepest.slotKey;
-        residualDeepestEl.title = `最深链七槽 ${residualDeepest.slotKey}（巩固再加深一层）`;
-      }
-    }
-    if (residualDeepestDeeperEl instanceof HTMLElement) {
-      if (!residualDeepestDeeper) {
-        residualDeepestDeeperEl.hidden = true;
-        residualDeepestDeeperEl.classList.add("hidden");
-        residualDeepestDeeperEl.textContent = "";
-        residualDeepestDeeperEl.removeAttribute("data-slot-key");
-        residualDeepestDeeperEl.removeAttribute("title");
-      } else {
-        residualDeepestDeeperEl.hidden = false;
-        residualDeepestDeeperEl.classList.remove("hidden");
-        residualDeepestDeeperEl.textContent = residualDeepestDeeper.line;
-        residualDeepestDeeperEl.dataset.slotKey = residualDeepestDeeper.slotKey;
-        residualDeepestDeeperEl.title = `最深二层链七槽 ${residualDeepestDeeper.slotKey}（巩固再加深二层）`;
-      }
-    }
-    if (residualDeepestDeepestDeeperEl instanceof HTMLElement) {
-      if (!residualDeepestDeepestDeeper) {
-        residualDeepestDeepestDeeperEl.hidden = true;
-        residualDeepestDeepestDeeperEl.classList.add("hidden");
-        residualDeepestDeepestDeeperEl.textContent = "";
-        residualDeepestDeepestDeeperEl.removeAttribute("data-slot-key");
-        residualDeepestDeepestDeeperEl.removeAttribute("title");
-      } else {
-        residualDeepestDeepestDeeperEl.hidden = false;
-        residualDeepestDeepestDeeperEl.classList.remove("hidden");
-        residualDeepestDeepestDeeperEl.textContent = residualDeepestDeepestDeeper.line;
-        residualDeepestDeepestDeeperEl.dataset.slotKey = residualDeepestDeepestDeeper.slotKey;
-        residualDeepestDeepestDeeperEl.title = `最深三层链七槽 ${residualDeepestDeepestDeeper.slotKey}（巩固再加深三层）`;
-      }
-    }
-    if (residualDeepestDeepestDeepestEl instanceof HTMLElement) {
-      if (!residualDeepestDeepestDeepest) {
-        residualDeepestDeepestDeepestEl.hidden = true;
-        residualDeepestDeepestDeepestEl.classList.add("hidden");
-        residualDeepestDeepestDeepestEl.textContent = "";
-        residualDeepestDeepestDeepestEl.removeAttribute("data-slot-key");
-        residualDeepestDeepestDeepestEl.removeAttribute("title");
-      } else {
-        residualDeepestDeepestDeepestEl.hidden = false;
-        residualDeepestDeepestDeepestEl.classList.remove("hidden");
-        residualDeepestDeepestDeepestEl.textContent = residualDeepestDeepestDeepest.line;
-        residualDeepestDeepestDeepestEl.dataset.slotKey = residualDeepestDeepestDeepest.slotKey;
-        residualDeepestDeepestDeepestEl.title = `最深四层链七槽 ${residualDeepestDeepestDeepest.slotKey}（巩固再加深四层）`;
-      }
-    }
-    if (residualDeepestDeepestDeepestDeeperEl instanceof HTMLElement) {
-      if (!residualDeepestDeepestDeepestDeeper) {
-        residualDeepestDeepestDeepestDeeperEl.hidden = true;
-        residualDeepestDeepestDeepestDeeperEl.classList.add("hidden");
-        residualDeepestDeepestDeepestDeeperEl.textContent = "";
-        residualDeepestDeepestDeepestDeeperEl.removeAttribute("data-slot-key");
-        residualDeepestDeepestDeepestDeeperEl.removeAttribute("title");
-      } else {
-        residualDeepestDeepestDeepestDeeperEl.hidden = false;
-        residualDeepestDeepestDeepestDeeperEl.classList.remove("hidden");
-        residualDeepestDeepestDeepestDeeperEl.textContent = residualDeepestDeepestDeepestDeeper.line;
-        residualDeepestDeepestDeepestDeeperEl.dataset.slotKey = residualDeepestDeepestDeepestDeeper.slotKey;
-        residualDeepestDeepestDeepestDeeperEl.title = `最深五层链七槽 ${residualDeepestDeepestDeepestDeeper.slotKey}（巩固再加深五层）`;
-      }
-    }
-    if (residualDeepestDeepestDeepestDeepestDeeperEl instanceof HTMLElement) {
-      if (!residualDeepestDeepestDeepestDeepestDeeper) {
-        residualDeepestDeepestDeepestDeepestDeeperEl.hidden = true;
-        residualDeepestDeepestDeepestDeepestDeeperEl.classList.add("hidden");
-        residualDeepestDeepestDeepestDeepestDeeperEl.textContent = "";
-        residualDeepestDeepestDeepestDeepestDeeperEl.removeAttribute("data-slot-key");
-        residualDeepestDeepestDeepestDeepestDeeperEl.removeAttribute("title");
-      } else {
-        residualDeepestDeepestDeepestDeepestDeeperEl.hidden = false;
-        residualDeepestDeepestDeepestDeepestDeeperEl.classList.remove("hidden");
-        residualDeepestDeepestDeepestDeepestDeeperEl.textContent =
-          residualDeepestDeepestDeepestDeepestDeeper.line;
-        residualDeepestDeepestDeepestDeepestDeeperEl.dataset.slotKey =
-          residualDeepestDeepestDeepestDeepestDeeper.slotKey;
-        residualDeepestDeepestDeepestDeepestDeeperEl.title = `最深六层链七槽 ${residualDeepestDeepestDeepestDeepestDeeper.slotKey}（wave:58 巩固再加深五层）`;
-      }
     }
   }
 
@@ -961,33 +609,6 @@ export class QueuePanels {
     const recruitUl = this.panel.querySelector('[data-role="queue-recruit-list"]');
     const overviewEl = this.panel.querySelector('[data-role="queue-overview"]');
     const previewEl = this.panel.querySelector('[data-role="queue-next-finish-preview"]');
-    const previewResidualEl = this.panel.querySelector(
-      `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_ROLE}"]`,
-    );
-    const previewResidualDeepEl = this.panel.querySelector(
-      `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEP_ROLE}"]`,
-    );
-    const previewResidualDeeperEl = this.panel.querySelector(
-      `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPER_ROLE}"]`,
-    );
-    const previewResidualDeepestEl = this.panel.querySelector(
-      `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_ROLE}"]`,
-    );
-    const previewResidualDeepestDeeperEl = this.panel.querySelector(
-      `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ROLE}"]`,
-    );
-    const previewResidualDeepestDeepestDeeperEl = this.panel.querySelector(
-      `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_ROLE}"]`,
-    );
-    const previewResidualDeepestDeepestDeepestEl = this.panel.querySelector(
-      `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_ROLE}"]`,
-    );
-    const previewResidualDeepestDeepestDeepestDeeperEl = this.panel.querySelector(
-      `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_ROLE}"]`,
-    );
-    const previewResidualDeepestDeepestDeepestDeepestDeeperEl = this.panel.querySelector(
-      `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_ROLE}"]`,
-    );
     if (!buildUl || !recruitUl) return;
     const session = this.getSession();
     const prepared = this.gateway.preparedRecruit === true;
@@ -1011,19 +632,7 @@ export class QueuePanels {
         ? `建造 ${activeBuildingUpgrades(this.buildings(), now).length} · 募兵 ${recruitCount}`
         : formatQueuePanelOverviewBar(this.buildings(), this.recruits, now);
     }
-    this.renderNextQueueFinishPreview(
-      previewEl,
-      previewResidualEl,
-      previewResidualDeepEl,
-      previewResidualDeeperEl,
-      previewResidualDeepestEl,
-      previewResidualDeepestDeeperEl,
-      previewResidualDeepestDeepestDeeperEl,
-      previewResidualDeepestDeepestDeepestEl,
-      previewResidualDeepestDeepestDeepestDeeperEl,
-      previewResidualDeepestDeepestDeepestDeepestDeeperEl,
-      now,
-    );
+    this.renderNextQueueFinishPreview(previewEl, now);
     this.renderBuildSlotMatrix(now);
     if (!session) {
       buildUl.replaceChildren();
@@ -1406,97 +1015,6 @@ export class QueuePanels {
         } else {
           this.openAndHighlightBuildSlot(slotKey);
         }
-      }
-      return;
-    }
-    const residualDeepestDeepestDeepestDeepestDeeperAnchor = target.closest(
-      `[data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_ACTION}"]`,
-    );
-    if (residualDeepestDeepestDeepestDeepestDeeperAnchor instanceof HTMLElement) {
-      const slotKey =
-        residualDeepestDeepestDeepestDeepestDeeperAnchor.getAttribute("data-slot-key")?.trim();
-      if (slotKey) {
-        this.onPreviewCrossLinkResidualDeepestDeepestDeepestDeepestDeeperRing?.(slotKey);
-      }
-      return;
-    }
-    const residualDeepestDeepestDeepestDeeperAnchor = target.closest(
-      `[data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_ACTION}"]`,
-    );
-    if (residualDeepestDeepestDeepestDeeperAnchor instanceof HTMLElement) {
-      const slotKey = residualDeepestDeepestDeepestDeeperAnchor.getAttribute("data-slot-key")?.trim();
-      if (slotKey) {
-        this.onPreviewCrossLinkResidualDeepestDeepestDeepestDeeperRing?.(slotKey);
-      }
-      return;
-    }
-    const residualDeepestDeepestDeepestAnchor = target.closest(
-      `[data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_ACTION}"]`,
-    );
-    if (residualDeepestDeepestDeepestAnchor instanceof HTMLElement) {
-      const slotKey = residualDeepestDeepestDeepestAnchor.getAttribute("data-slot-key")?.trim();
-      if (slotKey) {
-        this.onPreviewCrossLinkResidualDeepestDeepestDeepestRing?.(slotKey);
-      }
-      return;
-    }
-    const residualDeepestDeepestDeeperAnchor = target.closest(
-      `[data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_ACTION}"]`,
-    );
-    if (residualDeepestDeepestDeeperAnchor instanceof HTMLElement) {
-      const slotKey = residualDeepestDeepestDeeperAnchor.getAttribute("data-slot-key")?.trim();
-      if (slotKey) {
-        this.onPreviewCrossLinkResidualDeepestDeepestDeeperRing?.(slotKey);
-      }
-      return;
-    }
-    const residualDeepestDeeperAnchor = target.closest(
-      `[data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ACTION}"]`,
-    );
-    if (residualDeepestDeeperAnchor instanceof HTMLElement) {
-      const slotKey = residualDeepestDeeperAnchor.getAttribute("data-slot-key")?.trim();
-      if (slotKey) {
-        this.onPreviewCrossLinkResidualDeepestDeeperRing?.(slotKey);
-      }
-      return;
-    }
-    const residualDeepestAnchor = target.closest(
-      `[data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_ACTION}"]`,
-    );
-    if (residualDeepestAnchor instanceof HTMLElement) {
-      const slotKey = residualDeepestAnchor.getAttribute("data-slot-key")?.trim();
-      if (slotKey) {
-        this.onPreviewCrossLinkResidualDeepestRing?.(slotKey);
-      }
-      return;
-    }
-    const residualDeeperAnchor = target.closest(
-      `[data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPER_ACTION}"]`,
-    );
-    if (residualDeeperAnchor instanceof HTMLElement) {
-      const slotKey = residualDeeperAnchor.getAttribute("data-slot-key")?.trim();
-      if (slotKey) {
-        this.onPreviewCrossLinkResidualDeeperRing?.(slotKey);
-      }
-      return;
-    }
-    const residualDeepAnchor = target.closest(
-      `[data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEP_ACTION}"]`,
-    );
-    if (residualDeepAnchor instanceof HTMLElement) {
-      const slotKey = residualDeepAnchor.getAttribute("data-slot-key")?.trim();
-      if (slotKey) {
-        this.onPreviewCrossLinkResidualDeepRing?.(slotKey);
-      }
-      return;
-    }
-    const residualAnchor = target.closest(
-      `[data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_ACTION}"]`,
-    );
-    if (residualAnchor instanceof HTMLElement) {
-      const slotKey = residualAnchor.getAttribute("data-slot-key")?.trim();
-      if (slotKey) {
-        this.onPreviewMarginResidualRing?.(slotKey);
       }
       return;
     }

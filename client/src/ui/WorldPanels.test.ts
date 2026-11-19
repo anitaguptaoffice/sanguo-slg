@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import { WorldPanels } from "@/ui/WorldPanels";
+import { formatWorldTileMarchSummaryLine } from "@/ui/minimapMarchStack";
 
 function flushPromises(): Promise<void> {
   return new Promise((r) => setTimeout(r, 0));
@@ -263,61 +264,36 @@ describe("WorldPanels", () => {
     expect(state?.classList.contains("hidden")).toBe(true);
   });
 
-  it("shows intel ETA residual line and mutual ring when intel dest matches grid (CLIENT-237)", () => {
-    vi.useFakeTimers();
-    const mount = document.createElement("div");
-    const intelMount = document.createElement("div");
-    intelMount.innerHTML = `
-      <aside data-role="march-info-card">
-        <p data-role="march-info-card-eta-residual-coord" class="march-intel-eta-residual-coord"></p>
-      </aside>
-    `;
-    const gateway: GatewayPort = {
-      listPlayerCities: vi.fn().mockResolvedValue({ cities: [] }),
-    } as unknown as GatewayPort;
-    const march = {
-      march_id: 3,
-      to_x: 7,
-      to_y: 8,
-      phase: 2,
-      arrive_at_ms: Date.now() + 50_000,
-      depart_at_ms: Date.now() - 1000,
-    };
-    const panels = new WorldPanels(
-      mount,
-      gateway,
-      () => null,
-      { marchFormRoot: null },
-      () => {},
-      {
-        getMarchesSnapshot: () => [march],
-        getSelectedIntelMarch: () => march,
-        getIntelPanelRoot: () => intelMount,
-      },
-    );
-    panels.attach();
-    panels.selectGridAt(7, 8);
-    const residual = mount.querySelector('[data-role="world-tile-intel-eta-residual-line"]');
-    expect(residual?.textContent).toContain("格点 (7,8)");
-    expect(residual?.textContent).toContain("军情 #3");
-    const card = mount.querySelector('[data-role="world-tile-info"]');
-    expect(card?.classList.contains("world-tile-intel-eta-residual-ring")).toBe(true);
-    vi.advanceTimersByTime(1000);
-    expect(card?.classList.contains("world-tile-intel-eta-residual-ring")).toBe(false);
-    vi.useRealTimers();
-  });
-
   it("shows recent march secondary line and occupation summary (CLIENT-170)", async () => {
     const mount = document.createElement("div");
+    const march = {
+      march_id: 7,
+      to_x: 60,
+      to_y: 60,
+      phase: 2,
+      arrive_at_ms: Date.now() + 60_000,
+    };
     const gateway: GatewayPort = {
       listPlayerCities: vi.fn().mockResolvedValue({
-        cities: [{ city_id: 1, name: "主城", x: 60, y: 60, is_capital: true }],
+        cities: [
+          {
+            city_id: 1,
+            name: "主城",
+            x: 60,
+            y: 60,
+            is_capital: true,
+            wall_level: 2,
+            tile_resource_type: "food",
+          },
+        ],
       }),
     } as unknown as GatewayPort;
     const session: MainCitySession = {
       serverId: 1,
       cityId: 1,
       cityName: "主城",
+      cityX: 50,
+      cityY: 50,
       player: {},
       wallet: {},
       buildings: [],
@@ -331,21 +307,27 @@ describe("WorldPanels", () => {
       { marchFormRoot: null },
       () => {},
       {
-        getMarchesSnapshot: () => [
-          { march_id: 7, to_x: 60, to_y: 60, phase: 2, arrive_at_ms: Date.now() + 60_000 },
-        ],
+        getMarchesSnapshot: () => [march],
       },
     );
     panels.attach();
     panels.toggle();
     await flushPromises();
     panels.selectGridAt(60, 60);
-    const secondary = mount.querySelector('[data-role="world-tile-march-secondary"]');
-    expect(secondary?.textContent).toContain("最近终点行军 #7");
-    expect(secondary?.classList.contains("world-tile-march-summary-line")).toBe(true);
-    expect(mount.querySelector('[data-role="world-tile-info-lines"]')?.textContent).toContain(
-      "己方主城",
+    const lines = mount.querySelector('[data-role="world-tile-info-lines"]');
+    expect(lines?.textContent).toContain("坐标(60,60)");
+    expect(lines?.textContent).toContain("城池主城 · 城墙 Lv.2 · 主城");
+    expect(lines?.textContent).toContain("占领己方主城");
+    expect(lines?.textContent).toContain("地形粮田");
+    expect(lines?.textContent).toContain("距离距主城曼哈顿 20 格");
+    expect(mount.querySelector('[data-role="world-tile-march-count"]')?.textContent).toBe(
+      "指向此格进行中行军：1 条",
     );
+    const secondary = mount.querySelector('[data-role="world-tile-march-secondary"]');
+    expect(secondary?.textContent).toBe(
+      formatWorldTileMarchSummaryLine([march], { x: 60, y: 60 }),
+    );
+    expect(secondary?.classList.contains("world-tile-march-summary-line")).toBe(true);
   });
 
   it("pulses info card on minimap grid sync and recenters minimap on card click", async () => {

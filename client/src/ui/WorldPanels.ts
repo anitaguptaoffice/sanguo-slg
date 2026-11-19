@@ -38,79 +38,6 @@ import {
   formatWorldTileMarchSummaryLine,
   WORLD_TILE_MARCH_SUMMARY_LINE_CLASS,
 } from "@/ui/minimapMarchStack";
-import {
-  createWorldTileIntelEtaResidualTimers,
-  formatWorldTileIntelEtaResidualLine,
-  pulseWorldTileIntelEtaResidualMutualHighlight,
-  WORLD_TILE_INTEL_ETA_RESIDUAL_LINE_CLASS,
-  WORLD_TILE_INTEL_ETA_RESIDUAL_LINE_ROLE,
-  worldTileIntelEtaResidualCoordsMatch,
-  type WorldTileIntelEtaResidualTimers,
-} from "@/ui/worldTileIntelEtaResidual";
-import {
-  createWorldTileIntelEtaCrossResidualTimers,
-  formatWorldTileIntelEtaCrossResidualLine,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_LINE_CLASS,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_LINE_ROLE,
-  type WorldTileIntelEtaCrossResidualTimers,
-} from "@/ui/worldTileIntelEtaCrossResidual";
-import {
-  createWorldTileIntelEtaCrossResidualDeepTimers,
-  formatWorldTileIntelEtaCrossResidualDeepLine,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEP_LINE_CLASS,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEP_LINE_ROLE,
-  type WorldTileIntelEtaCrossResidualDeepTimers,
-} from "@/ui/worldTileIntelEtaCrossResidualDeep";
-import {
-  createWorldTileIntelEtaCrossResidualDeeperTimers,
-  formatWorldTileIntelEtaCrossResidualDeeperLine,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPER_LINE_CLASS,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPER_LINE_ROLE,
-  type WorldTileIntelEtaCrossResidualDeeperTimers,
-} from "@/ui/worldTileIntelEtaCrossResidualDeeper";
-import {
-  createWorldTileIntelEtaCrossResidualDeepestTimers,
-  formatWorldTileIntelEtaCrossResidualDeepestLine,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_LINE_CLASS,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_LINE_ROLE,
-  type WorldTileIntelEtaCrossResidualDeepestTimers,
-} from "@/ui/worldTileIntelEtaCrossResidualDeepest";
-import {
-  createWorldTileIntelEtaCrossResidualDeepestDeeperTimers,
-  formatWorldTileIntelEtaCrossResidualDeepestDeeperLine,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPER_LINE_CLASS,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPER_LINE_ROLE,
-  type WorldTileIntelEtaCrossResidualDeepestDeeperTimers,
-} from "@/ui/worldTileIntelEtaCrossResidualDeepestDeeper";
-import {
-  createWorldTileIntelEtaCrossResidualDeepestDeepestDeeperTimers,
-  formatWorldTileIntelEtaCrossResidualDeepestDeepestDeeperLine,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPER_LINE_CLASS,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPER_LINE_ROLE,
-  type WorldTileIntelEtaCrossResidualDeepestDeepestDeeperTimers,
-} from "@/ui/worldTileIntelEtaCrossResidualDeepestDeepestDeeper";
-import {
-  createWorldTileIntelEtaCrossResidualDeepestDeepestDeepestTimers,
-  formatWorldTileIntelEtaCrossResidualDeepestDeepestDeepestLine,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_CLASS,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_ROLE,
-  type WorldTileIntelEtaCrossResidualDeepestDeepestDeepestTimers,
-} from "@/ui/worldTileIntelEtaCrossResidualDeepestDeepestDeepest";
-import {
-  createWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperTimers,
-  formatWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperLine,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_ROLE,
-  type WorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperTimers,
-} from "@/ui/worldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeper";
-import {
-  createWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperTimers,
-  formatWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperLine,
-  pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperReadonly,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS,
-  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_ROLE,
-  type WorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperTimers,
-} from "@/ui/worldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeper";
 import { WORLD_TILE_INFO_CARD_CLASS } from "@/ui/minimapTileFocusLink";
 import {
   applyWorldTileFocusPulse,
@@ -160,26 +87,6 @@ export class WorldPanels {
   private citiesLoadError: string | null = null;
   private citiesReadVersion = 0;
   private citiesOwner: (() => boolean) | null = null;
-  private readonly intelEtaResidualTimers: WorldTileIntelEtaResidualTimers =
-    createWorldTileIntelEtaResidualTimers();
-  private readonly intelEtaCrossResidualTimers: WorldTileIntelEtaCrossResidualTimers =
-    createWorldTileIntelEtaCrossResidualTimers();
-  private readonly intelEtaCrossResidualDeepTimers: WorldTileIntelEtaCrossResidualDeepTimers =
-    createWorldTileIntelEtaCrossResidualDeepTimers();
-  private readonly intelEtaCrossResidualDeeperTimers: WorldTileIntelEtaCrossResidualDeeperTimers =
-    createWorldTileIntelEtaCrossResidualDeeperTimers();
-  private readonly intelEtaCrossResidualDeepestTimers: WorldTileIntelEtaCrossResidualDeepestTimers =
-    createWorldTileIntelEtaCrossResidualDeepestTimers();
-  private readonly intelEtaCrossResidualDeepestDeeperTimers: WorldTileIntelEtaCrossResidualDeepestDeeperTimers =
-    createWorldTileIntelEtaCrossResidualDeepestDeeperTimers();
-  private readonly intelEtaCrossResidualDeepestDeepestDeeperTimers: WorldTileIntelEtaCrossResidualDeepestDeepestDeeperTimers =
-    createWorldTileIntelEtaCrossResidualDeepestDeepestDeeperTimers();
-  private readonly intelEtaCrossResidualDeepestDeepestDeepestTimers: WorldTileIntelEtaCrossResidualDeepestDeepestDeepestTimers =
-    createWorldTileIntelEtaCrossResidualDeepestDeepestDeepestTimers();
-  private readonly intelEtaCrossResidualDeepestDeepestDeepestDeeperTimers: WorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperTimers =
-    createWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperTimers();
-  private readonly intelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperTimers: WorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperTimers =
-    createWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperTimers();
 
   constructor(
     private readonly mount: HTMLElement,
@@ -276,261 +183,6 @@ export class WorldPanels {
     this.renderInfoCard();
   }
 
-  /** 军情选中变化时刷新 ETA 对照互高亮（CLIENT-237）。 */
-  syncIntelEtaResidualHighlightFromMarch(march: MarchSummary | null): void {
-    const card = this.panel.querySelector<HTMLElement>('[data-role="world-tile-info"]');
-    if (!card || card.classList.contains("hidden") || !this.selectedGrid) {
-      pulseWorldTileIntelEtaResidualMutualHighlight(
-        card,
-        this.options?.getIntelPanelRoot?.() ?? null,
-        false,
-        { timers: this.intelEtaResidualTimers },
-      );
-      return;
-    }
-    const { x, y } = this.selectedGrid;
-    pulseWorldTileIntelEtaResidualMutualHighlight(
-      card,
-      this.options?.getIntelPanelRoot?.() ?? null,
-      worldTileIntelEtaResidualCoordsMatch({ x, y }, march),
-      { timers: this.intelEtaResidualTimers },
-    );
-    const residualLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_RESIDUAL_LINE_ROLE}"]`,
-    );
-    if (residualLineEl) {
-      const marches = this.options?.getMarchesSnapshot?.() ?? [];
-      residualLineEl.textContent = formatWorldTileIntelEtaResidualLine(
-        marches,
-        { x, y },
-        Date.now(),
-      );
-    }
-    this.syncIntelEtaCrossResidualFromMarch(march);
-  }
-
-  /** CLIENT-252/268/284/300/316：格点 ETA cross 次行 + 巩固第三/四/五行与军情 ETA 条只读对照脉冲。 */
-  private syncIntelEtaCrossResidualFromMarch(march: MarchSummary | null): void {
-    const card = this.panel.querySelector<HTMLElement>('[data-role="world-tile-info"]');
-    const crossLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_LINE_ROLE}"]`,
-    );
-    const crossDeepLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEP_LINE_ROLE}"]`,
-    );
-    const crossDeeperLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPER_LINE_ROLE}"]`,
-    );
-    const crossDeepestLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_LINE_ROLE}"]`,
-    );
-    const crossDeepestDeeperLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPER_LINE_ROLE}"]`,
-    );
-    const crossDeepestDeepestDeeperLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPER_LINE_ROLE}"]`,
-    );
-    const crossDeepestDeepestDeepestLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_ROLE}"]`,
-    );
-    const crossDeepestDeepestDeepestDeeperLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_ROLE}"]`,
-    );
-    const crossDeepestDeepestDeepestDeepestDeeperLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_ROLE}"]`,
-    );
-    const intelRoot = this.options?.getIntelPanelRoot?.() ?? null;
-    const pulseOpts = {
-      timers: this.intelEtaCrossResidualTimers,
-      deepTimers: this.intelEtaCrossResidualDeepTimers,
-      deeperTimers: this.intelEtaCrossResidualDeeperTimers,
-      deepestTimers: this.intelEtaCrossResidualDeepestTimers,
-      deepestDeeperTimers: this.intelEtaCrossResidualDeepestDeeperTimers,
-      deepestDeepestDeeperTimers: this.intelEtaCrossResidualDeepestDeepestDeeperTimers,
-      deepestDeepestDeepestTimers: this.intelEtaCrossResidualDeepestDeepestDeepestTimers,
-      deepestDeepestDeepestDeeperTimers: this.intelEtaCrossResidualDeepestDeepestDeepestDeeperTimers,
-      deepestDeepestDeepestDeepestDeeperTimers:
-        this.intelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperTimers,
-    };
-    if (!card || card.classList.contains("hidden") || !this.selectedGrid || !crossLineEl) {
-      pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperReadonly(
-        card,
-        intelRoot,
-        false,
-        pulseOpts,
-      );
-      crossLineEl?.classList.add("hidden");
-      if (crossLineEl) crossLineEl.textContent = "";
-      crossDeepLineEl?.classList.add("hidden");
-      if (crossDeepLineEl) crossDeepLineEl.textContent = "";
-      crossDeeperLineEl?.classList.add("hidden");
-      if (crossDeeperLineEl) crossDeeperLineEl.textContent = "";
-      crossDeepestLineEl?.classList.add("hidden");
-      if (crossDeepestLineEl) crossDeepestLineEl.textContent = "";
-      crossDeepestDeeperLineEl?.classList.add("hidden");
-      if (crossDeepestDeeperLineEl) crossDeepestDeeperLineEl.textContent = "";
-      crossDeepestDeepestDeeperLineEl?.classList.add("hidden");
-      if (crossDeepestDeepestDeeperLineEl) crossDeepestDeepestDeeperLineEl.textContent = "";
-      crossDeepestDeepestDeepestLineEl?.classList.add("hidden");
-      if (crossDeepestDeepestDeepestLineEl) crossDeepestDeepestDeepestLineEl.textContent = "";
-      crossDeepestDeepestDeepestDeeperLineEl?.classList.add("hidden");
-      if (crossDeepestDeepestDeepestDeeperLineEl)
-        crossDeepestDeepestDeepestDeeperLineEl.textContent = "";
-      crossDeepestDeepestDeepestDeepestDeeperLineEl?.classList.add("hidden");
-      if (crossDeepestDeepestDeepestDeepestDeeperLineEl)
-        crossDeepestDeepestDeepestDeepestDeeperLineEl.textContent = "";
-      return;
-    }
-    const { x, y } = this.selectedGrid;
-    const marches = this.options?.getMarchesSnapshot?.() ?? [];
-    const nowMs = Date.now();
-    const crossLine = formatWorldTileIntelEtaCrossResidualLine(marches, { x, y }, march, nowMs);
-    const crossDeepLine = formatWorldTileIntelEtaCrossResidualDeepLine(
-      marches,
-      { x, y },
-      march,
-      nowMs,
-    );
-    const crossDeeperLine = formatWorldTileIntelEtaCrossResidualDeeperLine(
-      marches,
-      { x, y },
-      march,
-      nowMs,
-    );
-    const crossDeepestLine = formatWorldTileIntelEtaCrossResidualDeepestLine(
-      marches,
-      { x, y },
-      march,
-      nowMs,
-    );
-    const crossDeepestDeeperLine = formatWorldTileIntelEtaCrossResidualDeepestDeeperLine(
-      marches,
-      { x, y },
-      march,
-      nowMs,
-    );
-    const crossDeepestDeepestDeeperLine = formatWorldTileIntelEtaCrossResidualDeepestDeepestDeeperLine(
-      marches,
-      { x, y },
-      march,
-      nowMs,
-    );
-    const crossDeepestDeepestDeepestLine = formatWorldTileIntelEtaCrossResidualDeepestDeepestDeepestLine(
-      marches,
-      { x, y },
-      march,
-      nowMs,
-    );
-    const crossDeepestDeepestDeepestDeeperLine =
-      formatWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperLine(
-        marches,
-        { x, y },
-        march,
-        nowMs,
-      );
-    const crossDeepestDeepestDeepestDeepestDeeperLine =
-      formatWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperLine(
-        marches,
-        { x, y },
-        march,
-        nowMs,
-      );
-    if (!crossLine) {
-      crossLineEl.textContent = "";
-      crossLineEl.classList.add("hidden");
-      crossDeepLineEl?.classList.add("hidden");
-      if (crossDeepLineEl) crossDeepLineEl.textContent = "";
-      crossDeeperLineEl?.classList.add("hidden");
-      if (crossDeeperLineEl) crossDeeperLineEl.textContent = "";
-      crossDeepestLineEl?.classList.add("hidden");
-      if (crossDeepestLineEl) crossDeepestLineEl.textContent = "";
-      crossDeepestDeeperLineEl?.classList.add("hidden");
-      if (crossDeepestDeeperLineEl) crossDeepestDeeperLineEl.textContent = "";
-      crossDeepestDeepestDeeperLineEl?.classList.add("hidden");
-      if (crossDeepestDeepestDeeperLineEl) crossDeepestDeepestDeeperLineEl.textContent = "";
-      crossDeepestDeepestDeepestLineEl?.classList.add("hidden");
-      if (crossDeepestDeepestDeepestLineEl) crossDeepestDeepestDeepestLineEl.textContent = "";
-      crossDeepestDeepestDeepestDeeperLineEl?.classList.add("hidden");
-      if (crossDeepestDeepestDeepestDeeperLineEl)
-        crossDeepestDeepestDeepestDeeperLineEl.textContent = "";
-      crossDeepestDeepestDeepestDeepestDeeperLineEl?.classList.add("hidden");
-      if (crossDeepestDeepestDeepestDeepestDeeperLineEl)
-        crossDeepestDeepestDeepestDeepestDeeperLineEl.textContent = "";
-      pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperReadonly(
-        card,
-        intelRoot,
-        false,
-        pulseOpts,
-      );
-      return;
-    }
-    crossLineEl.textContent = crossLine;
-    crossLineEl.classList.remove("hidden");
-    if (crossDeepLine && crossDeepLineEl) {
-      crossDeepLineEl.textContent = crossDeepLine;
-      crossDeepLineEl.classList.remove("hidden");
-    } else if (crossDeepLineEl) {
-      crossDeepLineEl.textContent = "";
-      crossDeepLineEl.classList.add("hidden");
-    }
-    if (crossDeeperLine && crossDeeperLineEl) {
-      crossDeeperLineEl.textContent = crossDeeperLine;
-      crossDeeperLineEl.classList.remove("hidden");
-    } else if (crossDeeperLineEl) {
-      crossDeeperLineEl.textContent = "";
-      crossDeeperLineEl.classList.add("hidden");
-    }
-    if (crossDeepestLine && crossDeepestLineEl) {
-      crossDeepestLineEl.textContent = crossDeepestLine;
-      crossDeepestLineEl.classList.remove("hidden");
-    } else if (crossDeepestLineEl) {
-      crossDeepestLineEl.textContent = "";
-      crossDeepestLineEl.classList.add("hidden");
-    }
-    if (crossDeepestDeeperLine && crossDeepestDeeperLineEl) {
-      crossDeepestDeeperLineEl.textContent = crossDeepestDeeperLine;
-      crossDeepestDeeperLineEl.classList.remove("hidden");
-    } else if (crossDeepestDeeperLineEl) {
-      crossDeepestDeeperLineEl.textContent = "";
-      crossDeepestDeeperLineEl.classList.add("hidden");
-    }
-    if (crossDeepestDeepestDeeperLine && crossDeepestDeepestDeeperLineEl) {
-      crossDeepestDeepestDeeperLineEl.textContent = crossDeepestDeepestDeeperLine;
-      crossDeepestDeepestDeeperLineEl.classList.remove("hidden");
-    } else if (crossDeepestDeepestDeeperLineEl) {
-      crossDeepestDeepestDeeperLineEl.textContent = "";
-      crossDeepestDeepestDeeperLineEl.classList.add("hidden");
-    }
-    if (crossDeepestDeepestDeepestLine && crossDeepestDeepestDeepestLineEl) {
-      crossDeepestDeepestDeepestLineEl.textContent = crossDeepestDeepestDeepestLine;
-      crossDeepestDeepestDeepestLineEl.classList.remove("hidden");
-    } else if (crossDeepestDeepestDeepestLineEl) {
-      crossDeepestDeepestDeepestLineEl.textContent = "";
-      crossDeepestDeepestDeepestLineEl.classList.add("hidden");
-    }
-    if (crossDeepestDeepestDeepestDeeperLine && crossDeepestDeepestDeepestDeeperLineEl) {
-      crossDeepestDeepestDeepestDeeperLineEl.textContent = crossDeepestDeepestDeepestDeeperLine;
-      crossDeepestDeepestDeepestDeeperLineEl.classList.remove("hidden");
-    } else if (crossDeepestDeepestDeepestDeeperLineEl) {
-      crossDeepestDeepestDeepestDeeperLineEl.textContent = "";
-      crossDeepestDeepestDeepestDeeperLineEl.classList.add("hidden");
-    }
-    if (crossDeepestDeepestDeepestDeepestDeeperLine && crossDeepestDeepestDeepestDeepestDeeperLineEl) {
-      crossDeepestDeepestDeepestDeepestDeeperLineEl.textContent =
-        crossDeepestDeepestDeepestDeepestDeeperLine;
-      crossDeepestDeepestDeepestDeepestDeeperLineEl.classList.remove("hidden");
-    } else if (crossDeepestDeepestDeepestDeepestDeeperLineEl) {
-      crossDeepestDeepestDeepestDeepestDeeperLineEl.textContent = "";
-      crossDeepestDeepestDeepestDeepestDeeperLineEl.classList.add("hidden");
-    }
-    pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperReadonly(
-      card,
-      intelRoot,
-      worldTileIntelEtaResidualCoordsMatch({ x, y }, march),
-      pulseOpts,
-    );
-  }
-
   /** 打开世界面板、选中格点并触发 CLIENT-170 焦点脉冲（无新 world RPC）。 */
   openAndFocusTile(x: number, y: number): void {
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
@@ -565,16 +217,6 @@ export class WorldPanels {
       <p class="world-panel-hint" data-role="world-hint">玩家城池与坐标（非大地图）；点选可将坐标填入出征目标，并在下方信息卡扫读格点上下文。</p>
       <aside class="world-tile-info ${WORLD_TILE_INFO_CARD_CLASS} hidden" data-role="world-tile-info" aria-live="polite">
         <h4>格点信息</h4>
-        <p class="${WORLD_TILE_INTEL_ETA_RESIDUAL_LINE_CLASS}" data-role="${WORLD_TILE_INTEL_ETA_RESIDUAL_LINE_ROLE}"></p>
-        <p class="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_LINE_CLASS} hidden" data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_LINE_ROLE}"></p>
-        <p class="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEP_LINE_CLASS} hidden" data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEP_LINE_ROLE}"></p>
-        <p class="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPER_LINE_CLASS} hidden" data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPER_LINE_ROLE}"></p>
-        <p class="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_LINE_CLASS} hidden" data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_LINE_ROLE}"></p>
-        <p class="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPER_LINE_CLASS} hidden" data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPER_LINE_ROLE}"></p>
-        <p class="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPER_LINE_CLASS} hidden" data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPER_LINE_ROLE}"></p>
-        <p class="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_CLASS} hidden" data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_ROLE}"></p>
-        <p class="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS} hidden" data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_ROLE}"></p>
-        <p class="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS} hidden" data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_ROLE}"></p>
         <p class="world-tile-info-state hidden" data-role="world-tile-info-state"></p>
         <div data-role="world-tile-info-body">
           <dl class="world-tile-info-lines" data-role="world-tile-info-lines"></dl>
@@ -674,37 +316,6 @@ export class WorldPanels {
     const hintEl = this.panel.querySelector('[data-role="world-tile-occupation-hint"]');
     const marchEl = this.panel.querySelector('[data-role="world-tile-march-count"]');
     const secondaryEl = this.panel.querySelector('[data-role="world-tile-march-secondary"]');
-    const residualLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_RESIDUAL_LINE_ROLE}"]`,
-    );
-    const crossResidualLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_LINE_ROLE}"]`,
-    );
-    const crossResidualDeepLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEP_LINE_ROLE}"]`,
-    );
-    const crossResidualDeeperLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPER_LINE_ROLE}"]`,
-    );
-    const crossResidualDeepestLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_LINE_ROLE}"]`,
-    );
-    const crossResidualDeepestDeeperLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPER_LINE_ROLE}"]`,
-    );
-    const crossResidualDeepestDeepestDeeperLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPER_LINE_ROLE}"]`,
-    );
-    const crossResidualDeepestDeepestDeepestLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_ROLE}"]`,
-    );
-    const crossResidualDeepestDeepestDeepestDeeperLineEl = this.panel.querySelector<HTMLElement>(
-      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_ROLE}"]`,
-    );
-    const crossResidualDeepestDeepestDeepestDeepestDeeperLineEl =
-      this.panel.querySelector<HTMLElement>(
-        `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_ROLE}"]`,
-      );
     const reportBtn = this.panel.querySelector<HTMLButtonElement>(
       '[data-action="view-battle-reports-at-grid"]',
     );
@@ -715,17 +326,7 @@ export class WorldPanels {
       !secondaryEl ||
       !hintEl ||
       !stateEl ||
-      !bodyEl ||
-      !residualLineEl ||
-      !crossResidualLineEl ||
-      !crossResidualDeepLineEl ||
-      !crossResidualDeeperLineEl ||
-      !crossResidualDeepestLineEl ||
-      !crossResidualDeepestDeeperLineEl ||
-      !crossResidualDeepestDeepestDeeperLineEl ||
-      !crossResidualDeepestDeepestDeepestLineEl ||
-      !crossResidualDeepestDeepestDeepestDeeperLineEl ||
-      !crossResidualDeepestDeepestDeepestDeepestDeeperLineEl
+      !bodyEl
     )
       return;
 
@@ -740,49 +341,6 @@ export class WorldPanels {
       hintEl.classList.add("hidden");
       marchEl.textContent = "";
       secondaryEl.textContent = "";
-      residualLineEl.textContent = "";
-      crossResidualLineEl.textContent = "";
-      crossResidualLineEl.classList.add("hidden");
-      crossResidualDeepLineEl.textContent = "";
-      crossResidualDeepLineEl.classList.add("hidden");
-      crossResidualDeeperLineEl.textContent = "";
-      crossResidualDeeperLineEl.classList.add("hidden");
-      crossResidualDeepestLineEl.textContent = "";
-      crossResidualDeepestLineEl.classList.add("hidden");
-      crossResidualDeepestDeeperLineEl.textContent = "";
-      crossResidualDeepestDeeperLineEl.classList.add("hidden");
-      crossResidualDeepestDeepestDeeperLineEl.textContent = "";
-      crossResidualDeepestDeepestDeeperLineEl.classList.add("hidden");
-      crossResidualDeepestDeepestDeepestLineEl.textContent = "";
-      crossResidualDeepestDeepestDeepestLineEl.classList.add("hidden");
-      crossResidualDeepestDeepestDeepestDeeperLineEl.textContent = "";
-      crossResidualDeepestDeepestDeepestDeeperLineEl.classList.add("hidden");
-      crossResidualDeepestDeepestDeepestDeepestDeeperLineEl.textContent = "";
-      crossResidualDeepestDeepestDeepestDeepestDeeperLineEl.classList.add("hidden");
-      reportBtn?.classList.add("hidden");
-      pulseWorldTileIntelEtaResidualMutualHighlight(
-        card as HTMLElement,
-        this.options?.getIntelPanelRoot?.() ?? null,
-        false,
-        { timers: this.intelEtaResidualTimers },
-      );
-      pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperReadonly(
-        card as HTMLElement,
-        this.options?.getIntelPanelRoot?.() ?? null,
-        false,
-        {
-          timers: this.intelEtaCrossResidualTimers,
-          deepTimers: this.intelEtaCrossResidualDeepTimers,
-          deeperTimers: this.intelEtaCrossResidualDeeperTimers,
-          deepestTimers: this.intelEtaCrossResidualDeepestTimers,
-          deepestDeeperTimers: this.intelEtaCrossResidualDeepestDeeperTimers,
-          deepestDeepestDeeperTimers: this.intelEtaCrossResidualDeepestDeepestDeeperTimers,
-          deepestDeepestDeepestTimers: this.intelEtaCrossResidualDeepestDeepestDeepestTimers,
-          deepestDeepestDeepestDeeperTimers: this.intelEtaCrossResidualDeepestDeepestDeepestDeeperTimers,
-          deepestDeepestDeepestDeepestDeeperTimers:
-            this.intelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperTimers,
-        },
-      );
       return;
     }
 
@@ -852,16 +410,6 @@ export class WorldPanels {
     }
     marchEl.textContent = summary.marchCountLine;
     secondaryEl.textContent = formatWorldTileMarchSummaryLine(marches, { x, y });
-    const nowMs = Date.now();
-    residualLineEl.textContent = formatWorldTileIntelEtaResidualLine(marches, { x, y }, nowMs);
-    const selectedIntel = this.options?.getSelectedIntelMarch?.() ?? null;
-    pulseWorldTileIntelEtaResidualMutualHighlight(
-      card as HTMLElement,
-      this.options?.getIntelPanelRoot?.() ?? null,
-      worldTileIntelEtaResidualCoordsMatch({ x, y }, selectedIntel),
-      { timers: this.intelEtaResidualTimers },
-    );
-    this.syncIntelEtaCrossResidualFromMarch(selectedIntel);
     if (reportBtn) {
       if (summary.showBattleReportShortcut) {
         reportBtn.classList.remove("hidden");

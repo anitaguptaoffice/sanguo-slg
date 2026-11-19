@@ -8,7 +8,6 @@ import { skinPrimaryButtons } from "@/engine/artButtonSkin";
 import { clearHudBarChrome, clearToolbarBarChrome, skinHudBar, skinToolbarBar, wrapToolbarButtonsForHit } from "@/engine/artChromeSkin";
 import { skinToolbarButtons } from "@/engine/artToolbarButtonSkin";
 import { applyUiCountBadge } from "@/engine/artBadgeSkin";
-import { registerArtFilter008EvidenceHooks } from "@/engine/artFilter008EvidenceStaging";
 import { remountPanelFilterChips } from "@/engine/artFilterChipRuntime";
 import { mountToolbarIcons } from "@/engine/artToolbarIconSkin";
 import {
@@ -26,7 +25,6 @@ import {
   skinShopPanel,
   skinWorldPanel,
 } from "@/engine/artPanelSkin";
-import { mountFilterListPanelSkins } from "@/engine/filterListNarrowManifest";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import {
   appendHudResourceStrip,
@@ -51,15 +49,6 @@ import type { Scene, SceneContext } from "@/engine/SceneManager";
 import type { CityBuilding, CityTroopStack, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import { scrollCitySlotIntoView } from "@/net/citySlotQueueLink";
 import { highlightDomesticSlotForQueueRow } from "@/net/domesticSlotQueueFocusRing";
-import { pulseDomesticSlotCompleteMarginResidualRing } from "@/net/nextQueueFinishPreviewResidual";
-import { pulseDomesticSlotPreviewCrossLinkResidualDeepRing } from "@/net/nextQueueFinishPreviewResidualDeep";
-import { pulseDomesticSlotPreviewCrossLinkResidualDeeperRing } from "@/net/nextQueueFinishPreviewResidualDeeper";
-import { pulseDomesticSlotPreviewCrossLinkResidualDeepestRing } from "@/net/nextQueueFinishPreviewResidualDeepest";
-import { pulseDomesticSlotPreviewCrossLinkResidualDeepestDeeperRing } from "@/net/nextQueueFinishPreviewResidualDeepestDeeper";
-import { pulseDomesticSlotPreviewCrossLinkResidualDeepestDeepestDeeperRing } from "@/net/nextQueueFinishPreviewResidualDeepestDeepestDeeper";
-import { pulseDomesticSlotPreviewCrossLinkResidualDeepestDeepestDeepestRing } from "@/net/nextQueueFinishPreviewResidualDeepestDeepestDeepest";
-import { pulseDomesticSlotPreviewCrossLinkResidualDeepestDeepestDeepestDeeperRing } from "@/net/nextQueueFinishPreviewResidualDeepestDeepestDeepestDeeper";
-import { pulseDomesticSlotPreviewCrossLinkResidualDeepestDeepestDeepestDeepestDeeperRing } from "@/net/nextQueueFinishPreviewResidualDeepestDeepestDeepestDeepestDeeper";
 import {
   captureDomesticSlotScrollAnchor,
   restoreDomesticSlotScrollAnchor,
@@ -106,7 +95,6 @@ import {
 } from "@/net/battleReportListIntelJump";
 import { resolveMarchIdForBattleReport } from "@/net/battleReportRoundSummaryIntelLink";
 import { parseBattleReportLocation } from "@/net/battleReportMinimapFocus";
-import { MarchEndBattleReportHint } from "@/net/battleReportDeepLink";
 import { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import {
   formatMarchArrivedStatusMessage,
@@ -120,45 +108,13 @@ import { CityStateFetch, type CityStateSnapshot } from "@/net/cityStateFetch";
 import { parseCurrentRecruitQueue, renderCurrentRecruitQueue } from "@/net/currentRecruitQueue";
 import { CityStatePoll } from "@/net/cityStatePoll";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
-import {
-  formatMarchFormSummary,
-  syncMarchFormInlineFeedback,
-} from "@/net/marchFormSummary";
-import {
-  formatMarchFormTroopMarginResidualDeepestDeepestDeepestDeepestDeeperLine,
-  syncMarchFormTroopMarginResidualDeepestDeepestDeepestDeepestDeeperLine,
-} from "@/net/marchFormTroopMarginResidualDeepestDeepestDeepestDeepestDeeper";
+import { syncMarchFormInlineFeedback } from "@/net/marchFormSummary";
 import { readTroopRecruitForm, setTroopRecruitFormError, syncTroopRecruitFormPreview } from "@/ui/troopRecruitForm";
 import { readMarchUnitCfgId, setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
 import {
-  formatMarchFormValidationSweepLine,
-  syncMarchFormValidationSweepLine,
-} from "@/net/marchFormValidationSweep";
-import { buildMarchIntelRemarchPrefill } from "@/net/marchIntelRemarch";
-import { clearMarchIntelRemarchResidualDeepSummary } from "@/net/marchIntelRemarchResidualDeep";
-import {
-  clearMarchIntelRemarchResidualDeeperSummary,
-} from "@/net/marchIntelRemarchResidualDeeper";
-import {
-  clearMarchIntelRemarchResidualDeepestDeeperSummary,
-} from "@/net/marchIntelRemarchResidualDeepestDeeper";
-import {
-  clearMarchIntelRemarchResidualDeepestDeepestDeeperSummary,
-} from "@/net/marchIntelRemarchResidualDeepestDeepestDeeper";
-import {
-  clearMarchIntelRemarchResidualDeepestDeepestDeepestDeeperSummary,
-} from "@/net/marchIntelRemarchResidualDeepestDeepestDeepestDeeper";
-import {
-  clearMarchIntelRemarchResidualDeepestDeepestDeepestDeepestDeeperSummary,
-  prefillMarchFormFromIntelResidualDeepestDeepestDeepestDeepestDeeper,
-} from "@/net/marchIntelRemarchResidualDeepestDeepestDeepestDeepestDeeper";
-import {
-  clearMarchIntelRemarchResidualDeepestDeepestDeepestSummary,
-} from "@/net/marchIntelRemarchResidualDeepestDeepestDeepest";
-import {
-  clearMarchIntelRemarchResidualDeepestSummary,
-} from "@/net/marchIntelRemarchResidualDeepest";
-import { clearMarchIntelRemarchResidualSummary } from "@/net/marchIntelRemarchResidual";
+  applyMarchIntelRemarchPrefillWithFeedback,
+  buildMarchIntelRemarchPrefill,
+} from "@/net/marchIntelRemarch";
 import { restoreMarchTargetPrefill } from "@/net/marchTargetMemory";
 import { BuildCompleteTodoTracker } from "@/net/buildCompleteTodo";
 import { detectBuildJustCompleted } from "@/net/buildQueueComplete";
@@ -254,45 +210,6 @@ import {
   type HudTodoToolbarAction,
 } from "@/net/hudTodoOpenTarget";
 import { buildHudCenterTodoCounts, hudTodoSocialBadgesFromChatSummary } from "@/net/hudTodoBadges";
-import {
-  HUD_CENTER_PANEL_DEEPLINK_FACET_ATTR,
-  HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE,
-  centerPanelTabToolbarAction,
-  hudCenterPanelDeepLinkSegments,
-  resolveCenterPanelTabFromHudTodo,
-  scheduleCenterPanelTabPulse,
-  type CenterPanelTabFromHudTodo,
-  type HudCenterPanelDeepLinkCounts,
-  type HudCenterPanelDeepLinkFacet,
-} from "@/net/hudCenterPanelDeepLink";
-import {
-  scheduleMailTabHudSyncPulse,
-  setHudCenterPanelDeepLinkRefreshStamp,
-} from "@/net/mailTabUnreadSweep";
-import { formatHudTodoSweepLine } from "@/net/hudTodoSweep";
-import {
-  HUD_TODO_MERGED_SWEEP_FACET_ATTR,
-  HUD_TODO_MERGED_SWEEP_LINE_ROLE,
-  resolveToolbarPanelFromHudTodo,
-  toolbarPanelActionFromHudTodo,
-  type HudTodoMergedSweepCounts,
-  type HudTodoMergedSweepFacet,
-} from "@/net/hudTodoMergedSweep";
-import { pulseHudTodoToolbarDeepLinkResidual } from "@/net/hudTodoToolbarDeepLinkResidual";
-import {
-  findFirstIntelInProgressMarchId,
-  HUD_MILITARY_TODO_FACET_ATTR,
-  HUD_MILITARY_TODO_SWEEP_CLASS,
-  HUD_MILITARY_TODO_SWEEP_LINE_ROLE,
-  buildHudMilitaryTodoSweepCounts,
-  hudMilitaryTodoFacetForToolbarAction,
-  hudMilitaryTodoSweepSegments,
-  resolveToolbarPanelFromHudMilitaryTodo,
-  scheduleHudMilitaryTodoPulse,
-  toolbarPanelActionFromHudMilitaryTodo,
-  type HudMilitaryTodoSweepCounts,
-  type HudMilitaryTodoSweepFacet,
-} from "@/net/hudMilitaryTodoSweep";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
 import { syncToolbarAriaExpanded } from "@/ui/toolbarAriaExpanded";
 import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
@@ -308,45 +225,9 @@ import {
 import {
   createMinimapViewportIntelSyncTimers,
   scrollIntelListToVisibleMarch,
+  syncMinimapViewportToIntelRow,
   type MinimapViewportIntelSyncTimers,
 } from "@/net/minimapViewportIntelSync";
-import {
-  createMinimapViewportIntelScrollResidualTimers,
-  type MinimapViewportIntelScrollResidualTimers,
-} from "@/net/minimapViewportIntelScrollResidual";
-import {
-  createMinimapViewportIntelScrollResidualDeepTimers,
-  type MinimapViewportIntelScrollResidualDeepTimers,
-} from "@/net/minimapViewportIntelScrollResidualDeep";
-import {
-  createMinimapViewportIntelScrollResidualDeeperTimers,
-  type MinimapViewportIntelScrollResidualDeeperTimers,
-} from "@/net/minimapViewportIntelScrollResidualDeeper";
-import {
-  createMinimapViewportIntelScrollResidualDeepestTimers,
-  type MinimapViewportIntelScrollResidualDeepestTimers,
-} from "@/net/minimapViewportIntelScrollResidualDeepest";
-import {
-  createMinimapViewportIntelScrollResidualDeepestDeeperTimers,
-  type MinimapViewportIntelScrollResidualDeepestDeeperTimers,
-} from "@/net/minimapViewportIntelScrollResidualDeepestDeeper";
-import {
-  createMinimapViewportIntelScrollResidualDeepestDeepestDeeperTimers,
-  type MinimapViewportIntelScrollResidualDeepestDeepestDeeperTimers,
-} from "@/net/minimapViewportIntelScrollResidualDeepestDeepestDeeper";
-import {
-  createMinimapViewportIntelScrollResidualDeepestDeepestDeepestTimers,
-  type MinimapViewportIntelScrollResidualDeepestDeepestDeepestTimers,
-} from "@/net/minimapViewportIntelScrollResidualDeepestDeepestDeepest";
-import {
-  createMinimapViewportIntelScrollResidualDeepestDeepestDeepestDeeperTimers,
-  type MinimapViewportIntelScrollResidualDeepestDeepestDeepestDeeperTimers,
-} from "@/net/minimapViewportIntelScrollResidualDeepestDeepestDeepestDeeper";
-import {
-  createMinimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeperTimers,
-  syncMinimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeper,
-  type MinimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeperTimers,
-} from "@/net/minimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeper";
 import {
   applyMinimapFocusPulseClass,
   highlightMinimapMarchEnd,
@@ -376,6 +257,7 @@ import {
   layoutPointInMinimapToggle,
   minimapLayoutToWorld,
   formatMinimapCollapsedSelectedMarchStatus,
+  marchShowsDestOnMinimap,
   readMinimapCollapsedFromSession,
   writeMinimapCollapsedToSession,
   type MinimapView,
@@ -410,15 +292,6 @@ import {
   formatDomesticQueueCompleteSlotMarginLabel,
   scheduleDomesticQueueCompleteSlotMargin,
 } from "@/net/domesticQueueCompleteSlotMargin";
-import { scheduleDomesticQueueCompleteFocusResidualDeepRing } from "@/net/domesticQueueCompleteFocusResidualDeepRing";
-import { scheduleDomesticQueueCompleteFocusResidualDeeperRing } from "@/net/domesticQueueCompleteFocusResidualDeeperRing";
-import { scheduleDomesticQueueCompleteFocusResidualDeepestRing } from "@/net/domesticQueueCompleteFocusResidualDeepestRing";
-import { scheduleDomesticQueueCompleteFocusResidualDeepestDeeperRing } from "@/net/domesticQueueCompleteFocusResidualDeepestDeeperRing";
-import { scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeeperRing } from "@/net/domesticQueueCompleteFocusResidualDeepestDeepestDeeperRing";
-import { scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeepestRing } from "@/net/domesticQueueCompleteFocusResidualDeepestDeepestDeepestRing";
-import { scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeepestDeeperRing } from "@/net/domesticQueueCompleteFocusResidualDeepestDeepestDeepestDeeperRing";
-import { scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeepestDeepestRing } from "@/net/domesticQueueCompleteFocusResidualDeepestDeepestDeepestDeepestRing";
-import { scheduleDomesticQueueCompleteFocusResidualRing } from "@/net/domesticQueueCompleteFocusResidualRing";
 import {
   collectCitySlotKeysForQueueCompleteFocus,
   scheduleCitySlotCompleteFocusRing,
@@ -494,7 +367,6 @@ export class MainCityScene implements Scene {
   private assets!: AssetLoader;
   private getViewport!: () => LayoutViewport;
   private canvas!: HTMLCanvasElement;
-  private hitDebug = "";
   private hudRefreshAccum = 0;
   private cityStateFetch!: CityStateFetch;
   private cityStatePoll!: CityStatePoll;
@@ -506,11 +378,8 @@ export class MainCityScene implements Scene {
   private lastToolbarFocus: HTMLElement | null = null;
   private lastCenterTodoScrollKey: string | null = null;
   /** CLIENT-209：HUD 中心深链与邮件 tab 扫读共用刷新戳记。 */
-  private hudCenterPanelDeepLinkRefreshStamp = 0;
-  private mailTabHudSyncPulsePending = false;
   private marchArrivalPoll!: MarchArrivalPoll;
   private battleReportUnread = new BattleReportUnreadSession();
-  private marchEndReportHint = new MarchEndBattleReportHint();
   private marchArrivalHudReminder: MarchArrivalReminder | null = null;
   private walletGainBrief: string | null = null;
   private walletGainUntilMs = 0;
@@ -536,24 +405,6 @@ export class MainCityScene implements Scene {
     createMinimapIntelSyncTimers();
   private readonly minimapViewportIntelSyncTimers: MinimapViewportIntelSyncTimers =
     createMinimapViewportIntelSyncTimers();
-  private readonly minimapViewportIntelScrollResidualTimers: MinimapViewportIntelScrollResidualTimers =
-    createMinimapViewportIntelScrollResidualTimers();
-  private readonly minimapViewportIntelScrollResidualDeepTimers: MinimapViewportIntelScrollResidualDeepTimers =
-    createMinimapViewportIntelScrollResidualDeepTimers();
-  private readonly minimapViewportIntelScrollResidualDeeperTimers: MinimapViewportIntelScrollResidualDeeperTimers =
-    createMinimapViewportIntelScrollResidualDeeperTimers();
-  private readonly minimapViewportIntelScrollResidualDeepestTimers: MinimapViewportIntelScrollResidualDeepestTimers =
-    createMinimapViewportIntelScrollResidualDeepestTimers();
-  private readonly minimapViewportIntelScrollResidualDeepestDeeperTimers: MinimapViewportIntelScrollResidualDeepestDeeperTimers =
-    createMinimapViewportIntelScrollResidualDeepestDeeperTimers();
-  private readonly minimapViewportIntelScrollResidualDeepestDeepestDeeperTimers: MinimapViewportIntelScrollResidualDeepestDeepestDeeperTimers =
-    createMinimapViewportIntelScrollResidualDeepestDeepestDeeperTimers();
-  private readonly minimapViewportIntelScrollResidualDeepestDeepestDeepestTimers: MinimapViewportIntelScrollResidualDeepestDeepestDeepestTimers =
-    createMinimapViewportIntelScrollResidualDeepestDeepestDeepestTimers();
-  private readonly minimapViewportIntelScrollResidualDeepestDeepestDeepestDeeperTimers: MinimapViewportIntelScrollResidualDeepestDeepestDeepestDeeperTimers =
-    createMinimapViewportIntelScrollResidualDeepestDeepestDeepestDeeperTimers();
-  private readonly minimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeperTimers: MinimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeperTimers =
-    createMinimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeperTimers();
   private minimapViewportGestureActive = false;
   /** 与军情列表 {@link MarchListPanel} 共用的行军 ETA 时钟（毫秒）。 */
   private marchClockMs = Date.now();
@@ -570,7 +421,6 @@ export class MainCityScene implements Scene {
     const currentScene = () => this.sceneActive && lifecycle === this.marchSnapshotGeneration;
     this.chatUnreadTracker = new ChatUnreadTracker();
     this.battleReportUnread = new BattleReportUnreadSession();
-    this.marchEndReportHint = new MarchEndBattleReportHint();
     this.lastMarch = this.marchQueueBannerTarget = this.marchArrivalHudReminder = null;
     this.recruitQueueHighlightId = this.intelRemarchTroopsLine = this.activeDomesticSlotKey = null;
     this.lastToolbarFocus = null;
@@ -580,9 +430,9 @@ export class MainCityScene implements Scene {
     this.minimapView = { ...DEFAULT_MINIMAP_VIEW };
     this.minimapPanPointerId = this.minimapPanLastLayout = this.minimapPanStartLayout = null;
     this.walletGainBrief = null;
-    this.walletGainUntilMs = this.minimapFocusPulseUntilMs = this.hudCenterPanelDeepLinkRefreshStamp = 0;
-    this.status = this.hitDebug = "";
-    this.mailTabHudSyncPulsePending = this.minimapViewportGestureActive = false;
+    this.walletGainUntilMs = this.minimapFocusPulseUntilMs = 0;
+    this.status = "";
+    this.minimapViewportGestureActive = false;
     this.returnToServers = () => {
       if (!this.sceneActive || this.returningToServers || lifecycle !== this.marchSnapshotGeneration) return;
       if (!window.confirm("返回选服会断开当前连接。已提交的操作不会撤销；尚未收到结果的操作可能已成功，请重新进入后核实，勿重复提交。是否返回选服？")) return;
@@ -717,15 +567,6 @@ export class MainCityScene implements Scene {
           <label>目标 Y <input type="number" data-field="to-y" value="${DEFAULT_MARCH_TARGET.y}" /></label>
         </div>
         <p class="march-intel-last-troops hidden" data-role="march-intel-last-troops"></p>
-        <p class="march-intel-remarch-residual-summary hidden" data-role="march-intel-remarch-residual-summary" aria-live="polite"></p>
-        <p class="march-intel-remarch-residual-deep-summary hidden" data-role="march-intel-remarch-residual-deep-summary" aria-live="polite"></p>
-        <p class="march-intel-remarch-residual-deeper-summary hidden" data-role="march-intel-remarch-residual-deeper-summary" aria-live="polite"></p>
-        <p class="march-intel-remarch-residual-deepest-summary hidden" data-role="march-intel-remarch-residual-deepest-summary" aria-live="polite"></p>
-        <p class="march-intel-remarch-residual-deepest-deeper-summary hidden" data-role="march-intel-remarch-residual-deepest-deeper-summary" aria-live="polite"></p>
-        <p class="march-intel-remarch-residual-deepest-deepest-deeper-summary hidden" data-role="march-intel-remarch-residual-deepest-deepest-deeper-summary" aria-live="polite"></p>
-        <p class="march-intel-remarch-residual-deepest-deepest-deepest-summary hidden" data-role="march-intel-remarch-residual-deepest-deepest-deepest-summary" aria-live="polite"></p>
-        <p class="march-intel-remarch-residual-deepest-deepest-deepest-deeper-summary hidden" data-role="march-intel-remarch-residual-deepest-deepest-deepest-deeper-summary" aria-live="polite"></p>
-        <p class="march-intel-remarch-residual-deepest-deepest-deepest-deepest-deeper-summary hidden" data-role="march-intel-remarch-residual-deepest-deepest-deepest-deepest-deeper-summary" aria-live="polite"></p>
         <button type="button" data-action="clear-march-target">清除出征目标记忆</button>
         <label>带队将领
           <select data-field="march-hero" aria-label="出征带队将领"></select>
@@ -740,19 +581,6 @@ export class MainCityScene implements Scene {
         <p class="march-form-summary" data-role="march-form-summary" aria-live="polite"></p>
         <p class="march-form-summary-warn hidden" data-role="march-form-summary-warn" role="status"></p>
         <p class="march-form-error hidden" data-role="march-form-error" role="alert"></p>
-        <p class="march-form-validation-sweep-line" data-role="march-form-validation-sweep-line" aria-live="polite"></p>
-        <p class="march-form-troop-margin-residual-line hidden" data-role="march-form-troop-margin-residual-line" aria-live="polite">
-          <span data-role="march-form-troop-margin-residual-primary"></span>
-          <span class="march-form-troop-margin-residual-subline" data-role="march-form-troop-margin-residual-subline"></span>
-          <span class="march-form-troop-margin-residual-deep-line hidden" data-role="march-form-troop-margin-residual-deep-line"></span>
-          <span class="march-form-troop-margin-residual-deeper-line hidden" data-role="march-form-troop-margin-residual-deeper-line"></span>
-          <span class="march-form-troop-margin-residual-deepest-line hidden" data-role="march-form-troop-margin-residual-deepest-line"></span>
-          <span class="march-form-troop-margin-residual-deepest-deeper-line hidden" data-role="march-form-troop-margin-residual-deepest-deeper-line"></span>
-          <span class="march-form-troop-margin-residual-deepest-deepest-deeper-line hidden" data-role="march-form-troop-margin-residual-deepest-deepest-deeper-line"></span>
-          <span class="march-form-troop-margin-residual-deepest-deepest-deepest-line hidden" data-role="march-form-troop-margin-residual-deepest-deepest-deepest-line"></span>
-          <span class="march-form-troop-margin-residual-deepest-deepest-deepest-deeper-line hidden" data-role="march-form-troop-margin-residual-deepest-deepest-deepest-deeper-line"></span>
-          <span class="march-form-troop-margin-residual-deepest-deepest-deepest-deepest-deeper-line hidden" data-role="march-form-troop-margin-residual-deepest-deepest-deepest-deepest-deeper-line"></span>
-        </p>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
         <p class="military-march" data-role="march"></p>
       </div>
@@ -990,7 +818,6 @@ export class MainCityScene implements Scene {
         onSelectionChange: (march) => {
           if (!currentScene()) return;
           this.syncMilitaryPanel();
-          this.world?.syncIntelEtaResidualHighlightFromMarch(march);
           highlightMarchFormCoordsFromIntel(this.militaryPanel, march, {
             timers: this.marchFormCoordSyncTimers,
           });
@@ -1067,7 +894,6 @@ export class MainCityScene implements Scene {
         onGridSelectionChange: (grid) => {
           if (!currentScene()) return;
           this.marchList.syncWorldGridSelection(grid);
-          this.world?.syncIntelEtaResidualHighlightFromMarch(this.marchList.getSelectedMarch());
           if (grid) {
             this.focusMinimapOnWorldGrid(grid.x, grid.y);
           } else {
@@ -1163,78 +989,6 @@ export class MainCityScene implements Scene {
         this.applyQueueCompleteFocusRing(events);
       },
       (open) => this.onQueuePanelVisibilityChange(open),
-      (slotKey) => {
-        if (!currentScene()) return;
-        scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
-        pulseDomesticSlotCompleteMarginResidualRing(
-          this.slotUpgradeOverlay?.getOverlayLayer(),
-          slotKey,
-        );
-      },
-      (slotKey) => {
-        if (!currentScene()) return;
-        scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
-        pulseDomesticSlotPreviewCrossLinkResidualDeepRing(
-          this.slotUpgradeOverlay?.getOverlayLayer(),
-          slotKey,
-        );
-      },
-      (slotKey) => {
-        if (!currentScene()) return;
-        scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
-        pulseDomesticSlotPreviewCrossLinkResidualDeeperRing(
-          this.slotUpgradeOverlay?.getOverlayLayer(),
-          slotKey,
-        );
-      },
-      (slotKey) => {
-        if (!currentScene()) return;
-        scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
-        pulseDomesticSlotPreviewCrossLinkResidualDeepestRing(
-          this.slotUpgradeOverlay?.getOverlayLayer(),
-          slotKey,
-        );
-      },
-      (slotKey) => {
-        if (!currentScene()) return;
-        scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
-        pulseDomesticSlotPreviewCrossLinkResidualDeepestDeeperRing(
-          this.slotUpgradeOverlay?.getOverlayLayer(),
-          slotKey,
-        );
-      },
-      (slotKey) => {
-        if (!currentScene()) return;
-        scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
-        pulseDomesticSlotPreviewCrossLinkResidualDeepestDeepestDeeperRing(
-          this.slotUpgradeOverlay?.getOverlayLayer(),
-          slotKey,
-        );
-      },
-      (slotKey) => {
-        if (!currentScene()) return;
-        scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
-        pulseDomesticSlotPreviewCrossLinkResidualDeepestDeepestDeepestRing(
-          this.slotUpgradeOverlay?.getOverlayLayer(),
-          slotKey,
-        );
-      },
-      (slotKey) => {
-        if (!currentScene()) return;
-        scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
-        pulseDomesticSlotPreviewCrossLinkResidualDeepestDeepestDeepestDeeperRing(
-          this.slotUpgradeOverlay?.getOverlayLayer(),
-          slotKey,
-        );
-      },
-      (slotKey) => {
-        if (!currentScene()) return;
-        scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
-        pulseDomesticSlotPreviewCrossLinkResidualDeepestDeepestDeepestDeepestDeeperRing(
-          this.slotUpgradeOverlay?.getOverlayLayer(),
-          slotKey,
-        );
-      },
     );
     this.queuePanels.attach();
     this.buildingPanel = new MainCityBuildingPanel(
@@ -1268,14 +1022,9 @@ export class MainCityScene implements Scene {
     skinQueuePanel(this.queuePanels.getRoot(), this.assets, 520, 320);
     skinMailPanel(this.heroMail.getMailRoot(), this.assets, 520, 320);
     skinDailyPanel(this.dailyQuest.getRoot(), this.assets, 520, 320);
-    registerArtFilter008EvidenceHooks(this.assets);
     remountPanelFilterChips(this.heroMail.getMailRoot(), this.assets);
     remountPanelFilterChips(this.dailyQuest.getRoot(), this.assets);
     remountPanelFilterChips(this.battleReports.getRoot(), this.assets);
-    mountFilterListPanelSkins(this.heroMail.getMailRoot(), this.assets);
-    mountFilterListPanelSkins(this.dailyQuest.getRoot(), this.assets);
-    mountFilterListPanelSkins(this.marchList.getRoot(), this.assets);
-    mountFilterListPanelSkins(this.battleReports.getRoot(), this.assets);
     skinWorldPanel(this.world.getRoot(), this.assets, 520, 320);
     skinRankPanel(this.social.getRankRoot(), this.assets, 520, 320);
     skinGuildPanel(this.social.getGuildRoot(), this.assets, 520, 320);
@@ -1485,7 +1234,6 @@ export class MainCityScene implements Scene {
         );
         if (social.chat > 0) {
           if (!this.social.isChatOpen()) this.social.toggleChat();
-          this.pulseToolbarPanelDeepLink("social");
           return;
         }
       }
@@ -1510,7 +1258,6 @@ export class MainCityScene implements Scene {
               unclaimedCount: target.unclaimedCount,
             },
           });
-          this.pulseToolbarPanelDeepLink("mail");
           return;
         }
         if (target.kind === "daily") {
@@ -1519,13 +1266,11 @@ export class MainCityScene implements Scene {
             claimableCount: target.claimableCount,
           });
           this.updateDailyToolbarBadge(0);
-          this.pulseToolbarPanelDeepLink("daily");
           return;
         }
         if (target.kind === "queue-building") {
           this.queuePanels.openFromTodoBadge(target.slotKey);
           this.updateQueueToolbarBadge(0);
-          this.pulseToolbarPanelDeepLink("queue");
           return;
         }
         if (target.kind === "battle-report") {
@@ -1533,15 +1278,8 @@ export class MainCityScene implements Scene {
           void this.battleReports
             .openPanelWithDeepLink(target.reportId)
             .then(() => this.renderHud());
-          this.pulseHudMilitaryTodoForFacet("reports");
           return;
         }
-      }
-      const militaryCounts = this.hudMilitaryTodoSweepCounts();
-      const militaryFacet = hudMilitaryTodoFacetForToolbarAction(action ?? "", militaryCounts);
-      if (militaryFacet) {
-        this.openHudMilitaryTodoDeepLink(militaryFacet);
-        return;
       }
     }
     if (action === "upgrade-farm") {
@@ -1584,8 +1322,7 @@ export class MainCityScene implements Scene {
     if (action === "toggle-hero") this.heroMail.toggleHero();
     if (action === "toggle-mail") {
       this.heroMail.toggleMail();
-      if (this.heroMail.isMailOpen()) this.bumpMailTabHudSyncFromPoll(false);
-      else void this.hudTodoBadgePoll.pollOnce();
+      if (!this.heroMail.isMailOpen()) void this.hudTodoBadgePoll.pollOnce();
     }
     if (action === "toggle-world") this.world.toggle();
     if (action === "toggle-queue") {
@@ -1638,15 +1375,6 @@ export class MainCityScene implements Scene {
       clearMarchTargetFromForm(this.militaryPanel);
       this.clearMinimapWorldGridFocus();
       this.intelRemarchTroopsLine = null;
-      clearMarchIntelRemarchResidualSummary(this.militaryPanel);
-      clearMarchIntelRemarchResidualDeepSummary(this.militaryPanel);
-      clearMarchIntelRemarchResidualDeeperSummary(this.militaryPanel);
-      clearMarchIntelRemarchResidualDeepestSummary(this.militaryPanel);
-      clearMarchIntelRemarchResidualDeepestDeeperSummary(this.militaryPanel);
-      clearMarchIntelRemarchResidualDeepestDeepestDeeperSummary(this.militaryPanel);
-      clearMarchIntelRemarchResidualDeepestDeepestDeepestSummary(this.militaryPanel);
-      clearMarchIntelRemarchResidualDeepestDeepestDeepestDeeperSummary(this.militaryPanel);
-      clearMarchIntelRemarchResidualDeepestDeepestDeepestDeepestDeeperSummary(this.militaryPanel);
       this.marchList.clearRecentMarchHighlight();
       this.status = "已清除出征目标记忆，表单恢复默认坐标";
       this.renderHud();
@@ -1663,15 +1391,6 @@ export class MainCityScene implements Scene {
       if (!this.suppressMarchTargetHighlightClear) {
         this.marchList.clearRecentMarchHighlight();
         this.intelRemarchTroopsLine = null;
-        clearMarchIntelRemarchResidualSummary(this.militaryPanel);
-        clearMarchIntelRemarchResidualDeepSummary(this.militaryPanel);
-        clearMarchIntelRemarchResidualDeeperSummary(this.militaryPanel);
-      clearMarchIntelRemarchResidualDeepestSummary(this.militaryPanel);
-      clearMarchIntelRemarchResidualDeepestDeeperSummary(this.militaryPanel);
-      clearMarchIntelRemarchResidualDeepestDeepestDeeperSummary(this.militaryPanel);
-      clearMarchIntelRemarchResidualDeepestDeepestDeepestSummary(this.militaryPanel);
-      clearMarchIntelRemarchResidualDeepestDeepestDeepestDeeperSummary(this.militaryPanel);
-      clearMarchIntelRemarchResidualDeepestDeepestDeepestDeepestDeeperSummary(this.militaryPanel);
       }
       syncMarchTargetSessionFromForm(this.militaryPanel);
       this.syncMinimapFocusFromMarchTarget();
@@ -1785,7 +1504,8 @@ export class MainCityScene implements Scene {
   }
 
   private openMilitaryFromIntelRemarch(march: MarchSummary): void {
-    if (!buildMarchIntelRemarchPrefill(march)) {
+    const prefill = buildMarchIntelRemarchPrefill(march);
+    if (!prefill) {
       this.status = "该行缺少有效目的格点，无法再出征";
       this.renderHud();
       return;
@@ -1793,11 +1513,11 @@ export class MainCityScene implements Scene {
     this.openMilitaryPanel();
     resetCenterPanelViewportScroll(this.militaryPanel);
     this.suppressMarchTargetHighlightClear = true;
-    const prefill = prefillMarchFormFromIntelResidualDeepestDeepestDeepestDeepestDeeper(
+    applyMarchIntelRemarchPrefillWithFeedback(
       this.militaryPanel,
-      march,
+      prefill,
       this.marchFormFeedbackContext(),
-    )!;
+    );
     this.suppressMarchTargetHighlightClear = false;
     this.intelRemarchTroopsLine = prefill.lastTroopsSummary;
     setMarchTargetFieldHighlight(this.militaryPanel, false);
@@ -1916,22 +1636,6 @@ export class MainCityScene implements Scene {
       syncMilitaryRecruitViewQueueLink(this.militaryPanel, recruitSnapshot, highlightId);
     }
     syncMarchFormInlineFeedback(this.militaryPanel, this.marchFormFeedbackContext());
-    syncMarchFormValidationSweepLine(
-      this.militaryPanel,
-      formatMarchFormValidationSweepLine(marchValidated, troopReserve, {
-        toXRaw: marchSnap.toXRaw,
-        toYRaw: marchSnap.toYRaw,
-      }),
-    );
-    const marchSummary = formatMarchFormSummary(marchSnap, this.marchClockMs);
-    syncMarchFormTroopMarginResidualDeepestDeepestDeepestDeepestDeeperLine(
-      this.militaryPanel,
-      formatMarchFormTroopMarginResidualDeepestDeepestDeepestDeepestDeeperLine(
-        troopReserve,
-        marchSummary,
-        this.session?.wallet,
-      ),
-    );
     syncMarchQueueBanner(this.militaryPanel, this.marchQueueBannerTarget);
     const queueId = this.marchQueueBannerTarget?.march_id ?? null;
     syncMarchFormReadonlyStripFromInput(this.militaryPanel, {
@@ -2021,30 +1725,14 @@ export class MainCityScene implements Scene {
 
   private syncMinimapViewportForIntelSelection(march: MarchSummary): void {
     const bounds = this.currentMinimapWorldBounds();
-    const synced = syncMinimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeper(
+    const synced = syncMinimapViewportToIntelRow(
       {
         march,
         bounds,
         currentView: this.minimapView,
         layoutFrame: this.layoutFrame,
-        intelRoot: this.marchList.getRoot(),
       },
-      {
-        viewportTimers: this.minimapViewportIntelSyncTimers,
-        residualTimers: this.minimapViewportIntelScrollResidualTimers,
-        residualDeepTimers: this.minimapViewportIntelScrollResidualDeepTimers,
-        residualDeeperTimers: this.minimapViewportIntelScrollResidualDeeperTimers,
-        residualDeepestTimers: this.minimapViewportIntelScrollResidualDeepestTimers,
-        residualDeepestDeeperTimers: this.minimapViewportIntelScrollResidualDeepestDeeperTimers,
-        residualDeepestDeepestDeeperTimers:
-          this.minimapViewportIntelScrollResidualDeepestDeepestDeeperTimers,
-        residualDeepestDeepestDeepestTimers:
-          this.minimapViewportIntelScrollResidualDeepestDeepestDeepestTimers,
-        residualDeepestDeepestDeepestDeeperTimers:
-          this.minimapViewportIntelScrollResidualDeepestDeepestDeepestDeeperTimers,
-        residualDeepestDeepestDeepestDeepestDeeperTimers:
-          this.minimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeperTimers,
-      },
+      { timers: this.minimapViewportIntelSyncTimers },
     );
     if (synced.applied) {
       this.minimapView = synced.view;
@@ -2321,7 +2009,6 @@ export class MainCityScene implements Scene {
       .filter((slot) => this.pointInRect(layout, slot.hit));
     const top = hits[0];
     if (!top) return;
-    this.hitDebug = top.slot_key;
     this.activateMainCitySlot(top.slot_key);
   }
 
@@ -2729,15 +2416,6 @@ export class MainCityScene implements Scene {
     const buildings = this.session?.buildings;
     for (const key of slotKeys) {
       scheduleCitySlotCompleteFocusRing(layer, key);
-      scheduleDomesticQueueCompleteFocusResidualRing(layer, key);
-      scheduleDomesticQueueCompleteFocusResidualDeepRing(layer, key);
-      scheduleDomesticQueueCompleteFocusResidualDeeperRing(layer, key);
-      scheduleDomesticQueueCompleteFocusResidualDeepestRing(layer, key);
-      scheduleDomesticQueueCompleteFocusResidualDeepestDeeperRing(layer, key);
-      scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeeperRing(layer, key);
-      scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeepestRing(layer, key);
-      scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeepestDeeperRing(layer, key);
-      scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeepestDeepestRing(layer, key);
       const label = formatDomesticQueueCompleteSlotMarginLabel(
         buildingBySlot(buildings, key),
         nowMs,
@@ -2755,15 +2433,12 @@ export class MainCityScene implements Scene {
     }
     const p = s?.player;
     const troopHint = s?.garrisonStatus === "ready" ? formatTroopStacks(s.cityTroops) : "待同步";
-    const dprTag = `art ${this.assets.getTextureScale()}× @${this.assets.getDevicePixelRatio().toFixed(1)}dpr`;
     const groups: string[] = [
       `${s?.cityName ?? "主城"} · ${p?.display_name ?? "君主"} Lv${p?.level ?? 1}`,
     ];
     if (this.walletGainBrief) groups.push(this.walletGainBrief);
     groups.push(formatKeyBuildingHudLine(s?.buildings, SLOT_LABEL, ["hall", "farm"], now));
     if (troopHint !== "无") groups.push(`兵 ${troopHint}`);
-    if (this.hitDebug) groups.push(`点选 ${SLOT_LABEL[this.hitDebug] ?? this.hitDebug}`);
-    groups.push(dprTag);
     if (this.status) groups.push(this.status);
 
     const resourceStripExpanded = readHudResourceStripExpanded(this.hud);
@@ -2771,8 +2446,6 @@ export class MainCityScene implements Scene {
     appendHudResourceStrip(this.hud, s?.wallet, this.assets, s?.productionRates);
     restoreHudResourceStripExpanded(this.hud, resourceStripExpanded);
     this.appendHudCenterTodoBadge();
-    this.appendHudCenterPanelDeepLinkLine();
-    this.appendHudMilitaryTodoSweepLine();
     for (const text of groups) {
       const span = document.createElement("span");
       span.className =
@@ -2841,41 +2514,11 @@ export class MainCityScene implements Scene {
     if (!reminders.length) return;
     const last = reminders[reminders.length - 1]!;
     this.marchArrivalHudReminder = last;
-    if (last.reportId) {
-      this.marchEndReportHint.setReportId(last.reportId);
-    } else {
-      void this.seedMarchEndBattleReportHint();
-    }
     this.renderHud();
     void this.hudTodoBadgePoll.pollOnce();
   }
 
   private onHudClick(ev: Event): void {
-    const militaryFacetBtn = (ev.target as HTMLElement).closest(
-      `[${HUD_MILITARY_TODO_FACET_ATTR}]`,
-    );
-    if (militaryFacetBtn instanceof HTMLElement) {
-      const militaryFacet = militaryFacetBtn.getAttribute(
-        HUD_MILITARY_TODO_FACET_ATTR,
-      ) as HudMilitaryTodoSweepFacet | null;
-      if (militaryFacet) {
-        this.openHudMilitaryTodoDeepLink(militaryFacet);
-        return;
-      }
-    }
-    const facetBtn = (ev.target as HTMLElement).closest(
-      `[${HUD_CENTER_PANEL_DEEPLINK_FACET_ATTR}], [${HUD_TODO_MERGED_SWEEP_FACET_ATTR}]`,
-    );
-    if (facetBtn instanceof HTMLElement) {
-      const facet = (facetBtn.getAttribute(HUD_TODO_MERGED_SWEEP_FACET_ATTR) ??
-        facetBtn.getAttribute(HUD_CENTER_PANEL_DEEPLINK_FACET_ATTR)) as
-        | HudCenterPanelDeepLinkFacet
-        | null;
-      if (facet) {
-        this.openHudCenterPanelDeepLink(facet);
-        return;
-      }
-    }
     const todoBtn = (ev.target as HTMLElement).closest('[data-action="open-hud-center-todo"]');
     if (todoBtn) {
       this.openHudCenterTodoDeepLink();
@@ -2883,10 +2526,9 @@ export class MainCityScene implements Scene {
     }
     const el = (ev.target as HTMLElement).closest('[data-action="open-march-reports"]');
     if (!el) return;
-    const reportHint =
-      this.marchArrivalHudReminder?.reportId ?? this.marchEndReportHint.peek();
+    const reportHint = this.marchArrivalHudReminder?.reportId;
     this.marchArrivalHudReminder = null;
-    const hint = reportHint ?? this.marchEndReportHint.consume();
+    const hint = reportHint;
     void this.battleReports.openPanelWithDeepLink(hint).then(() => this.renderHud());
     this.renderHud();
   }
@@ -2898,209 +2540,6 @@ export class MainCityScene implements Scene {
       dailyRows: snap.dailyChainRows,
       buildCompleteCount: this.buildCompleteTodos.pendingCount(),
     });
-  }
-
-  private hudTodoMergedSweepCounts(): HudTodoMergedSweepCounts {
-    const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
-    const social = hudTodoSocialBadgesFromChatSummary(
-      this.chatUnreadTracker.getSummary(this.social?.getGuildId() ?? null),
-    );
-    return {
-      mailClaimable: snap.mailClaimable,
-      dailyClaimable: snap.dailyClaimable,
-      queueBuilding: snap.queueBuilding,
-      chatUnread: social.chat,
-    };
-  }
-
-  private hudMilitaryTodoSweepCounts(): HudMilitaryTodoSweepCounts {
-    const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
-    const marchSnap = readMarchFormSnapshot(this.militaryPanel, {
-      cityX: this.session?.cityX,
-      cityY: this.session?.cityY,
-      wallet: this.session?.wallet,
-    });
-    const troopReserve = buildMarchFormTroopReserveLine(
-      marchSnap.marchCountRaw,
-      readyGarrison(this.session),
-      marchSnap.unitCfgId,
-    );
-    const marchValidated = validateMarchForm({
-      toXRaw: marchSnap.toXRaw,
-      toYRaw: marchSnap.toYRaw,
-      marchCountRaw: marchSnap.marchCountRaw,
-      unitCfgId: marchSnap.unitCfgId,
-      heroIdRaw: marchSnap.heroIdRaw,
-      ownedHeroes: this.marchFormHeroes,
-      localBusyHeroIds: this.marchLocalBusyHeroIds,
-      cityX: this.session?.cityX,
-      cityY: this.session?.cityY,
-      cityTroops: readyGarrison(this.session),
-    });
-    return buildHudMilitaryTodoSweepCounts({
-      marches: this.minimapMarches,
-      battleReportUnread: snap.battleReportUnread,
-      marchSubmitState: this.marchSubmitState,
-      marchFormValidation: marchValidated,
-      troopReserve,
-    });
-  }
-
-  private centerPanelDeepLinkCounts(): HudCenterPanelDeepLinkCounts {
-    return this.hudTodoMergedSweepCounts();
-  }
-
-  private appendHudCenterPanelDeepLinkLine(): void {
-    const counts = this.centerPanelDeepLinkCounts();
-    const segments = hudCenterPanelDeepLinkSegments(counts);
-    if (!segments.length) return;
-    const wrap = document.createElement("span");
-    wrap.className = "hud-center-panel-deeplink hud-todo-merged-sweep";
-    wrap.setAttribute("data-role", HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE);
-    if (this.hudCenterPanelDeepLinkRefreshStamp > 0) {
-      setHudCenterPanelDeepLinkRefreshStamp(wrap, this.hudCenterPanelDeepLinkRefreshStamp);
-      if (this.mailTabHudSyncPulsePending) {
-        scheduleMailTabHudSyncPulse(wrap);
-        this.mailTabHudSyncPulsePending = false;
-      }
-    }
-    segments.forEach((seg, index) => {
-      if (index > 0) {
-        const sep = document.createElement("span");
-        sep.className = "hud-center-panel-deeplink-sep";
-        sep.textContent = " · ";
-        sep.setAttribute("aria-hidden", "true");
-        wrap.appendChild(sep);
-      }
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "hud-center-panel-deeplink-seg";
-      btn.setAttribute(HUD_CENTER_PANEL_DEEPLINK_FACET_ATTR, seg.facet);
-      btn.setAttribute(HUD_TODO_MERGED_SWEEP_FACET_ATTR, seg.facet);
-      btn.setAttribute("title", `打开${seg.label}`);
-      btn.setAttribute("aria-label", `HUD 深链：${seg.label}`);
-      btn.textContent = seg.label;
-      wrap.appendChild(btn);
-    });
-    this.hud.appendChild(wrap);
-  }
-
-  private appendHudMilitaryTodoSweepLine(): void {
-    const counts = this.hudMilitaryTodoSweepCounts();
-    const segments = hudMilitaryTodoSweepSegments(counts);
-    if (!segments.length) return;
-    const wrap = document.createElement("span");
-    wrap.className = `hud-center-panel-deeplink ${HUD_MILITARY_TODO_SWEEP_CLASS}`;
-    wrap.setAttribute("data-role", HUD_MILITARY_TODO_SWEEP_LINE_ROLE);
-    segments.forEach((seg, index) => {
-      if (index > 0) {
-        const sep = document.createElement("span");
-        sep.className = "hud-center-panel-deeplink-sep";
-        sep.textContent = " · ";
-        sep.setAttribute("aria-hidden", "true");
-        wrap.appendChild(sep);
-      }
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "hud-center-panel-deeplink-seg";
-      btn.setAttribute(HUD_MILITARY_TODO_FACET_ATTR, seg.facet);
-      btn.setAttribute("title", `打开${seg.label}`);
-      btn.setAttribute("aria-label", `HUD 军事待办：${seg.label}`);
-      btn.textContent = seg.label;
-      wrap.appendChild(btn);
-    });
-    this.hud.appendChild(wrap);
-  }
-
-  private pulseCenterPanelToolbarTab(tab: CenterPanelTabFromHudTodo | null): void {
-    if (!tab) return;
-    const action = centerPanelTabToolbarAction(tab);
-    const btn = this.toolbarTrigger(action);
-    scheduleCenterPanelTabPulse(btn);
-  }
-
-  private pulseToolbarPanelDeepLink(panel: HudTodoMergedSweepFacet): void {
-    const counts = this.hudTodoMergedSweepCounts();
-    if (!resolveToolbarPanelFromHudTodo(panel, counts)) return;
-    const action = toolbarPanelActionFromHudTodo(panel);
-    pulseHudTodoToolbarDeepLinkResidual(this.toolbarTrigger(action));
-  }
-
-  private pulseHudMilitaryTodoForFacet(facet: HudMilitaryTodoSweepFacet): void {
-    const counts = this.hudMilitaryTodoSweepCounts();
-    const panel = resolveToolbarPanelFromHudMilitaryTodo(facet, counts);
-    if (!panel) return;
-    const action = toolbarPanelActionFromHudMilitaryTodo(panel);
-    scheduleHudMilitaryTodoPulse(this.toolbarTrigger(action));
-  }
-
-  private openHudMilitaryTodoDeepLink(facet: HudMilitaryTodoSweepFacet): void {
-    const counts = this.hudMilitaryTodoSweepCounts();
-    const panel = resolveToolbarPanelFromHudMilitaryTodo(facet, counts);
-    if (!panel) return;
-    const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
-    if (panel === "marches") {
-      const marchId = findFirstIntelInProgressMarchId(this.minimapMarches);
-      this.marchList.selectMarchById(marchId > 0 ? marchId : null, { openPanel: true });
-    } else if (panel === "reports") {
-      this.marchArrivalHudReminder = null;
-      void this.battleReports
-        .openPanelWithDeepLink(snap.firstUnreadBattleReportId)
-        .then(() => this.renderHud());
-    } else if (panel === "military") {
-      this.openMilitaryPanel();
-      resetCenterPanelViewportScroll(this.militaryPanel);
-      this.syncMilitaryPanel();
-    }
-    this.pulseHudMilitaryTodoForFacet(facet);
-    this.status = `已打开军事待办（${panel}）`;
-    this.renderHud();
-  }
-
-  private openHudCenterPanelDeepLink(facet: HudCenterPanelDeepLinkFacet): void {
-    const counts = this.centerPanelDeepLinkCounts();
-    const tab = resolveCenterPanelTabFromHudTodo(facet, counts);
-    if (!tab) return;
-    const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
-    if (tab === "mail") {
-      const target = resolveHudTodoOpenTarget("toggle-mail", snap, this.session?.buildings);
-      if (target.kind === "mail") {
-        this.heroMail.openFromTodoBadge(target.mailId, {
-          mailFilter: target.mailFilter,
-          filterTabCounts: {
-            unreadForTab: target.unreadForTab,
-            unclaimedCount: target.unclaimedCount,
-          },
-        });
-      } else {
-        this.heroMail.toggleMail();
-      }
-    } else if (tab === "daily") {
-      const target = resolveHudTodoOpenTarget("toggle-daily", snap, this.session?.buildings);
-      if (target.kind === "daily") {
-        this.dailyQuest.openFromTodoBadge(target.cfgId, {
-          listFilter: target.listFilter,
-          claimableCount: target.claimableCount,
-        });
-        this.updateDailyToolbarBadge(0);
-      } else {
-        this.dailyQuest.toggle();
-      }
-    } else if (tab === "queue") {
-      const target = resolveHudTodoOpenTarget("toggle-queue", snap, this.session?.buildings);
-      if (target.kind === "queue-building") {
-        this.queuePanels.openFromTodoBadge(target.slotKey);
-        this.updateQueueToolbarBadge(0);
-      } else {
-        this.queuePanels.toggle();
-      }
-    } else if (tab === "social" && !this.social.isChatOpen()) {
-      this.social.toggleChat();
-    }
-    this.pulseCenterPanelToolbarTab(tab);
-    this.pulseToolbarPanelDeepLink(tab);
-    this.status = `已打开中心面板（${tab}）`;
-    this.renderHud();
   }
 
   private appendHudCenterTodoBadge(): void {
@@ -3217,18 +2656,6 @@ export class MainCityScene implements Scene {
     this.renderHud();
   }
 
-  private async seedMarchEndBattleReportHint(): Promise<void> {
-    const generation = this.marchSnapshotGeneration;
-    try {
-      const res = (await this.gateway.listBattleReports(10, 0)) as {
-        reports?: { report_id?: number }[];
-      };
-      if (this.sceneActive && generation === this.marchSnapshotGeneration) this.marchEndReportHint.setFromReports(res.reports ?? []);
-    } catch {
-      // 战报尚未落库时深链回退为刷新后选最近一条
-    }
-  }
-
   private applyChatUnreadCounts(): void {
     const summary = this.chatUnreadTracker.getSummary(this.social.getGuildId());
     const social = hudTodoSocialBadgesFromChatSummary(summary);
@@ -3237,34 +2664,12 @@ export class MainCityScene implements Scene {
     this.updateGuildToolbarBadge(social.guild);
   }
 
-  private hudTodoSweepTitleSuffix(): string {
-    const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
-    const line = formatHudTodoSweepLine({
-      mailClaimable: snap.mailClaimable,
-      dailyClaimable: snap.dailyClaimable,
-    });
-    return line ? ` · ${line}` : "";
-  }
-
-  private bumpMailTabHudSyncFromPoll(pulse = true): void {
-    const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
-    this.hudCenterPanelDeepLinkRefreshStamp = Date.now();
-    if (pulse) this.mailTabHudSyncPulsePending = true;
-    this.heroMail?.syncMailTabHudTodoLinkage({
-      dailyRows: snap.dailyChainRows,
-      stamp: this.hudCenterPanelDeepLinkRefreshStamp,
-      pulse,
-    });
-  }
-
   private applyHudTodoBadgeCounts(counts: HudTodoBadgeCounts): void {
-    this.bumpMailTabHudSyncFromPoll(true);
-    const sweepSuffix = this.hudTodoSweepTitleSuffix();
     if (!this.heroMail?.isMailOpen()) {
-      this.updateMailToolbarBadge(counts.mailUnread, sweepSuffix);
+      this.updateMailToolbarBadge(counts.mailUnread);
     }
     if (!this.dailyQuest?.isOpen()) {
-      this.updateDailyToolbarBadge(counts.dailyTodo, sweepSuffix);
+      this.updateDailyToolbarBadge(counts.dailyTodo);
     } else {
       this.dailyQuest.syncBattleReportUnreadBanner();
     }
@@ -3274,12 +2679,36 @@ export class MainCityScene implements Scene {
     if (!this.battleReports?.isOpen()) {
       this.updateReportsToolbarBadge(counts.battleReportUnread);
     }
-    const militaryCounts = this.hudMilitaryTodoSweepCounts();
+    const intelInProgress = this.minimapMarches.filter(marchShowsDestOnMinimap).length;
     if (!this.marchList?.isOpen()) {
-      this.updateMarchesToolbarBadge(militaryCounts.intelInProgress);
+      this.updateMarchesToolbarBadge(intelInProgress);
     }
     if (this.militaryPanel?.classList.contains("hidden")) {
-      this.updateMilitaryToolbarBadge(militaryCounts.marchSubmittable);
+      const marchSnap = readMarchFormSnapshot(this.militaryPanel, {
+        cityX: this.session?.cityX,
+        cityY: this.session?.cityY,
+        wallet: this.session?.wallet,
+      });
+      const troopReserve = buildMarchFormTroopReserveLine(
+        marchSnap.marchCountRaw,
+        readyGarrison(this.session),
+        marchSnap.unitCfgId,
+      );
+      const marchValidated = validateMarchForm({
+        toXRaw: marchSnap.toXRaw,
+        toYRaw: marchSnap.toYRaw,
+        marchCountRaw: marchSnap.marchCountRaw,
+        unitCfgId: marchSnap.unitCfgId,
+        heroIdRaw: marchSnap.heroIdRaw,
+        ownedHeroes: this.marchFormHeroes,
+        localBusyHeroIds: this.marchLocalBusyHeroIds,
+        cityX: this.session?.cityX,
+        cityY: this.session?.cityY,
+        cityTroops: readyGarrison(this.session),
+      });
+      const marchSubmittable =
+        this.marchSubmitState === "submitting" ? 0 : marchFormAllowsSubmit(marchValidated, troopReserve) ? 1 : 0;
+      this.updateMilitaryToolbarBadge(marchSubmittable);
     }
     this.renderHud();
   }
@@ -3769,26 +3198,26 @@ export class MainCityScene implements Scene {
     );
   }
 
-  private updateMailToolbarBadge(unreadCount: number, sweepSuffix = ""): void {
+  private updateMailToolbarBadge(unreadCount: number): void {
     const btn = this.toolbar?.querySelector<HTMLElement>('[data-role="mail-toolbar-btn"]');
     const label = toolbarButtonLabel(btn) || "邮件";
     setToolbarBadge(
       btn,
       unreadCount,
       unreadCount > 0
-        ? `${label} · ${unreadCount} 项待处理（未读/未领）${sweepSuffix}`
+        ? `${label} · ${unreadCount} 项待处理（未读/未领）`
         : "收件箱",
       this.assets,
     );
   }
 
-  private updateDailyToolbarBadge(todoCount: number, sweepSuffix = ""): void {
+  private updateDailyToolbarBadge(todoCount: number): void {
     const btn = this.toolbar?.querySelector<HTMLElement>('[data-role="daily-toolbar-btn"]');
     const label = toolbarButtonLabel(btn) || "日常";
     setToolbarBadge(
       btn,
       todoCount,
-      todoCount > 0 ? `${label} · ${todoCount} 项可领取${sweepSuffix}` : "日常任务",
+      todoCount > 0 ? `${label} · ${todoCount} 项可领取` : "日常任务",
       this.assets,
     );
   }
