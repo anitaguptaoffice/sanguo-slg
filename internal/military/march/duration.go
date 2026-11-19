@@ -20,3 +20,15 @@ func MarchDurationSec(distance int, speed int) int64 {
 	}
 	return int64(math.Ceil(sec))
 }
+
+// CommandCap is the troop ceiling one hero can lead: 200 per government level
+// plus 100 per command (统率) point.
+func CommandCap(governmentLevel, command int32) int64 {
+	if governmentLevel < 1 {
+		governmentLevel = 1
+	}
+	if command < 0 {
+		command = 0
+	}
+	return int64(governmentLevel)*200 + int64(command)*100
+}

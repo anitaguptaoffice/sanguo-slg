@@ -801,6 +801,9 @@ export class MainCityScene implements Scene {
         onMarchesUpdated: (marches) => { if (currentScene()) this.applyMarchesSnapshot(marches); },
         onMarchArrivalReminders: (reminders) => { if (currentScene()) this.applyMarchArrivalHudReminders(reminders); },
         onRemarchFromRow: (march) => this.openMilitaryFromIntelRemarch(march),
+        onRecallMarch: (march) => void this.recallMarch(march),
+        onSpeedupMarch: (march) => void this.speedupMarch(march),
+        speedupItemAvailable: () => this.hasMarchSpeedupItem(),
         onOpenMilitaryQueueBanner: (marchId) => this.openMilitaryQueueBannerHighlight(marchId),
         onViewMarchDestTile: (march) => {
           if (!currentScene()) return;
@@ -1511,6 +1514,50 @@ export class MainCityScene implements Scene {
       },
     });
     this.status = `军事：队列顶栏已定位行军 #${marchId}`;
+    this.renderHud();
+  }
+
+  private static readonly MARCH_SPEEDUP_ITEM_CFG_ID = 2050;
+
+  private hasMarchSpeedupItem(): boolean {
+    return (this.session?.bag ?? []).some(
+      (stack) => stack.item_cfg_id === MainCityScene.MARCH_SPEEDUP_ITEM_CFG_ID && stack.quantity > 0,
+    );
+  }
+
+  private async recallMarch(march: MarchSummary): Promise<void> {
+    const id = march.march_id ?? 0;
+    if (!id) return;
+    try {
+      await this.gateway.recallMarch(id);
+      this.status = `行军 #${id} 已召回，部队返程中`;
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("march", error);
+    }
+    this.renderHud();
+  }
+
+  private async speedupMarch(march: MarchSummary): Promise<void> {
+    const id = march.march_id ?? 0;
+    if (!id) return;
+    try {
+      const result = (await this.gateway.speedupMarch(id, MainCityScene.MARCH_SPEEDUP_ITEM_CFG_ID)) as {
+        reduced_sec?: number;
+      };
+      const minutes = Math.max(1, Math.round((result.reduced_sec ?? 0) / 60));
+      this.status = `行军 #${id} 急行军，缩短 ${minutes} 分钟`;
+      if (this.session) {
+        this.session.bag = this.session.bag
+          .map((stack) =>
+            stack.item_cfg_id === MainCityScene.MARCH_SPEEDUP_ITEM_CFG_ID
+              ? { ...stack, quantity: stack.quantity - 1 }
+              : stack,
+          )
+          .filter((stack) => stack.quantity > 0);
+      }
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("march", error);
+    }
     this.renderHud();
   }
 

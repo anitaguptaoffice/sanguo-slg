@@ -113,6 +113,9 @@ export type MarchListPanelOptions = {
   onMarchArrivalReminders?: (reminders: MarchArrivalReminder[]) => void;
   /** CLIENT-093：军情行再出征 → 军事面板预填。 */
   onRemarchFromRow?: (march: MarchSummary) => void;
+  onRecallMarch?: (march: MarchSummary) => void;
+  onSpeedupMarch?: (march: MarchSummary) => void;
+  speedupItemAvailable?: () => boolean;
   /** CLIENT-156：军情新出征行 → 军事队列顶栏摘要互跳。 */
   onOpenMilitaryQueueBanner?: (marchId: number) => void;
   /** CLIENT-172：信息卡「查看目的格点」→ 世界面板焦点。 */
@@ -140,6 +143,9 @@ export class MarchListPanel {
   private readonly getWorldSelectedGrid?: () => { x: number; y: number } | null;
   private readonly onMarchArrivalReminders?: (reminders: MarchArrivalReminder[]) => void;
   private readonly onRemarchFromRow?: (march: MarchSummary) => void;
+  private readonly onRecallMarch?: (march: MarchSummary) => void;
+  private readonly onSpeedupMarch?: (march: MarchSummary) => void;
+  private readonly speedupItemAvailable?: () => boolean;
   private readonly onOpenMilitaryQueueBanner?: (marchId: number) => void;
   private readonly onViewMarchDestTile?: (march: MarchSummary) => void;
   private readonly onOpenMilitaryFromInfoCard?: (march: MarchSummary) => void;
@@ -173,6 +179,9 @@ export class MarchListPanel {
     this.getWorldSelectedGrid = options?.getWorldSelectedGrid;
     this.onMarchArrivalReminders = options?.onMarchArrivalReminders;
     this.onRemarchFromRow = options?.onRemarchFromRow;
+    this.onRecallMarch = options?.onRecallMarch;
+    this.onSpeedupMarch = options?.onSpeedupMarch;
+    this.speedupItemAvailable = options?.speedupItemAvailable;
     this.onOpenMilitaryQueueBanner = options?.onOpenMilitaryQueueBanner;
     this.onViewMarchDestTile = options?.onViewMarchDestTile;
     this.onOpenMilitaryFromInfoCard = options?.onOpenMilitaryFromInfoCard;
@@ -532,6 +541,8 @@ export class MarchListPanel {
           <div class="march-info-card-actions">
             <button type="button" data-action="march-info-view-dest">查看目的格点</button>
             <button type="button" data-action="march-info-remarch">再出征</button>
+            <button type="button" data-action="march-info-recall">召回</button>
+            <button type="button" data-action="march-info-speedup">急行军</button>
             <button type="button" data-action="${MARCH_INFO_CARD_OPEN_MILITARY_ACTION}">打开军事</button>
             <button type="button" data-action="${MARCH_INFO_REPLAY_BATTLE_REPORT_ACTION}">复盘战报</button>
           </div>
@@ -826,6 +837,8 @@ export class MarchListPanel {
     syncMarchIntelPhaseEtaMutualHighlight(this.panel, march.march_id ?? null);
 
     const remarchBtn = card.querySelector<HTMLButtonElement>('[data-action="march-info-remarch"]');
+    const recallBtn = card.querySelector<HTMLButtonElement>('[data-action="march-info-recall"]');
+    const speedupBtn = card.querySelector<HTMLButtonElement>('[data-action="march-info-speedup"]');
     const viewDestBtn = card.querySelector<HTMLButtonElement>('[data-action="march-info-view-dest"]');
     const openMilitaryBtn = card.querySelector<HTMLButtonElement>(
       `[data-action="${MARCH_INFO_CARD_OPEN_MILITARY_ACTION}"]`,
@@ -842,6 +855,11 @@ export class MarchListPanel {
       readBattleReportReplaySession(),
     );
     replayReportBtn?.toggleAttribute("disabled", replayReportId == null);
+    const phase = march.phase ?? 0;
+    recallBtn?.toggleAttribute("disabled", phase !== 2 && phase !== 3);
+    // The server owns item stock; only the phase decides whether the action is
+    // offered, and a missing item surfaces as a clear gateway error.
+    speedupBtn?.toggleAttribute("disabled", phase !== 2 && phase !== 4);
     if (openMilitaryBtn && march.march_id != null) {
       openMilitaryBtn.setAttribute("data-march-id", String(march.march_id));
     }
@@ -1193,6 +1211,22 @@ export class MarchListPanel {
       ev.stopPropagation();
       const march = this.getSelectedMarch();
       if (march) this.onViewMarchDestTile?.(march);
+      return;
+    }
+
+    const infoRecall = (ev.target as HTMLElement).closest('[data-action="march-info-recall"]');
+    if (infoRecall) {
+      ev.stopPropagation();
+      const march = this.getSelectedMarch();
+      if (march) this.onRecallMarch?.(march);
+      return;
+    }
+
+    const infoSpeedup = (ev.target as HTMLElement).closest('[data-action="march-info-speedup"]');
+    if (infoSpeedup) {
+      ev.stopPropagation();
+      const march = this.getSelectedMarch();
+      if (march) this.onSpeedupMarch?.(march);
       return;
     }
 

@@ -49,3 +49,4 @@ items:
   - {code: signal_flare, name: 烽烟信号弹, item_type: 1, max_stack: 99, meta: {description: 烽烟信号弹：城务与军备常用物资，开箱即用。, grants: {silver: 45}}}
   - {code: shield_blank, name: 盾胚料, item_type: 1, max_stack: 99, meta: {description: 盾胚料：城务与军备常用物资，开箱即用。, grants: {iron: 200, wood: 150}}}
   - {code: catapult_rope, name: 弩车缆绳, item_type: 1, max_stack: 99, meta: {description: 弩车缆绳：城务与军备常用物资，开箱即用。, grants: {wood: 400}}}
+  - {code: speedup_march, name: 急行军令, item_type: 2, max_stack: 99, meta: {description: 缩短在途行军或返程 5 分钟。, speedup_sec: 300, applies_to: [march]}}

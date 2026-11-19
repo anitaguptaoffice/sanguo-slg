@@ -128,6 +128,28 @@ message StartMarchResponse {
   repeated sanguo.common.v1.CityTroopStack city_troops = 2;
 }
 
+// route: military.v1.RecallMarch
+// 召回在途或驻守部队：去程按已走时间等距折返；驻守按原始单程时长返程。
+message RecallMarchRequest {
+  int64 march_id = 1;
+}
+
+message RecallMarchResponse {
+  MarchSummary march = 1;
+}
+
+// route: military.v1.SpeedupMarch
+// 消耗急行军令，缩短在途去程或返程的剩余时间；不会把到期时间推到过去。
+message SpeedupMarchRequest {
+  int64 march_id = 1;
+  int32 item_cfg_id = 2;
+}
+
+message SpeedupMarchResponse {
+  MarchSummary march = 1;
+  int64 reduced_sec = 2;
+}
+
 // route: military.v1.ListMarches
 // 拉取当前玩家在会话服内的行军单（进行中与近期，含 RETURNED 历史）。
 message ListMarchesRequest {
