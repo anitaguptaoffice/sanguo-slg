@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -54,7 +55,24 @@ func warmNeedsApply(ctx context.Context, pool *pgxpool.Pool) (bool, error) {
 	if err != nil {
 		return true, nil
 	}
-	return n < minRecordedMigrations, nil
+	if n < minRecordedMigrations {
+		return true, nil
+	}
+	specDir, err := SpecDir()
+	if err != nil {
+		return false, err
+	}
+	entries, err := os.ReadDir(specDir)
+	if err != nil {
+		return false, err
+	}
+	expected := 0
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".sql") {
+			expected++
+		}
+	}
+	return n < expected, nil
 }
 
 func initWarmFixture() {
