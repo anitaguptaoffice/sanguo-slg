@@ -29,7 +29,7 @@ func TestPGReturnLockedStates(t *testing.T) {
 		{"DELETE FROM march_order", 0}, {"DELETE FROM field_army", 0}, {"UPDATE field_army SET owner_player_id=2", 0},
 		{"UPDATE march_order SET server_id=2", 0}, {"UPDATE field_army SET server_id=2", 0}, {"UPDATE army_troop SET server_id=2", 0},
 		{"UPDATE march_order SET from_x=1", 0}, {"UPDATE march_order SET to_y=500", 0}, {"UPDATE field_army SET x=0", 0},
-		{"UPDATE march_order SET status=2", 0}, {"UPDATE field_army SET status=3", 0}, {"UPDATE march_order SET purpose=4", 0},
+		{"UPDATE march_order SET status=2", 0}, {"UPDATE field_army SET status=3", 0}, {"UPDATE march_order SET purpose=5", 0},
 		{"UPDATE march_order SET depart_at=arrive_at", 0}, {"UPDATE march_order SET return_finish_at=arrive_at", 0}, {"UPDATE march_order SET return_finish_at=NULL", 0}, {"UPDATE march_order SET return_finish_at='infinity'", 0},
 		{"UPDATE field_army SET hero_ids='{}'", 0}, {"UPDATE field_army SET hero_ids=ARRAY[1,1]", 0}, {"UPDATE field_army SET hero_ids=ARRAY[0]", 0}, {"UPDATE field_army SET hero_ids=ARRAY[-1]", 0}, {"UPDATE field_army SET hero_ids=ARRAY[NULL]::bigint[]", 0},
 		{"UPDATE army_troop SET count=0 WHERE unit_cfg_id=1", 0}, {"UPDATE army_troop SET unit_cfg_id=5 WHERE unit_cfg_id=4", 0}, {"DELETE FROM army_troop", 0},

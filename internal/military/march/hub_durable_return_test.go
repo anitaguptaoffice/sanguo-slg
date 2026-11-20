@@ -122,3 +122,17 @@ func TestDurableHubReturnEarlyAndQuarantined(t *testing.T) {
 		}
 	}
 }
+
+func TestMatchesDurableReturnAcceptsPostgresPrecision(t *testing.T) {
+	at := time.Date(2026, 11, 19, 14, 52, 35, 548385123, time.UTC)
+	ev := DurableMarchReturnEvent{MarchID: 30, ArmyID: 40, CityID: 101, PlayerID: 8, ReturnAt: at}
+	obs := durableReturnObservation(ev, ReturnApplied)
+	obs.ReturnAt = at.Truncate(time.Microsecond)
+	if !matchesDurableReturn(ev, obs) {
+		t.Fatal("microsecond deadline rejected")
+	}
+	obs.ReturnAt = at.Add(-time.Second)
+	if matchesDurableReturn(ev, obs) {
+		t.Fatal("stale deadline accepted")
+	}
+}

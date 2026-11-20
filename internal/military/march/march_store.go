@@ -104,7 +104,7 @@ func (s *MarchStore) Create(ctx context.Context, a *recruittx.Access, in MarchCr
 func validateMarchCreate(serverID int32, in *MarchCreate) error {
 	if in == nil || in.ServerID != serverID || in.ServerID <= 0 || in.PlayerID <= 0 ||
 		in.OwnerPlayerID != in.PlayerID || in.ArmyStatus != 2 || in.OriginCityID <= 0 ||
-		in.Purpose < 1 || in.Purpose > 3 || !validMarchTime(in.DepartAt) || !validMarchTime(in.ArriveAt) ||
+		in.Purpose < 1 || in.Purpose > 4 || !validMarchTime(in.DepartAt) || !validMarchTime(in.ArriveAt) ||
 		!in.DepartAt.Before(in.ArriveAt) || len(in.Troops) == 0 || len(in.HeroIDs) == 0 {
 		return ErrMarchStore
 	}

@@ -116,7 +116,8 @@ func (s *Server) startMarch(ctx context.Context, pkt *commonv1.ClientPacket, pre
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode(50005), "city coordinates unknown"), nil
 	}
 	if prepared {
-		if write == nil || req.GetPurpose() != combat.PurposeAttack {
+		purpose := req.GetPurpose()
+		if write == nil || (purpose != combat.PurposeAttack && purpose != combat.PurposeLoot && purpose != combat.PurposeOccupy) {
 			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "prepared march unavailable"), nil
 		}
 		return write(ctx, pc, &req, coord, stacks, pkt.GetTraceId())

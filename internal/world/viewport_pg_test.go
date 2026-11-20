@@ -116,3 +116,32 @@ func TestViewportBoundsClamp(t *testing.T) {
 }
 
 var _ = time.Now
+
+func TestPGViewportOwnedFieldsAndAbandon(t *testing.T) {
+	svc, ctx := viewportPG(t)
+	if err := svc.Store.SaveChunk(ctx, 1, []Cell{
+		{X: 10, Y: 10, Terrain: TerrainForest, Level: 3, MaxLevel: 10, ProvinceID: 2, OwnerCityID: 5},
+		{X: 11, Y: 10, Terrain: TerrainPlain, Level: 2, MaxLevel: 10, ProvinceID: 2, OwnerCityID: 5},
+		{X: 12, Y: 10, Terrain: TerrainLake, Level: 4, MaxLevel: 10, ProvinceID: 2, OwnerCityID: 6},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	fields, err := svc.OwnedFields(ctx, 1, 5)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(fields) != 2 || fields[0].X != 10 || fields[1].X != 11 {
+		t.Fatalf("owned fields: %+v", fields)
+	}
+	ok, err := svc.AbandonField(ctx, 1, 5, 10, 10)
+	if err != nil || !ok {
+		t.Fatalf("abandon: %v %v", ok, err)
+	}
+	if ok, err := svc.AbandonField(ctx, 1, 6, 11, 10); err != nil || ok {
+		t.Fatalf("foreign abandon: %v %v", ok, err)
+	}
+	fields, err = svc.OwnedFields(ctx, 1, 5)
+	if err != nil || len(fields) != 1 || fields[0].X != 11 {
+		t.Fatalf("after abandon: %+v %v", fields, err)
+	}
+}

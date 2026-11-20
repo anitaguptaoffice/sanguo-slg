@@ -18,6 +18,8 @@ export const BAG_USE_CAPABILITIES: Readonly<Record<number, BagUseCapability>> = 
   2039: "train", 2040: "train", 2041: "train", 2042: "resource", 2043: "resource",
   2044: "resource", 2045: "resource", 2046: "resource", 2047: "unsupported",
   2048: "resource", 2049: "resource", 2100: "unsupported",
+  2101: "unsupported", 2102: "unsupported", 2103: "unsupported", 2104: "unsupported",
+  2105: "unsupported", 2106: "unsupported", 2107: "unsupported",
 });
 
 export function canUseBagItem(itemId: number): boolean {

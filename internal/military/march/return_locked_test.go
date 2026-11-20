@@ -73,7 +73,7 @@ func TestReturnLockedGraphRejects(t *testing.T) {
 		func(s *returnLockedSnapshot) { s.toX = -1 },
 		func(s *returnLockedSnapshot) { s.toY = 500 },
 		func(s *returnLockedSnapshot) { s.purpose = 0 },
-		func(s *returnLockedSnapshot) { s.purpose = 4 },
+		func(s *returnLockedSnapshot) { s.purpose = 5 },
 		func(s *returnLockedSnapshot) { s.depart = s.arrive },
 		func(s *returnLockedSnapshot) { s.returnAt = &s.arrive },
 		func(s *returnLockedSnapshot) { s.returnAt = nil },

@@ -119,6 +119,15 @@ func (s *Server) preparedArrival(r *preparedMarchRuntime, resolve march.MarchArr
 	return func(_ context.Context, ev march.MarchArrivalEvent) (out march.MarchArrivalOutcome, err error) {
 		ctx, cancel := context.WithTimeout(r.ctx, 10*time.Second)
 		defer cancel()
+		if ev.Order.Purpose == combat.PurposeOccupy && ev.Order.OriginCityID > 0 {
+			limit := 1
+			if city, snapErr := s.domestic.SnapshotCity(ev.Order.OriginCityID); snapErr == nil && city != nil {
+				if building := city.Buildings["hall"]; building != nil && building.Level > 0 {
+					limit = int(building.Level)
+				}
+			}
+			ev.OccupyLimit = limit
+		}
 		lease, err := r.source.s.admission.acquire(ctx)
 		defer func() {
 			if fault := recover(); fault != nil {
@@ -156,7 +165,10 @@ func (s *Server) preparedReturn(r *preparedMarchRuntime, generation *returnGener
 		c := march.ReturnCandidate{ServerID: generation.s.profile.ServerID, PlayerID: ev.PlayerID,
 			CityID: ev.CityID, MarchID: ev.MarchID, ArmyID: ev.ArmyID}
 		result := generation.complete(ctx, c)
-		if result.outcome != returnConfirmed || !result.confirmed.ReturnAt.Equal(ev.ReturnAt) {
+		// PostgreSQL stores the deadline at microsecond precision; the in-memory
+		// hub keeps the nanosecond value it scheduled, so compare truncated.
+		if result.outcome != returnConfirmed ||
+			!result.confirmed.ReturnAt.Truncate(time.Microsecond).Equal(ev.ReturnAt.Truncate(time.Microsecond)) {
 			return out, errors.Join(march.ErrReturnUnavailable, result.cause, result.cleanup, result.diagnostic)
 		}
 		if result.diagnostic != nil {

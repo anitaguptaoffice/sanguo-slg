@@ -91,6 +91,8 @@ func matchesDurableReturn(event DurableMarchReturnEvent, out ReturnObservation) 
 	c := out.Candidate
 	return c.ServerID > 0 && c.MarchID == event.MarchID && c.ArmyID == event.ArmyID &&
 		c.CityID == event.CityID && c.PlayerID == event.PlayerID && !event.ReturnAt.IsZero() &&
-		out.ReturnAt.Equal(event.ReturnAt) &&
+		// PostgreSQL stores deadlines at microsecond precision while the Hub
+		// scheduled the nanosecond value it computed from time.Now.
+		out.ReturnAt.Truncate(time.Microsecond).Equal(event.ReturnAt.Truncate(time.Microsecond)) &&
 		(out.Disposition == ReturnApplied || out.Disposition == ReturnCreditedTerminal || out.Disposition == ReturnEarly)
 }

@@ -219,6 +219,8 @@ message BattleReportDetail {
   BattleHeroSummary defender_hero = 9;
   BattleLoot loot = 10;
   int64 hero_exp_gained = 11;
+  // R1-S5: 占领结果（"occupied" / "cap_reached" / 空）。
+  string occupy_result = 12;
 }
 
 message BattleRound {

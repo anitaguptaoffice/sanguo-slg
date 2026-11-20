@@ -92,7 +92,7 @@ func (r *Resolver) allocReportID() int64 {
 // ResolveAttackGarrison handles PurposeAttack against a fixed garrison tile.
 func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArrivalEvent) (ArrivalResult, error) {
 	g := r.Garrisons.Get(ctx, ev.Order.ToX, ev.Order.ToY)
-	if ev.Order.Purpose != PurposeAttack || g == nil {
+	if (ev.Order.Purpose != PurposeAttack && ev.Order.Purpose != PurposeLoot && ev.Order.Purpose != PurposeOccupy) || g == nil {
 		if r.commitArrival != nil {
 			return r.persistArrival(ctx, ev, ArrivalResult{AttackerRemaining: append([]march.TroopStack(nil), ev.Troops...)})
 		}
@@ -176,6 +176,9 @@ func (r *Resolver) persistArrival(ctx context.Context, ev march.MarchArrivalEven
 	}
 	in := march.ArrivalCommit{ServerID: r.ServerID, MarchID: ev.MarchID, ArmyID: order.ArmyID,
 		ToX: int32(order.ToX), ToY: int32(order.ToY), Survivors: result.AttackerRemaining, Loot: result.Loot}
+	if order.Purpose == PurposeOccupy && result.BattleRan && result.Report.Result == battle.ResultAttackerWin && ev.OccupyLimit > 0 {
+		in.Occupy = &march.OccupyRequest{CityID: order.OriginCityID, Limit: ev.OccupyLimit}
+	}
 	if len(in.Survivors) > 0 {
 		if err := march.BeginReturn(&order, order.ArriveAt); err != nil {
 			return ArrivalResult{}, err

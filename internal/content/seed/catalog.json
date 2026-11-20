@@ -1,5 +1,5 @@
 {
-  "bag_max_distinct_items": 58,
+  "bag_max_distinct_items": 65,
   "items": [
     {
       "item_cfg_id": 2001,
@@ -690,6 +690,97 @@
         "applies_to": [
           "march"
         ]
+      }
+    },
+    {
+      "item_cfg_id": 2101,
+      "code": "pearl",
+      "name": "南海珍珠",
+      "item_type": 1,
+      "max_stack": 999,
+      "meta": {
+        "description": "采集所得的圆润珠贝，可供名将招降与爵位晋升。",
+        "grants": {
+          "silver": 120
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2102,
+      "code": "amber",
+      "name": "松脂琥珀",
+      "item_type": 1,
+      "max_stack": 999,
+      "meta": {
+        "description": "山野老松凝结的暖色琥珀，后续招降与晋升会用到的珍材。",
+        "grants": {
+          "silver": 110
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2103,
+      "code": "emerald",
+      "name": "林间翡翠",
+      "item_type": 1,
+      "max_stack": 999,
+      "meta": {
+        "description": "森林深处采出的翠色石料，可供名将招降与爵位晋升。",
+        "grants": {
+          "silver": 130
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2104,
+      "code": "glaze",
+      "name": "琉璃珠",
+      "item_type": 1,
+      "max_stack": 999,
+      "meta": {
+        "description": "湖泥烧制的透明琉璃珠，后续招降与晋升会用到的珍材。",
+        "grants": {
+          "silver": 100
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2105,
+      "code": "jade",
+      "name": "青玉璧",
+      "item_type": 1,
+      "max_stack": 999,
+      "meta": {
+        "description": "草原古墓旁拾得的青玉残璧，可供名将招降与爵位晋升。",
+        "grants": {
+          "silver": 140
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2106,
+      "code": "coral",
+      "name": "深湖珊瑚",
+      "item_type": 1,
+      "max_stack": 999,
+      "meta": {
+        "description": "深水珊瑚枝，后续招降与晋升会用到的珍材。",
+        "grants": {
+          "silver": 115
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2107,
+      "code": "night_pearl",
+      "name": "夜明珠",
+      "item_type": 1,
+      "max_stack": 999,
+      "meta": {
+        "description": "沼泽深处偶得的夜明珠，可供名将招降与爵位晋升。",
+        "grants": {
+          "silver": 150
+        }
       }
     }
   ]

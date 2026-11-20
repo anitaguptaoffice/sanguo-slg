@@ -11,6 +11,9 @@ type MarchArrivalEvent struct {
 	HeroIDs  []int64
 	Troops   []TroopStack
 	Order    MarchOrder
+	// OccupyLimit is the origin city's free field slots (hall level). The API
+	// layer fills it; zero disables occupation.
+	OccupyLimit int
 }
 
 // MarchArrivalOutcome carries battle results back into the hub state machine.

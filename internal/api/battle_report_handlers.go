@@ -137,6 +137,7 @@ func battleReportDetailProto(rep battle.BattleReport) *militaryv1.BattleReportDe
 		DefenderHero:       heroSummaryProto(rep.DefenderHero),
 		HeroExpGained:      rep.Loot.HeroExp,
 		Loot:               lootProto(rep.Loot),
+		OccupyResult:       rep.OccupyResult,
 	}
 	for _, rr := range rep.Rounds {
 		d.Rounds = append(d.Rounds, &militaryv1.BattleRound{

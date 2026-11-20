@@ -86,3 +86,25 @@ func viewportBounds(centerX, centerY, radiusX, radiusY int) (minX, minY, maxX, m
 	}
 	return minX, minY, maxX, maxY
 }
+
+// OwnedFields returns the wild tiles owned by one city.
+func (svc *Service) OwnedFields(ctx context.Context, sid int32, cityID int64) ([]TileView, error) {
+	store, ok := svc.Store.(interface {
+		OwnedFields(ctx context.Context, sid int32, cityID int64) ([]TileView, error)
+	})
+	if !ok {
+		return nil, ErrViewportUnavailable
+	}
+	return store.OwnedFields(ctx, sid, cityID)
+}
+
+// AbandonField clears one city's ownership of a wild tile.
+func (svc *Service) AbandonField(ctx context.Context, sid int32, cityID int64, x, y int) (bool, error) {
+	store, ok := svc.Store.(interface {
+		AbandonField(ctx context.Context, sid int32, cityID int64, x, y int) (bool, error)
+	})
+	if !ok {
+		return false, ErrViewportUnavailable
+	}
+	return store.AbandonField(ctx, sid, cityID, x, y)
+}

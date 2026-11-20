@@ -43,6 +43,11 @@ export type GatewayPort = {
   listPlayerCities(): Promise<unknown>;
   getWorldViewport(centerX: number, centerY: number, radiusX: number, radiusY: number): Promise<unknown>;
   getWorldTileDetail(x: number, y: number): Promise<unknown>;
+  listOwnedFields(cityId: number): Promise<unknown>;
+  abandonField(cityId: number, x: number, y: number): Promise<unknown>;
+  startFieldGather(cityId: number, x: number, y: number): Promise<unknown>;
+  listFieldGathers(cityId: number): Promise<unknown>;
+  claimFieldGather(gatherId: number): Promise<unknown>;
   createCity(serverId: number, name: string, x: number, y: number): Promise<unknown>;
   getCityState(cityId: number): Promise<unknown>;
   startBuildingUpgrade(cityId: number, slotKey: string, buildingCfgId: number): Promise<unknown>;
@@ -471,6 +476,61 @@ export class GatewayClient implements GatewayPort {
       "GetWorldViewportRequest",
       { center_x: centerX, center_y: centerY, radius_x: radiusX, radius_y: radiusY },
       GetWorldViewportResponse,
+      true,
+    );
+  }
+
+  async listOwnedFields(cityId: number) {
+    const { ListOwnedFieldsResponse } = getTypes();
+    return this.rpc(
+      Routes.ListOwnedFields,
+      "ListOwnedFieldsRequest",
+      { city_id: cityId },
+      ListOwnedFieldsResponse,
+      true,
+    );
+  }
+
+  async abandonField(cityId: number, x: number, y: number) {
+    const { AbandonFieldResponse } = getTypes();
+    return this.rpc(
+      Routes.AbandonField,
+      "AbandonFieldRequest",
+      { city_id: cityId, x, y },
+      AbandonFieldResponse,
+      true,
+    );
+  }
+
+  async startFieldGather(cityId: number, x: number, y: number) {
+    const { StartFieldGatherResponse } = getTypes();
+    return this.rpc(
+      Routes.StartFieldGather,
+      "StartFieldGatherRequest",
+      { city_id: cityId, x, y },
+      StartFieldGatherResponse,
+      true,
+    );
+  }
+
+  async listFieldGathers(cityId: number) {
+    const { ListFieldGathersResponse } = getTypes();
+    return this.rpc(
+      Routes.ListFieldGathers,
+      "ListFieldGathersRequest",
+      { city_id: cityId },
+      ListFieldGathersResponse,
+      true,
+    );
+  }
+
+  async claimFieldGather(gatherId: number) {
+    const { ClaimFieldGatherResponse } = getTypes();
+    return this.rpc(
+      Routes.ClaimFieldGather,
+      "ClaimFieldGatherRequest",
+      { gather_id: gatherId },
+      ClaimFieldGatherResponse,
       true,
     );
   }

@@ -252,6 +252,11 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteListPlayerCities] = s.handleListPlayerCities
 	handlers[RouteGetWorldViewport] = s.handleGetWorldViewport
 	handlers[RouteGetWorldTileDetail] = s.handleGetWorldTileDetail
+	handlers[RouteListOwnedFields] = s.handleListOwnedFields
+	handlers[RouteAbandonField] = s.handleAbandonField
+	handlers[RouteStartFieldGather] = s.handleStartFieldGather
+	handlers[RouteListFieldGathers] = s.handleListFieldGathers
+	handlers[RouteClaimFieldGather] = s.handleClaimFieldGather
 	handlers[RouteStartBuildingUpgrade] = s.handleStartBuildingUpgrade
 	handlers[RouteGetCityState] = s.handleGetCityState
 	handlers[RouteListMarches] = s.handleListMarches
