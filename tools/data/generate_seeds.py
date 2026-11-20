@@ -15,6 +15,7 @@ SOURCE = ROOT / "spec/data/source"
 OUT = ROOT / "spec/data/generated"
 CATALOG_EMBED = ROOT / "internal/content/seed/catalog.json"
 BUILDING_EMBED = ROOT / "internal/domestic/seed/building_catalog.json"
+TECHNIC_EMBED = ROOT / "internal/domestic/seed/technic_catalog.json"
 
 UNIT_ORDER = ["infantry", "cavalry", "archer", "siege"]
 UNIT_NAMES = {"infantry": "步兵", "cavalry": "骑兵", "archer": "弓兵", "siege": "器械"}
@@ -359,6 +360,38 @@ def build_world_wild(source: dict, item_by_code: dict[str, int]) -> str:
     return json.dumps(out, ensure_ascii=False, separators=(",", ":")) + "\n"
 
 
+def build_technics(meta_source: dict) -> list[dict]:
+    cost_growth, time_growth = 1.50, 1.40
+    max_level = 10
+    rows = []
+    for t in meta_source.get("technics", []):
+        base_cost = t.get("base_cost") or {}
+        levels = []
+        for level in range(1, max_level + 1):
+            cost = {
+                key: int((base_cost.get(key) or 0) * (cost_growth ** (level - 1)))
+                for key in ("food", "wood", "stone", "iron")
+            }
+            bonus = {k: int(v) * level for k, v in (t.get("bonus") or {}).items()}
+            levels.append({
+                "level": level,
+                "cost": cost,
+                "time_sec": int(int(t.get("base_time_sec") or 0) * (time_growth ** (level - 1))),
+                "bonus": bonus,
+            })
+        rows.append({
+            "tid": t["tid"],
+            "code": t["code"],
+            "name": t["name"],
+            "category": t["category"],
+            "academy_level": t.get("academy_level", 1),
+            "max_level": max_level,
+            "prereqs": t.get("prereqs") or [],
+            "levels": levels,
+        })
+    return rows
+
+
 def build_buildings(params: dict, meta_source: dict) -> list[dict]:
     build, production, main_hall = (
         params["domestic"]["build"],
@@ -473,6 +506,7 @@ def generate() -> dict[str, str]:
     quests_src = load_yaml(SOURCE / "quests.yml")
     shop_src = load_yaml(SOURCE / "shop.yml")
     world_wild_src = load_yaml(SOURCE / "world_wild.yml")
+    technics_src = load_yaml(SOURCE / "technics.yml")
 
     units = build_units(params)
     heroes = build_heroes(heroes_src)
@@ -560,8 +594,20 @@ def generate() -> dict[str, str]:
         + "\n",
         "catalog.json": build_catalog_json(items),
         "world_wild.json": build_world_wild(world_wild_src, item_by_code),
+        "cfg_technic.json": json.dumps(
+            {"version": 1, "technics": build_technics(technics_src)},
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+        + "\n",
         "__building_embed__": json.dumps(
             {"version": 1, "buildings": build_buildings(params, buildings_src)},
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+        + "\n",
+        "__technic_embed__": json.dumps(
+            {"version": 1, "technics": build_technics(technics_src)},
             ensure_ascii=False,
             separators=(",", ":"),
         )
@@ -592,6 +638,9 @@ def main() -> int:
         if BUILDING_EMBED.read_text(encoding="utf-8") != outputs["__building_embed__"]:
             print(f"stale or missing: {BUILDING_EMBED}", file=sys.stderr)
             return 1
+        if TECHNIC_EMBED.read_text(encoding="utf-8") != outputs["__technic_embed__"]:
+            print(f"stale or missing: {TECHNIC_EMBED}", file=sys.stderr)
+            return 1
         print("check ok")
         return 0
     changed = [
@@ -603,6 +652,8 @@ def main() -> int:
         changed.append("internal/content/seed/catalog.json")
     if write_if_changed(BUILDING_EMBED, outputs["__building_embed__"]):
         changed.append("internal/domestic/seed/building_catalog.json")
+    if write_if_changed(TECHNIC_EMBED, outputs["__technic_embed__"]):
+        changed.append("internal/domestic/seed/technic_catalog.json")
     print("updated: " + ", ".join(changed) if changed else "unchanged")
     return 0
 

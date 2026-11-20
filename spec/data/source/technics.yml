@@ -1,0 +1,33 @@
+# R2-S3 书院科技树（重写数值）。
+#
+# 28 项科技，每项 10 级；等级消耗/耗时按 base 值逐级放大，加成按 level 线性叠加。
+# academy_level 为研究该科技所需书院等级；prereqs 为跨科技前置。
+technics:
+  - {tid: 1, code: agriculture, name: 农术, category: domestic, academy_level: 3, base_time_sec: 120, base_cost: {food: 200, wood: 100, stone: 50, iron: 0}, bonus: {food_pct: 2}}
+  - {tid: 2, code: logging, name: 伐木术, category: domestic, academy_level: 3, base_time_sec: 120, base_cost: {food: 120, wood: 200, stone: 50, iron: 0}, bonus: {wood_pct: 2}}
+  - {tid: 3, code: masonry, name: 石工术, category: domestic, academy_level: 3, base_time_sec: 130, base_cost: {food: 100, wood: 100, stone: 200, iron: 0}, bonus: {stone_pct: 2}}
+  - {tid: 4, code: metallurgy, name: 冶炼术, category: domestic, academy_level: 3, base_time_sec: 130, base_cost: {food: 100, wood: 100, stone: 100, iron: 100}, bonus: {iron_pct: 2}}
+  - {tid: 5, code: storage, name: 仓储术, category: domestic, academy_level: 4, base_time_sec: 140, base_cost: {food: 150, wood: 200, stone: 100, iron: 0}, bonus: {storage_pct: 3}}
+  - {tid: 6, code: architecture, name: 营造术, category: domestic, academy_level: 4, base_time_sec: 150, base_cost: {food: 150, wood: 150, stone: 150, iron: 50}, bonus: {build_speed_pct: 2}}
+  - {tid: 7, code: logistics, name: 辎重术, category: military, academy_level: 6, base_time_sec: 180, base_cost: {food: 250, wood: 180, stone: 80, iron: 60}, bonus: {march_speed_pct: 2}, prereqs: [{tid: 6, level: 5}]}
+  - {tid: 8, code: infantry, name: 步兵术, category: military, academy_level: 6, base_time_sec: 170, base_cost: {food: 200, wood: 150, stone: 80, iron: 120}, bonus: {attack_pct: 1}, prereqs: [{tid: 4, level: 5}]}
+  - {tid: 9, code: cavalry, name: 骑兵术, category: military, academy_level: 6, base_time_sec: 180, base_cost: {food: 220, wood: 120, stone: 60, iron: 140}, bonus: {attack_pct: 1}, prereqs: [{tid: 7, level: 5}]}
+  - {tid: 10, code: archery, name: 弓术, category: military, academy_level: 6, base_time_sec: 170, base_cost: {food: 180, wood: 200, stone: 60, iron: 80}, bonus: {attack_pct: 1}, prereqs: [{tid: 2, level: 5}]}
+  - {tid: 11, code: siege, name: 器械术, category: military, academy_level: 6, base_time_sec: 200, base_cost: {food: 160, wood: 240, stone: 160, iron: 160}, bonus: {attack_pct: 1}, prereqs: [{tid: 3, level: 5}]}
+  - {tid: 12, code: armor, name: 甲胄术, category: military, academy_level: 6, base_time_sec: 190, base_cost: {food: 150, wood: 120, stone: 180, iron: 200}, bonus: {defense_pct: 1}, prereqs: [{tid: 4, level: 5}]}
+  - {tid: 13, code: medicine, name: 医术, category: military, academy_level: 6, base_time_sec: 160, base_cost: {food: 260, wood: 120, stone: 60, iron: 40}, bonus: {heal_pct: 2}, prereqs: [{tid: 1, level: 5}]}
+  - {tid: 14, code: conscription, name: 募兵术, category: military, academy_level: 6, base_time_sec: 175, base_cost: {food: 240, wood: 160, stone: 80, iron: 80}, bonus: {recruit_speed_pct: 2}, prereqs: [{tid: 5, level: 5}]}
+  - {tid: 15, code: command, name: 统御术, category: command, academy_level: 9, base_time_sec: 220, base_cost: {food: 300, wood: 200, stone: 120, iron: 120}, bonus: {command_add: 20}, prereqs: [{tid: 8, level: 6}]}
+  - {tid: 16, code: economy, name: 理财术, category: domestic, academy_level: 9, base_time_sec: 210, base_cost: {food: 260, wood: 220, stone: 120, iron: 80}, bonus: {tax_pct: 2}, prereqs: [{tid: 5, level: 6}]}
+  - {tid: 17, code: morale, name: 安民术, category: domestic, academy_level: 9, base_time_sec: 200, base_cost: {food: 300, wood: 160, stone: 80, iron: 40}, bonus: {morale_add: 1}, prereqs: [{tid: 1, level: 6}]}
+  - {tid: 18, code: trade, name: 商术, category: domestic, academy_level: 9, base_time_sec: 210, base_cost: {food: 200, wood: 200, stone: 100, iron: 100}, bonus: {tax_pct: 1}, prereqs: [{tid: 6, level: 6}]}
+  - {tid: 19, code: scouting, name: 侦察术, category: military, academy_level: 9, base_time_sec: 190, base_cost: {food: 180, wood: 180, stone: 80, iron: 80}, bonus: {scout_pct: 3}, prereqs: [{tid: 7, level: 6}]}
+  - {tid: 20, code: beacon, name: 烽燧术, category: military, academy_level: 9, base_time_sec: 200, base_cost: {food: 160, wood: 160, stone: 220, iron: 60}, bonus: {scout_pct: 2}, prereqs: [{tid: 19, level: 4}]}
+  - {tid: 21, code: fortification, name: 城防术, category: military, academy_level: 9, base_time_sec: 230, base_cost: {food: 160, wood: 180, stone: 300, iron: 120}, bonus: {defense_pct: 2}, prereqs: [{tid: 12, level: 6}]}
+  - {tid: 22, code: research, name: 学术, category: domestic, academy_level: 9, base_time_sec: 240, base_cost: {food: 240, wood: 240, stone: 160, iron: 80}, bonus: {research_speed_pct: 2}, prereqs: [{tid: 6, level: 6}]}
+  - {tid: 23, code: strategy, name: 兵法, category: command, academy_level: 12, base_time_sec: 300, base_cost: {food: 400, wood: 260, stone: 160, iron: 180}, bonus: {attack_pct: 1}, prereqs: [{tid: 15, level: 8}, {tid: 22, level: 6}]}
+  - {tid: 24, code: siege_engineering, name: 攻城术, category: military, academy_level: 12, base_time_sec: 310, base_cost: {food: 300, wood: 320, stone: 220, iron: 240}, bonus: {attack_pct: 2}, prereqs: [{tid: 11, level: 8}]}
+  - {tid: 25, code: iron_cavalry, name: 铁骑术, category: military, academy_level: 12, base_time_sec: 320, base_cost: {food: 360, wood: 180, stone: 120, iron: 320}, bonus: {attack_pct: 1}, prereqs: [{tid: 9, level: 8}]}
+  - {tid: 26, code: grand_armor, name: 重甲术, category: military, academy_level: 12, base_time_sec: 330, base_cost: {food: 300, wood: 180, stone: 260, iron: 340}, bonus: {defense_pct: 2}, prereqs: [{tid: 12, level: 8}]}
+  - {tid: 27, code: grand_command, name: 大都督术, category: command, academy_level: 12, base_time_sec: 340, base_cost: {food: 420, wood: 280, stone: 200, iron: 200}, bonus: {command_add: 30}, prereqs: [{tid: 15, level: 10}]}
+  - {tid: 28, code: statecraft, name: 治国术, category: domestic, academy_level: 12, base_time_sec: 360, base_cost: {food: 500, wood: 400, stone: 260, iron: 160}, bonus: {food_pct: 2, wood_pct: 2, stone_pct: 2, iron_pct: 2, tax_pct: 2}, prereqs: [{tid: 16, level: 8}, {tid: 17, level: 8}]}
