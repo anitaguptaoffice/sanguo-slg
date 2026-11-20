@@ -135,6 +135,7 @@ func (a *App) newAPIServer(ctx context.Context) (*api.Server, error) {
 	if err := srv.WireM4Content(ctx); err != nil {
 		a.Log.Error("m4 content wire failed", "err", err)
 	}
+	go srv.RunPreparedRecruitScheduler(ctx)
 	go srv.RunDomesticScheduler(ctx)
 	go srv.RunRankScheduler(ctx)
 	return srv, nil

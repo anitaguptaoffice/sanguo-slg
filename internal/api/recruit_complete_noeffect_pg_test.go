@@ -52,9 +52,9 @@ AND (SELECT count(*) FROM mil_recruit_origin)=2 AND (SELECT count(*) FROM mil_re
 AND (SELECT count(*) FROM player_wallet)=1
 AND (SELECT ARRAY[food,wood,iron,stone,gold]=ARRAY[0,0,0,0,0]::bigint[] FROM player_wallet WHERE server_id=1 AND player_id=1)
 AND (SELECT last_value=101 AND is_called FROM work_queue_id_seq)
-AND (SELECT array_agg(unit_cfg_id ORDER BY unit_cfg_id)=ARRAY[1,2,3,4]
-AND array_agg(count ORDER BY unit_cfg_id)=ARRAY[11,12,13,14]
-AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[1,2,3,4] FROM city_troop WHERE server_id=1 AND city_id=1)
+AND (SELECT array_agg(unit_cfg_id ORDER BY unit_cfg_id)=ARRAY[1,2,3,4,5,6,7,8,9,10,11,12]
+AND array_agg(count ORDER BY unit_cfg_id)=ARRAY[11,12,13,14,15,16,17,18,19,20,21,22]
+AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[1,2,3,4,5,6,7,8,9,10,11,12] FROM city_troop WHERE server_id=1 AND city_id=1)
 AND EXISTS (SELECT FROM mil_city_origin WHERE server_id=1 AND city_id=1 AND owner_player_id=1
 AND cohort_id=decode('03000000000000000000000000000000','hex') AND format_version=1)`).Scan(&exact))
 	if !exact {

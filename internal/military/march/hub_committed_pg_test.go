@@ -58,7 +58,7 @@ func TestPGCommittedMarchPublicationMatchesRestore(t *testing.T) {
 	}
 	var stock []int32
 	baseOK(t, f.pool.QueryRow(ctx, "SELECT array_agg(count ORDER BY unit_cfg_id) FROM city_troop").Scan(&stock))
-	if !reflect.DeepEqual(stock, ready[:]) || ready != ([4]int32{2, 5, 0, 7}) || marchStoreRows(t, f.pool) != "1,1,2,0" {
+	if !reflect.DeepEqual(stock, []int32{2, 5, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0}) || ready != ([12]int32{2, 5, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0}) || marchStoreRows(t, f.pool) != "1,1,2,0" {
 		t.Fatal("publication or restart unexpectedly changed durable stock or order", ready, stock)
 	}
 }

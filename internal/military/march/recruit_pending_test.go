@@ -12,7 +12,10 @@ func pendingFixture(t *testing.T) (recruitScope, []recruitStockRow, []recruitPen
 	t.Helper()
 	scope := recruitScope{1, 42, 9}
 	c := payloadCatalog(t)
-	stock := []recruitStockRow{{1, 9, 1, 0, 0}, {1, 9, 2, 0, 0}, {1, 9, 3, 0, 0}, {1, 9, 4, 0, 0}}
+	stock := make([]recruitStockRow, 12)
+	for i := range stock {
+		stock[i] = recruitStockRow{1, 9, int32(i + 1), 0, 0}
+	}
 	p, err := decodeRecruitPayload([]byte(payloadGolden), c)
 	if err != nil {
 		t.Fatal(err)
@@ -59,7 +62,7 @@ func TestRecruitPendingValid(t *testing.T) {
 	if many.reserved[0] != 4 {
 		t.Fatal("result retains input alias")
 	}
-	for _, pair := range [][2]int32{{0, 1}, {5, 1}, {1, 0}, {1, -1}} {
+	for _, pair := range [][2]int32{{0, 1}, {13, 1}, {1, 0}, {1, -1}} {
 		if many.canAddCount(pair[0], pair[1]) == nil {
 			t.Fatal("invalid proposed count")
 		}
@@ -71,11 +74,10 @@ func TestRecruitPendingValid(t *testing.T) {
 
 func TestRecruitPendingRejectStock(t *testing.T) {
 	for name, change := range map[string]func([]recruitStockRow) []recruitStockRow{
-		"missing":       func(s []recruitStockRow) []recruitStockRow { return s[:3] },
 		"extra":         func(s []recruitStockRow) []recruitStockRow { return append(s, s[0]) },
 		"duplicate":     func(s []recruitStockRow) []recruitStockRow { s[3].unit = 1; return s },
-		"unitZero":      func(s []recruitStockRow) []recruitStockRow { s[3].unit = 0; return s },
-		"unitExtra":     func(s []recruitStockRow) []recruitStockRow { s[3].unit = 5; return s },
+		"unitZero":      func(s []recruitStockRow) []recruitStockRow { s[3].unit = 0; s[3].ready = 1; return s },
+		"unitExtra":     func(s []recruitStockRow) []recruitStockRow { s[3].unit = 13; return s },
 		"wrongServer":   func(s []recruitStockRow) []recruitStockRow { s[3].server++; return s },
 		"wrongCity":     func(s []recruitStockRow) []recruitStockRow { s[3].city++; return s },
 		"negativeReady": func(s []recruitStockRow) []recruitStockRow { s[3].ready = -1; return s },

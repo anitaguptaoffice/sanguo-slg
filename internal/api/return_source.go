@@ -72,7 +72,7 @@ func newReturnGeneration(binding *recruittx.Binding, expected freshsource.Profil
 			seen[object.OID] = true
 		}
 	}
-	for unit := int32(1); unit <= 4; unit++ {
+	for unit := int32(1); unit <= 12; unit++ {
 		if _, err := capturedCatalog.Current(unit); err != nil {
 			return nil, errors.Join(errReturnGeneration, err)
 		}

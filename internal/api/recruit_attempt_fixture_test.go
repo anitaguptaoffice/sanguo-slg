@@ -14,12 +14,12 @@ import (
 
 // Independent SHA-256 vectors from the RULE_EVIDENCE canonical bytes. These
 // test-only prices are not a released artifact or permission for production use.
-const recruitAttemptPGVersion = "recruit-v1:ee84843ef35d958c0b8fbfc5ae4a2bd0236f385fcc215d9fca3b028b740225b4"
+const recruitAttemptPGVersion = "recruit-v1:54afbd0251f6cd8574b31bf126f63ec40701fce8feb79f8ed14bd431a7b62ec8"
 const recruitAttemptPGDigest = "69921906a221d82ed9d74fb220d2166b401cdb35c0a4b8aec960185e68000a5e"
 
 func recruitAttemptPGCatalog(t *testing.T) *march.RecruitCatalog {
 	t.Helper()
-	var rules [4]march.RecruitRule
+	var rules [12]march.RecruitRule
 	for i := range rules {
 		n := int64(i + 1)
 		rules[i] = march.RecruitRule{UnitCfgID: int32(n),

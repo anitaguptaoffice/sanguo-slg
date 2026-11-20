@@ -394,10 +394,12 @@ func loadCityName(ctx context.Context, tx pgx.Tx, sid int32, cityID int64, c *Ci
 }
 
 func loadCivic(ctx context.Context, tx pgx.Tx, sid int32, cityID int64, c *CityState) error {
-	err := tx.QueryRow(ctx, `SELECT population,morale,tax_rate,work_rate,last_civic_at,pop_remainder,tax_remainder
+	err := tx.QueryRow(ctx, `SELECT population,morale,tax_rate,work_rate,last_civic_at,pop_remainder,tax_remainder,
+		wall_trap,wall_stakes,wall_tower,wall_log,wall_rock
 		FROM city_civic WHERE server_id=$1 AND city_id=$2`, sid, cityID).
 		Scan(&c.Civic.Population, &c.Civic.Morale, &c.Civic.TaxRate, &c.Civic.WorkRate,
-			&c.Civic.LastCivicAt, &c.Civic.popRemainder, &c.Civic.taxRemainder)
+			&c.Civic.LastCivicAt, &c.Civic.popRemainder, &c.Civic.taxRemainder,
+			&c.Wall[0], &c.Wall[1], &c.Wall[2], &c.Wall[3], &c.Wall[4])
 	if errors.Is(err, pgx.ErrNoRows) {
 		ensureCivic(c, time.Now())
 		return nil
@@ -407,13 +409,16 @@ func loadCivic(ctx context.Context, tx pgx.Tx, sid int32, cityID int64, c *CityS
 
 func saveCivic(ctx context.Context, tx pgx.Tx, sid int32, c *CityState, now time.Time) error {
 	ensureCivic(c, now)
-	_, err := tx.Exec(ctx, `INSERT INTO city_civic(server_id,city_id,population,morale,tax_rate,work_rate,last_civic_at,pop_remainder,tax_remainder)
-		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
+	_, err := tx.Exec(ctx, `INSERT INTO city_civic(server_id,city_id,population,morale,tax_rate,work_rate,last_civic_at,pop_remainder,tax_remainder,wall_trap,wall_stakes,wall_tower,wall_log,wall_rock)
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
 		ON CONFLICT (server_id,city_id) DO UPDATE SET population=EXCLUDED.population,morale=EXCLUDED.morale,
 		tax_rate=EXCLUDED.tax_rate,work_rate=EXCLUDED.work_rate,last_civic_at=EXCLUDED.last_civic_at,
-		pop_remainder=EXCLUDED.pop_remainder,tax_remainder=EXCLUDED.tax_remainder`,
+		pop_remainder=EXCLUDED.pop_remainder,tax_remainder=EXCLUDED.tax_remainder,
+		wall_trap=EXCLUDED.wall_trap,wall_stakes=EXCLUDED.wall_stakes,wall_tower=EXCLUDED.wall_tower,
+		wall_log=EXCLUDED.wall_log,wall_rock=EXCLUDED.wall_rock`,
 		sid, c.ID, c.Civic.Population, c.Civic.Morale, c.Civic.TaxRate, c.Civic.WorkRate,
-		c.Civic.LastCivicAt, c.Civic.popRemainder, c.Civic.taxRemainder)
+		c.Civic.LastCivicAt, c.Civic.popRemainder, c.Civic.taxRemainder,
+		c.Wall[0], c.Wall[1], c.Wall[2], c.Wall[3], c.Wall[4])
 	return err
 }
 

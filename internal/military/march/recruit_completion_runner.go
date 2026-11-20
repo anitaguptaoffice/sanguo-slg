@@ -140,7 +140,7 @@ func (p *RecruitParticipant) recruitDueEffect(ctx context.Context, a *recruittx.
 	if promoted != nil {
 		effect.PromotedID, effect.PromotedFinishAt = *promoted, promotedFinish.UTC()
 	}
-	if effect.UnitCfgID < 1 || effect.UnitCfgID > 4 || effect.Count <= 0 || (promoted == nil) != (promotedFinish == nil) ||
+	if effect.UnitCfgID < 1 || effect.UnitCfgID > 12 || effect.Count <= 0 || (promoted == nil) != (promotedFinish == nil) ||
 		effect.PromotedID < 0 || effect.PromotedID > 9007199254740991 ||
 		promoted != nil && (effect.PromotedID < 1 || !validRecruitTime(effect.PromotedFinishAt)) {
 		return effect, ErrRecruitUnavailable

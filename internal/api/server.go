@@ -43,6 +43,9 @@ const (
 	RouteClearCityOffice      = "domestic.v1.ClearCityOffice"
 	RoutePayCityOfficeSalary  = "domestic.v1.PayCityOfficeSalary"
 	RouteRewardCityOfficeHero = "domestic.v1.RewardCityOfficeHero"
+	RouteListWallDefenses     = "domestic.v1.ListWallDefenses"
+	RouteBuildWallDefense     = "domestic.v1.BuildWallDefense"
+	RouteHealWounded          = "domestic.v1.HealWounded"
 	RouteGetCityState         = "domestic.v1.GetCityState"
 	defaultServerID           = 1
 )
@@ -278,6 +281,9 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteClearCityOffice] = s.handleClearCityOffice
 	handlers[RoutePayCityOfficeSalary] = s.handlePayCityOfficeSalary
 	handlers[RouteRewardCityOfficeHero] = s.handleRewardCityOfficeHero
+	handlers[RouteListWallDefenses] = s.handleListWallDefenses
+	handlers[RouteBuildWallDefense] = s.handleBuildWallDefense
+	handlers[RouteHealWounded] = s.handleHealWounded
 	handlers[RouteGetCityState] = s.handleGetCityState
 	handlers[RouteListMarches] = s.handleListMarches
 	handlers[RouteGetBattleReport] = s.wrapGameplayOnSuccess(obs.EventBattleReportReady, s.handleGetBattleReport)

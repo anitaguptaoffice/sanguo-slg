@@ -44,7 +44,7 @@ func TestMilitaryGenerationCapture(t *testing.T) {
 	if *r.binding != savedBinding || len(v.profile.Objects) != 43 || len(r.profile.Objects) != 34 || r.profile.ServerID != 7 || v.profile.ServerID != 7 {
 		t.Fatal("caller mutation escaped snapshot")
 	}
-	for unit := int32(1); unit <= 4; unit++ {
+	for unit := int32(1); unit <= 12; unit++ {
 		want, _ := savedCatalog.Current(unit)
 		for _, catalog := range []march.RecruitCatalog{r.catalog, v.catalog} {
 			if got, err := catalog.Current(unit); err != nil || got != want {

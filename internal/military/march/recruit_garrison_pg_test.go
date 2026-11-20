@@ -11,9 +11,9 @@ func TestPGRecruitReadyGarrisonSnapshot(t *testing.T) {
 	pool, binding, profile := completionPG(t)
 	baseSQL(t, pool, `
 INSERT INTO mil_city_origin SELECT server_id,101,2,cohort_id,format_version,created_at FROM mil_city_origin WHERE city_id=100;
-INSERT INTO city_troop SELECT 1,101,u,0,1 FROM generate_series(1,4) u`)
+INSERT INTO city_troop SELECT 1,101,u,0,1 FROM generate_series(1,12) u`)
 	owner, access, ctx, participant := completionParticipant(t, binding, profile, catalog)
-	read := func(playerID, cityID int64, want [4]int32) {
+	read := func(playerID, cityID int64, want [12]int32) {
 		t.Helper()
 		got, err := participant.ReadReadyGarrison(ctx, access, 1, playerID, cityID)
 		baseOK(t, err)
@@ -22,8 +22,8 @@ INSERT INTO city_troop SELECT 1,101,u,0,1 FROM generate_series(1,4) u`)
 		}
 	}
 	before := completionState(t, pool)
-	read(1, 100, [4]int32{5, 0, 0, 0})
-	read(2, 101, [4]int32{})
+	read(1, 100, [12]int32{5})
+	read(2, 101, [12]int32{})
 	if completionState(t, pool) != before {
 		t.Fatal("garrison read changed committed state")
 	}
@@ -32,14 +32,14 @@ INSERT INTO city_troop SELECT 1,101,u,0,1 FROM generate_series(1,4) u`)
 	defer func() { _ = writer.Rollback(ctx) }()
 	tag, err := writer.Exec(ctx, "UPDATE city_troop SET count=10*unit_cfg_id WHERE server_id=1 AND city_id=100")
 	baseOK(t, err)
-	if tag.RowsAffected() != 4 {
-		t.Fatal("fixture did not stage all four stock rows")
+	if tag.RowsAffected() != 12 {
+		t.Fatal("fixture did not stage all twelve stock rows")
 	}
-	read(1, 100, [4]int32{5, 0, 0, 0}) // The separate transaction has not committed.
+	read(1, 100, [12]int32{5}) // The separate transaction has not committed.
 	baseOK(t, writer.Commit(ctx))
 	committed := completionState(t, pool)
-	read(1, 100, [4]int32{10, 20, 30, 40})
-	read(2, 101, [4]int32{})
+	read(1, 100, [12]int32{10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120})
+	read(2, 101, [12]int32{})
 	baseOK(t, owner.Commit(ctx))
 	if completionState(t, pool) != committed {
 		t.Fatal("garrison read rewrote current stock or its evidence")
@@ -53,8 +53,8 @@ func TestPGRecruitReadyGarrisonBadEvidence(t *testing.T) {
 		{"wrong cohort", "UPDATE mil_city_origin SET cohort_id=decode(repeat('aa',16),'hex') WHERE city_id=100"},
 		{"no stock", "DELETE FROM city_troop WHERE city_id=100"},
 		{"partial stock", "DELETE FROM city_troop WHERE city_id=100 AND unit_cfg_id=4"},
-		{"extra unit", "INSERT INTO city_troop VALUES(1,100,5,0,0)"},
-		{"replacement unit", "UPDATE city_troop SET unit_cfg_id=5 WHERE city_id=100 AND unit_cfg_id=4"},
+		{"extra unit", "INSERT INTO city_troop VALUES(1,100,13,0,0)"},
+		{"replacement unit", "UPDATE city_troop SET unit_cfg_id=13 WHERE city_id=100 AND unit_cfg_id=4"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			catalog, _, _, _ := completionRows(t)
@@ -64,7 +64,7 @@ func TestPGRecruitReadyGarrisonBadEvidence(t *testing.T) {
 			completionNoWrite(t, pool, owner, ctx, func() {
 				stock, err := participant.ReadReadyGarrison(ctx, access, 1, 1, 100)
 				completionUnavailable(t, err)
-				if stock != ([4]int32{}) {
+				if stock != ([12]int32{}) {
 					t.Fatalf("bad evidence returned partial stock: %v", stock)
 				}
 			})
@@ -96,7 +96,7 @@ func TestPGRecruitReadyGarrisonSourceGuards(t *testing.T) {
 	baseOK(t, foreignOwner.Rollback(foreignCtx))
 	got, err := participant.ReadReadyGarrison(ctx, access, 1, 1, 100)
 	baseOK(t, err)
-	if got != ([4]int32{5}) {
+	if got != ([12]int32{5}) {
 		t.Fatalf("valid pinned source returned %v", got)
 	}
 	baseOK(t, owner.Rollback(ctx))

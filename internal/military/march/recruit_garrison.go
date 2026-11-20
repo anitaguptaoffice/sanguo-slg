@@ -7,11 +7,11 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/recruittx"
 )
 
-// ReadReadyGarrison returns copied ready counts for units 1 to 4 from one
+// ReadReadyGarrison returns copied ready counts for units 1 to 12 from one
 // statement snapshot. The caller must already have checked WORLD ownership
 // and installed the existing MIL pins in this transaction.
-func (p *RecruitParticipant) ReadReadyGarrison(ctx context.Context, a *recruittx.Access, serverID int32, playerID, cityID int64) ([4]int32, error) {
-	var out [4]int32
+func (p *RecruitParticipant) ReadReadyGarrison(ctx context.Context, a *recruittx.Access, serverID int32, playerID, cityID int64) ([12]int32, error) {
+	var out [12]int32
 	if playerID <= 0 || cityID <= 0 || a == nil {
 		return out, ErrRecruitUnavailable
 	}
@@ -31,7 +31,7 @@ FROM ` + s.table("mil_city_origin") + ` m CROSS JOIN LATERAL (
         pg_catalog.array_agg(wounded ORDER BY unit_cfg_id) AS wounded
  FROM (SELECT unit_cfg_id,count,wounded FROM ` + s.table("city_troop") + `
        WHERE server_id OPERATOR(pg_catalog.=) m.server_id AND city_id OPERATOR(pg_catalog.=) m.city_id
-       ORDER BY unit_cfg_id LIMIT 5) stock_rows
+       ORDER BY unit_cfg_id LIMIT 13) stock_rows
 ) stock WHERE m.server_id OPERATOR(pg_catalog.=) $1 AND m.city_id OPERATOR(pg_catalog.=) $2`
 	if err = recruitHistoryRead(ctx, &access, s, query, []any{serverID, cityID},
 		&owner, &cohort, &format, &units, &ready, &wounded); err != nil {

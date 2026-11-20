@@ -74,7 +74,7 @@ function availableTroopCount(cityTroops: CityTroopStack[], unitCfgId: number): n
 export function validateMarchForm(input: MarchFormValidationInput): MarchFormValidationResult {
   const errors: string[] = [];
   const unitCfgId = input.unitCfgId ?? MARCH_FORM_INFANTRY_UNIT_CFG_ID;
-  if (![1, 2, 3, 4].includes(unitCfgId)) errors.push("请选择有效的出征兵种");
+  if (![1,2,3,4,5,6,7,8,9,10,11,12].includes(unitCfgId)) errors.push("请选择有效的出征兵种");
   const unitName = unitCfgId === 1 ? "步兵" : `${unitLabel(unitCfgId)}兵力`;
 
   const toXParsed = parseWorldMapCoord(input.toXRaw, "X");

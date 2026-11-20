@@ -76,11 +76,14 @@ func (p *RecruitParticipant) recruitCompletionLocked(ctx context.Context, a *rec
 	if err = recruitHistoryRead(ctx, a, s, `SELECT COALESCE(pg_catalog.array_agg(unit_cfg_id ORDER BY unit_cfg_id),'{}'::pg_catalog.int4[]),COALESCE(pg_catalog.array_agg(count ORDER BY unit_cfg_id),'{}'::pg_catalog.int4[]),COALESCE(pg_catalog.array_agg(wounded ORDER BY unit_cfg_id),'{}'::pg_catalog.int4[]) FROM (SELECT unit_cfg_id,count,wounded FROM `+s.table("city_troop")+` WHERE server_id OPERATOR(pg_catalog.=) $1 AND city_id OPERATOR(pg_catalog.=) $2 ORDER BY unit_cfg_id FOR UPDATE) q`, []any{c.ServerID, c.CityID}, &units, &counts, &wounded); err != nil {
 		return st, err
 	}
-	if len(units) != 4 || len(counts) != 4 || len(wounded) != 4 {
+	if len(units) != 12 || len(counts) != 12 || len(wounded) != 12 {
 		return st, ErrRecruitUnavailable
 	}
-	stock := make([]recruitStockRow, 4)
+	stock := make([]recruitStockRow, 12)
 	for i := range units {
+		if units[i] != int32(i+1) {
+			return st, ErrRecruitUnavailable
+		}
 		stock[i] = recruitStockRow{server: c.ServerID, city: c.CityID, unit: units[i], ready: int64(counts[i]), wounded: int64(wounded[i])}
 	}
 	var ids, players []int64
@@ -129,7 +132,7 @@ func (p *RecruitParticipant) recruitCompletionLocked(ctx context.Context, a *rec
 // recruitCompletionApply writes credit, done and one promotion; a later failure poisons the caller.
 func (p *RecruitParticipant) recruitCompletionApply(ctx context.Context, a *recruittx.Access, c RecruitCandidate, st recruitCompletionState) error {
 	plan, s := st.plan, st.source
-	if s == nil || plan.disposition != recruitCompletionDue || plan.creditUnit < 1 || plan.creditUnit > 4 || plan.creditCount <= 0 || plan.readyAfter < plan.creditCount || plan.doneID != c.QueueID {
+	if s == nil || plan.disposition != recruitCompletionDue || plan.creditUnit < 1 || plan.creditUnit > 12 || plan.creditCount <= 0 || plan.readyAfter < plan.creditCount || plan.doneID != c.QueueID {
 		return ErrRecruitUnavailable
 	}
 	wrote := false

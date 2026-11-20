@@ -51,8 +51,8 @@ AND (SELECT count(*) FROM work_queue)=3 AND (SELECT count(*) FROM mil_recruit_or
 AND (SELECT last_value=101 AND is_called FROM work_queue_id_seq)
 AND (SELECT array_agg(queue_id ORDER BY queue_id)=ARRAY[100,101]::bigint[] AND array_agg(status ORDER BY queue_id)=ARRAY[1,0]::smallint[]
 AND sum((payload->>'count')::bigint)=4 FROM work_queue WHERE queue_type=3)
-AND (SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[2147483636,12,13,14]
-AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[2147483647,2147483647,2147483647,2147483647] FROM city_troop)
+AND (SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[2147483636,12,13,14,15,16,17,18,19,20,21,22]
+AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647] FROM city_troop)
 AND EXISTS (SELECT FROM mil_city_origin WHERE server_id=1 AND city_id=1 AND owner_player_id=1 AND format_version=1
 AND cohort_id=decode('03000000000000000000000000000000','hex'))`).Scan(&exact))
 	if !exact {
@@ -90,7 +90,7 @@ func recruitReturnRowsCheckpoint(t *testing.T, f *recruitCompleteReturnPG, state
 AND EXISTS (SELECT FROM work_queue WHERE server_id=1 AND queue_id=100 AND start_at=$1 AND finish_at=$2)
 AND EXISTS (SELECT FROM work_queue WHERE server_id=1 AND queue_id=101 AND start_at=$3 AND finish_at=$4)
 AND (SELECT sum((payload->>'count')::bigint)=2 FROM work_queue WHERE queue_type=3 AND status IN(0,1))
-AND (SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[2147483638,12,13,14] FROM city_troop)
+AND (SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[2147483638,12,13,14,15,16,17,18,19,20,21,22] FROM city_troop)
 AND (SELECT count::bigint+(SELECT sum((payload->>'count')::bigint) FROM work_queue WHERE queue_type=3 AND status IN(0,1))=$5
 FROM city_troop WHERE server_id=1 AND city_id=1 AND unit_cfg_id=1)`, state.first.InitialStartAt, state.first.InitialFinishAt, at, finish, int64(math.MaxInt32-7)).Scan(&exact))
 	if !exact {

@@ -23,13 +23,13 @@ type RecruitRule struct {
 
 type RecruitManifest struct {
 	Version string
-	Rules   [4]RecruitRule
+	Rules   [12]RecruitRule
 }
 
 // RecruitCatalog is a copied immutable snapshot, NOT proof of source authority.
 // Only reviewed server release inputs may construct a production snapshot.
 type RecruitCatalog struct {
-	manifests map[string][4]RecruitRule
+	manifests map[string][12]RecruitRule
 	current   string
 }
 
@@ -43,7 +43,7 @@ type RecruitRuleEvidence struct {
 func recruitRuleBytes(rule RecruitRule) ([67]byte, error) {
 	var out [67]byte
 	cost := rule.Cost
-	if rule.UnitCfgID < 1 || rule.UnitCfgID > 4 || cost.Food < 0 || cost.Wood < 0 ||
+	if rule.UnitCfgID < 1 || rule.UnitCfgID > 12 || cost.Food < 0 || cost.Wood < 0 ||
 		cost.Iron < 0 || cost.Stone < 0 || rule.SecondsPerUnit <= 0 ||
 		rule.SecondsPerUnit > math.MaxInt64/int64(time.Second) {
 		return out, ErrRecruitManifest
@@ -57,8 +57,8 @@ func recruitRuleBytes(rule RecruitRule) ([67]byte, error) {
 }
 
 // RecruitManifestVersion computes public integrity, not artifact approval.
-func RecruitManifestVersion(rules [4]RecruitRule) (string, error) {
-	var out [295]byte
+func RecruitManifestVersion(rules [12]RecruitRule) (string, error) {
+	var out [831]byte
 	copy(out[:], "sanguo/recruit-manifest/v1\x00")
 	for i, rule := range rules {
 		if rule.UnitCfgID != int32(i+1) {
@@ -78,7 +78,7 @@ func NewRecruitCatalog(records []RecruitManifest, currentVersion string) (*Recru
 	if len(records) == 0 || currentVersion == "" {
 		return nil, ErrRecruitManifest
 	}
-	catalog := &RecruitCatalog{manifests: make(map[string][4]RecruitRule, len(records)), current: currentVersion}
+	catalog := &RecruitCatalog{manifests: make(map[string][12]RecruitRule, len(records)), current: currentVersion}
 	for _, record := range records {
 		version, err := RecruitManifestVersion(record.Rules)
 		if err != nil || version != record.Version {
@@ -96,7 +96,7 @@ func NewRecruitCatalog(records []RecruitManifest, currentVersion string) (*Recru
 }
 
 func (c *RecruitCatalog) evidence(version string, unitID int32) (RecruitRuleEvidence, error) {
-	if c == nil || unitID < 1 || unitID > 4 {
+	if c == nil || unitID < 1 || unitID > 12 {
 		return RecruitRuleEvidence{}, ErrRecruitEvidence
 	}
 	rules, found := c.manifests[version]

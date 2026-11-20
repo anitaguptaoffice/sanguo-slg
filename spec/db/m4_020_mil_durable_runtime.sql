@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS mil_recruit_receipt(
     queue_id bigint NOT NULL CHECK(queue_id >= 1 AND queue_id <= 9007199254740991),
     intent_version smallint NOT NULL CHECK(intent_version = 1),
     city_id bigint NOT NULL,
-    unit_cfg_id integer NOT NULL CHECK(unit_cfg_id >= 1 AND unit_cfg_id <= 4),
+    unit_cfg_id integer NOT NULL CHECK(unit_cfg_id >= 1 AND unit_cfg_id <= 12),
     count integer NOT NULL CHECK(count > 0),
     food_paid bigint NOT NULL CHECK(food_paid >= 0),
     wood_paid bigint NOT NULL CHECK(wood_paid >= 0),

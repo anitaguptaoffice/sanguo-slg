@@ -72,7 +72,7 @@ const freshRetainedChecks = `{"mil_recruit_origin":["CHECK (((octet_length(comma
  "PRIMARY KEY (server_id, queue_id)",
  "UNIQUE (server_id, player_id, operation, command_id)"],
  "mil_recruit_receipt":["CHECK (((queue_id >= 1) AND (queue_id <= '9007199254740991'::bigint)))",
- "CHECK (((unit_cfg_id >= 1) AND (unit_cfg_id <= 4)))",
+ "CHECK (((unit_cfg_id >= 1) AND (unit_cfg_id <= 12)))",
  "CHECK ((count > 0))",
  "CHECK ((duration_sec > 0))",
  "CHECK ((food_paid >= 0))",

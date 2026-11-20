@@ -50,7 +50,7 @@ AND (SELECT count(*) FROM mil_recruit_origin)=2 AND (SELECT count(*) FROM mil_re
 AND (SELECT array_agg(queue_id ORDER BY queue_id)=ARRAY[100,101]::bigint[] AND array_agg(status ORDER BY queue_id)=ARRAY[1,0]::smallint[] FROM work_queue WHERE queue_type=3)
 AND (SELECT last_value=101 AND is_called FROM work_queue_id_seq)
 AND (SELECT sum((payload->>'count')::bigint)=4 FROM work_queue WHERE queue_type=3 AND status IN(0,1))
-AND (SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[11,12,13,14] AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[2147483647,2147483647,2147483647,2147483647] FROM city_troop)
+AND (SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[11,12,13,14,15,16,17,18,19,20,21,22] AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647] FROM city_troop)
 AND EXISTS (SELECT FROM mil_city_origin WHERE server_id=1 AND city_id=1 AND owner_player_id=1 AND format_version=1 AND cohort_id=decode('03000000000000000000000000000000','hex'))`).Scan(&exact))
 	if !exact {
 		t.Fatal("paired paid wallet/stock/marker/allocator mismatch")
@@ -72,7 +72,7 @@ AND EXISTS (SELECT FROM mil_city_origin WHERE server_id=1 AND city_id=1 AND owne
 (SELECT array_agg(status ORDER BY queue_id)=ARRAY[2,1]::smallint[] FROM work_queue WHERE queue_type=3)
 AND EXISTS (SELECT FROM work_queue WHERE server_id=1 AND queue_id=101 AND start_at=$1 AND finish_at=$2)
 AND (SELECT sum((payload->>'count')::bigint)=2 FROM work_queue WHERE queue_type=3 AND status IN(0,1))
-AND (SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[13,12,13,14] FROM city_troop)
+AND (SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[13,12,13,14,15,16,17,18,19,20,21,22] FROM city_troop)
 AND (SELECT count::bigint+(SELECT sum((payload->>'count')::bigint) FROM work_queue WHERE queue_type=3 AND status IN(0,1))=15 FROM city_troop WHERE unit_cfg_id=1)`, at, finish).Scan(&exact))
 	if !exact {
 		t.Fatal("paired actual completion credit/terminal/promotion/capacity mismatch")
@@ -88,7 +88,7 @@ AND (SELECT count::bigint+(SELECT sum((payload->>'count')::bigint) FROM work_que
 		t.Fatal("paired Return changed retained graph, wounded, paid ledger or allocators")
 	}
 	returnPGOK(t, f.observer.QueryRow(f.ctx, `SELECT
-(SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[20,20,19,23] AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[2147483647,2147483647,2147483647,2147483647] FROM city_troop)
+(SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[20,20,19,23,15,16,17,18,19,20,21,22] AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647] FROM city_troop)
 AND (SELECT count(*)=1 AND bool_and(status=4) FROM march_order)
 AND (SELECT count(*)=1 AND bool_and(status=1 AND x=0 AND y=0) FROM field_army)
 AND (SELECT array_agg(unit_cfg_id ORDER BY unit_cfg_id)=ARRAY[1,2,3,4] AND array_agg(count ORDER BY unit_cfg_id)=ARRAY[7,8,6,9] FROM army_troop)

@@ -35,7 +35,7 @@ func TestPGRecruitPendingReadRawSnapshot(t *testing.T) {
 			scope := recruitScope{server: 1, player: 1, city: 100}
 			x, err := readRecruitPending(ctx, a, participant.source, scope)
 			baseOK(t, err)
-			if len(x.stock) != 4 || len(x.ids) != tc.total || x.ids[0] != 40 || x.ids[tc.total-1] != int64(39+tc.total) || x.statuses[0] != 1 || x.statuses[1] != 0 || !x.starts[0].Equal(active.qstart) || !x.finishes[1].Equal(waiting.qfinish) {
+			if len(x.stock) != 12 || len(x.ids) != tc.total || x.ids[0] != 40 || x.ids[tc.total-1] != int64(39+tc.total) || x.statuses[0] != 1 || x.statuses[1] != 0 || !x.starts[0].Equal(active.qstart) || !x.finishes[1].Equal(waiting.qfinish) {
 				t.Fatalf("incomplete raw snapshot: %#v", x)
 			}
 			if tc.name == "wrong owner" && x.players[1] != 2 || tc.name == "malformed payload" && x.payloads[1] != `{"v": 0}` || tc.name == "reserved capacity" && x.stock[0].ready != 2147483647 {
@@ -77,7 +77,7 @@ func TestPGRecruitPendingReadRejects(t *testing.T) {
 		{"wrong owner", `UPDATE mil_city_origin SET owner_player_id=2`},
 		{"wrong cohort", `UPDATE mil_city_origin SET cohort_id=decode(repeat('04',16),'hex')`},
 		{"missing stock", `DELETE FROM city_troop WHERE unit_cfg_id=4`},
-		{"extra stock", `INSERT INTO city_troop VALUES(1,100,5,0,0)`},
+		{"extra stock", `INSERT INTO city_troop VALUES(1,100,13,0,0)`},
 		{"SQL failure after stock", `ALTER TABLE work_queue RENAME TO hidden_queue`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

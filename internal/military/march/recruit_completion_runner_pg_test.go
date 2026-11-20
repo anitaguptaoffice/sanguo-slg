@@ -40,7 +40,7 @@ func dueCity(t *testing.T, pool *pgxpool.Pool, p freshsource.Profile, city int64
 	t.Helper()
 	_, err := pool.Exec(context.Background(), `INSERT INTO mil_city_origin VALUES(1,$1,1,$2,1,$3)`, city, p.Cohort[:], time.Now().UTC().Add(24*time.Hour).Truncate(time.Millisecond))
 	baseOK(t, err)
-	baseSQL(t, pool, fmt.Sprintf(`INSERT INTO city_troop VALUES(1,%d,1,5,1),(1,%d,2,0,0),(1,%d,3,0,0),(1,%d,4,0,0)`, city, city, city, city))
+	baseSQL(t, pool, fmt.Sprintf(`INSERT INTO city_troop SELECT 1,%d,u,CASE WHEN u=1 THEN 5 ELSE 0 END,CASE WHEN u=1 THEN 1 ELSE 0 END FROM generate_series(1,12) u`, city))
 }
 
 func TestPGDueKeysetAndApply(t *testing.T) {

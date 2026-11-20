@@ -28,7 +28,7 @@ func TestPGDurableHubReturnCommitAndRestore(t *testing.T) {
 	ids, err := f.store.Create(ctx, a, in)
 	baseOK(t, err)
 	baseOK(t, o.Commit(ctx))
-	if deployed != ([4]int32{2, 8, 0, 7}) {
+	if deployed != ([12]int32{2, 8, 0, 7}) {
 		t.Fatal("incorrect fixture deployment", deployed)
 	}
 
@@ -107,7 +107,7 @@ func TestPGDurableHubReturnCommitAndRestore(t *testing.T) {
 	var ready []int32
 	baseOK(t, f.pool.QueryRow(ctx, "SELECT array_agg(count ORDER BY unit_cfg_id) FROM city_troop").Scan(&ready))
 	if len(state.Marches) != 0 || fresh.March(ids.MarchID) != nil || len(fresh.restoreEv) != 0 ||
-		!reflect.DeepEqual(ready, []int32{5, 9, 0, 7}) || marchStoreRows(t, f.pool) != "1,1,2,0" {
+		!reflect.DeepEqual(ready, []int32{5, 9, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0}) || marchStoreRows(t, f.pool) != "1,1,2,0" {
 		t.Fatal("restart repeated a terminal order or lost stock", state, ready)
 	}
 }

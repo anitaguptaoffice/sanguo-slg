@@ -17,9 +17,15 @@ CATALOG_EMBED = ROOT / "internal/content/seed/catalog.json"
 BUILDING_EMBED = ROOT / "internal/domestic/seed/building_catalog.json"
 TECHNIC_EMBED = ROOT / "internal/domestic/seed/technic_catalog.json"
 
-UNIT_ORDER = ["infantry", "cavalry", "archer", "siege"]
-UNIT_NAMES = {"infantry": "步兵", "cavalry": "骑兵", "archer": "弓兵", "siege": "器械"}
-UNIT_TIER = {"infantry": 1, "cavalry": 2, "archer": 2, "siege": 3}
+UNIT_ORDER = ["infantry", "cavalry", "archer", "siege",
+              "militia", "levy", "scout", "spearman", "shield", "longbow",
+              "light_cavalry", "heavy_cavalry"]
+UNIT_NAMES = {"infantry": "步兵", "cavalry": "骑兵", "archer": "弓兵", "siege": "器械",
+              "militia": "民夫", "levy": "义兵", "scout": "斥候", "spearman": "长枪兵",
+              "shield": "刀盾兵", "longbow": "长弓手", "light_cavalry": "轻骑", "heavy_cavalry": "铁骑"}
+UNIT_TIER = {"infantry": 1, "cavalry": 2, "archer": 2, "siege": 3,
+             "militia": 1, "levy": 1, "scout": 2, "spearman": 2, "shield": 2,
+             "longbow": 2, "light_cavalry": 2, "heavy_cavalry": 3}
 HERO_ID_START, ITEM_ID_START = 1001, 2001
 QUEST_ID_START, OFFER_ID_START = 1001, 1001
 SHOP_ID_START, SHELF_ID_START = 1, 1
@@ -68,7 +74,7 @@ def build_units(params: dict) -> list[dict]:
     rows = []
     for i, code in enumerate(UNIT_ORDER, start=1):
         t = troops[code]
-        stats = {**t, "troop_type": code, "counter": counter, "counter_edges": edges}
+        stats = {**t, "troop_type": t.get("combat_type", code), "counter": counter, "counter_edges": edges}
         rows.append(
             {
                 "unit_cfg_id": i,

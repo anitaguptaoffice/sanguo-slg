@@ -24,7 +24,7 @@ export function parseCurrentRecruitQueue(value: unknown): CurrentRecruitQueue | 
   for (const row of jobs) {
     const { queue_id, unit_cfg_id, count, status = 0, finish_at_ms } = row ?? {};
     const expected = validated.length === 0 ? 1 : 0;
-    if (!Number.isSafeInteger(queue_id) || queue_id <= previous || ![1, 2, 3, 4].includes(unit_cfg_id) ||
+    if (!Number.isSafeInteger(queue_id) || queue_id <= previous || ![1,2,3,4,5,6,7,8,9,10,11,12].includes(unit_cfg_id) ||
         !Number.isInteger(count) || count <= 0 || count > 2147483647 || status !== expected ||
         !Number.isSafeInteger(finish_at_ms) || finish_at_ms < -62135596800000 || finish_at_ms > 253402300799999) {
       return null;

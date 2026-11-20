@@ -161,7 +161,7 @@ CONSTRAINT return_failure_unique UNIQUE(id) DEFERRABLE INITIALLY DEFERRED)`)
 		if err := conn.QueryRow(ctx, "SELECT m.status,a.status,a.x,a.y FROM march_order m,field_army a").Scan(&status, &army, &x, &y); err != nil {
 			return err
 		}
-		provisional = reflect.DeepEqual(ready, []int32{18, 20, 19, 23}) && status == 4 && army == 1 && x == 0 && y == 0
+		provisional = reflect.DeepEqual(ready, []int32{18, 20, 19, 23, 15, 16, 17, 18, 19, 20, 21, 22}) && status == 4 && army == 1 && x == 0 && y == 0
 		_, err := conn.Exec(ctx, "INSERT INTO return_failure_deferred VALUES(1),(1)")
 		return err
 	}

@@ -59,7 +59,7 @@ func TestReturnLockedGraphRejects(t *testing.T) {
 	for _, change := range []func(*returnLockedSnapshot){
 		func(s *returnLockedSnapshot) { s.units, s.counts = []int32{1, 1}, []int32{1, 1} },
 		func(s *returnLockedSnapshot) { s.units = []int32{0} },
-		func(s *returnLockedSnapshot) { s.units = []int32{5} },
+		func(s *returnLockedSnapshot) { s.units = []int32{13} },
 		func(s *returnLockedSnapshot) { s.counts = []int32{0} },
 		func(s *returnLockedSnapshot) { s.counts = []int32{-1} },
 		func(s *returnLockedSnapshot) { s.heroes = nil },

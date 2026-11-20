@@ -307,6 +307,6 @@ func returnAttemptLifetimeEffects(t *testing.T, f *returnAttemptPG, stable map[s
 	var status, army, x, y int32
 	returnPGOK(t, f.observer.QueryRow(f.ctx, "SELECT array_agg(count ORDER BY unit_cfg_id) FROM city_troop WHERE city_id=$1", f.candidate.CityID).Scan(&ready))
 	returnPGOK(t, f.observer.QueryRow(f.ctx, "SELECT m.status,a.status,a.x,a.y FROM march_order m JOIN field_army a USING(server_id,army_id) WHERE m.march_id=$1", f.candidate.MarchID).Scan(&status, &army, &x, &y))
-	returnLifetimeCheck(t, reflect.DeepEqual(ready, []int32{18, 20, 19, 23}) && status == 4 && army == 1 && x == 0 && y == 0 &&
+	returnLifetimeCheck(t, reflect.DeepEqual(ready, []int32{18, 20, 19, 23, 15, 16, 17, 18, 19, 20, 21, 22}) && status == 4 && army == 1 && x == 0 && y == 0 &&
 		reflect.DeepEqual(stable, snapshotReturnAttemptPG(t, f, true)), "committed credit or retained graph changed", ready, status, army, x, y)
 }

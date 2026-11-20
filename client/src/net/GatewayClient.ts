@@ -61,6 +61,9 @@ export type GatewayPort = {
   clearCityOffice(cityId: number, office: number): Promise<unknown>;
   payCityOfficeSalary(cityId: number): Promise<unknown>;
   rewardCityOfficeHero(cityId: number, heroId: number): Promise<unknown>;
+  listWallDefenses(cityId: number): Promise<unknown>;
+  buildWallDefense(cityId: number, defenseType: number): Promise<unknown>;
+  healWounded(cityId: number, unitCfgId: number, count: number): Promise<unknown>;
   recruitTroop(cityId: number, unitCfgId: number, count: number): Promise<unknown>;
   readonly preparedRecruit?: boolean;
   submitPreparedRecruit?(intent?: RecruitJournalIntent): Promise<PreparedRecruitResult>;
@@ -638,6 +641,21 @@ export class GatewayClient implements GatewayPort {
   async rewardCityOfficeHero(cityId: number, heroId: number) {
     const { RewardCityOfficeHeroResponse } = getTypes();
     return this.rpc(Routes.RewardCityOfficeHero, "RewardCityOfficeHeroRequest", { city_id: cityId, hero_id: heroId }, RewardCityOfficeHeroResponse, true);
+  }
+
+  async listWallDefenses(cityId: number) {
+    const { ListWallDefensesResponse } = getTypes();
+    return this.rpc(Routes.ListWallDefenses, "ListWallDefensesRequest", { city_id: cityId }, ListWallDefensesResponse, true);
+  }
+
+  async buildWallDefense(cityId: number, defenseType: number) {
+    const { BuildWallDefenseResponse } = getTypes();
+    return this.rpc(Routes.BuildWallDefense, "BuildWallDefenseRequest", { city_id: cityId, defense_type: defenseType }, BuildWallDefenseResponse, true);
+  }
+
+  async healWounded(cityId: number, unitCfgId: number, count: number) {
+    const { HealWoundedResponse } = getTypes();
+    return this.rpc(Routes.HealWounded, "HealWoundedRequest", { city_id: cityId, unit_cfg_id: unitCfgId, count }, HealWoundedResponse, true);
   }
 
   async startBuildingUpgrade(cityId: number, slotKey: string, buildingCfgId: number) {

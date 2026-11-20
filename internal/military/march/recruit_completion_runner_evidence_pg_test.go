@@ -183,7 +183,7 @@ func TestPGApplyDueRejectsDrift(t *testing.T) {
 		`UPDATE mil_city_origin SET owner_player_id=2`,
 		`UPDATE mil_city_origin SET cohort_id=decode(repeat('aa',16),'hex')`,
 		`DELETE FROM city_troop WHERE unit_cfg_id=4`,
-		`INSERT INTO city_troop VALUES(1,100,5,0,0)`,
+		`INSERT INTO city_troop VALUES(1,100,13,0,0)`,
 		`UPDATE city_troop SET count=2147483647 WHERE unit_cfg_id=1`,
 		`UPDATE mil_recruit_receipt SET rule_digest=decode(repeat('bb',32),'hex') WHERE queue_id=40`,
 	} {

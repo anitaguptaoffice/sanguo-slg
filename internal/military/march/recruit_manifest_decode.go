@@ -107,7 +107,7 @@ func recruitManifestInteger(d *json.Decoder, low, high int64) (int64, error) {
 func recruitManifestRule(d *json.Decoder, rule *RecruitRule) error {
 	return recruitManifestObject(d, map[string]func() error{
 		"unit_cfg_id": func() error {
-			value, err := recruitManifestInteger(d, 1, 4)
+			value, err := recruitManifestInteger(d, 1, 12)
 			rule.UnitCfgID = int32(value)
 			return err
 		},

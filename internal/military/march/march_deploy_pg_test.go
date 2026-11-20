@@ -94,7 +94,7 @@ func TestPGMarchDeploymentAndCreate(t *testing.T) {
 	baseOK(t, f.lock(ctx, a))
 	ready, err := f.recruit.DebitMarchTroops(ctx, a, 1, 1, 100, in.Troops)
 	baseOK(t, err)
-	if ready != ([4]int32{2, 5, 0, 7}) || returnAtomicState(t, f.pool, false) != before || !prepareProbeLocked(t, f.pool, "SELECT city_id FROM player_city WHERE server_id=1 AND city_id=100") {
+	if ready != ([12]int32{2, 5, 0, 7}) || returnAtomicState(t, f.pool, false) != before || !prepareProbeLocked(t, f.pool, "SELECT city_id FROM player_city WHERE server_id=1 AND city_id=100") {
 		t.Fatal("incorrect provisional debit, visibility or WORLD barrier", ready)
 	}
 	_, err = f.store.Create(ctx, a, in)
@@ -116,13 +116,13 @@ func TestPGMarchDeploymentAndCreate(t *testing.T) {
 	baseOK(t, o.Commit(ctx))
 	var exact bool
 	baseOK(t, f.pool.QueryRow(ctx, `SELECT
-		(SELECT array_agg(count ORDER BY unit_cfg_id) FROM city_troop)=ARRAY[2,5,0,7]
-		AND (SELECT array_agg(wounded ORDER BY unit_cfg_id) FROM city_troop)=ARRAY[1,2,0,17]
+		(SELECT array_agg(count ORDER BY unit_cfg_id) FROM city_troop)=ARRAY[2,5,0,7,0,0,0,0,0,0,0,0]
+		AND (SELECT array_agg(wounded ORDER BY unit_cfg_id) FROM city_troop)=ARRAY[1,2,0,17,0,0,0,0,0,0,0,0]
 		AND EXISTS (SELECT FROM march_order WHERE march_id=$1 AND army_id=$2 AND origin_city_id=100 AND status=1)
 		AND (SELECT array_agg(count ORDER BY unit_cfg_id) FROM army_troop WHERE army_id=$2)=ARRAY[3,4]
 		AND (SELECT array_agg(status ORDER BY queue_id) FROM work_queue)=ARRAY[1,0]::smallint[]
 		AND (SELECT count(*) FROM mil_recruit_receipt)=2 AND (SELECT food FROM player_wallet)=8000`, ids.MarchID, ids.ArmyID).Scan(&exact))
-	if ready != ([4]int32{2, 5, 0, 7}) || !exact {
+	if ready != ([12]int32{2, 5, 0, 7}) || !exact {
 		t.Fatal("confirmed debit or immutable state changed", ready, ids)
 	}
 }
@@ -136,7 +136,7 @@ func TestPGMarchDeploymentRejects(t *testing.T) {
 		{"insufficient despite wounded", "", 1, ErrInsufficientTroops},
 		{"wrong owner", "", 2, ErrMarchDeploymentUnavailable},
 		{"stock missing", "DELETE FROM city_troop WHERE unit_cfg_id=3", 1, ErrMarchDeploymentUnavailable},
-		{"stock extra", "INSERT INTO city_troop VALUES(1,100,5,0,0)", 1, ErrMarchDeploymentUnavailable},
+		{"stock extra", "INSERT INTO city_troop VALUES(1,100,13,0,0)", 1, ErrMarchDeploymentUnavailable},
 		{"wrong cohort", "UPDATE mil_city_origin SET cohort_id=decode(repeat('08',16),'hex')", 1, ErrMarchDeploymentUnavailable},
 		{"bad pending receipt", "DELETE FROM mil_recruit_receipt WHERE queue_id=41", 1, ErrMarchDeploymentUnavailable},
 	} {
@@ -149,7 +149,7 @@ func TestPGMarchDeploymentRejects(t *testing.T) {
 			o, a, ctx := baseOwner(t, f.binding)
 			baseOK(t, f.lock(ctx, a))
 			got, err := f.recruit.DebitMarchTroops(ctx, a, 1, tc.player, 100, []TroopStack{{1, 3}, {4, 8}})
-			if !errors.Is(err, tc.want) || got != ([4]int32{}) {
+			if !errors.Is(err, tc.want) || got != ([12]int32{}) {
 				t.Fatal(got, err)
 			}
 			baseOK(t, o.Commit(ctx)) // These definite rejections occur before any write.

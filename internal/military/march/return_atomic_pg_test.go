@@ -68,7 +68,7 @@ func returnAtomicState(t *testing.T, pool *pgxpool.Pool, stable bool) string {
 func TestPGReturnAtomicDue(t *testing.T) {
 	for _, boundary := range []bool{false, true} {
 		pool, b, profile, trace := returnAtomicFixture(t)
-		want := []int32{12, 8, 6, 9}
+		want := []int32{12, 8, 6, 9, 0, 0, 0, 0, 0, 0, 0, 0}
 		baseSQL(t, pool, "UPDATE city_troop SET wounded=2147483647")
 		if boundary {
 			baseSQL(t, pool, "UPDATE city_troop SET count=2147483636 WHERE unit_cfg_id=1") // R+P+S = MaxInt32.

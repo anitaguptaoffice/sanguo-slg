@@ -37,7 +37,7 @@ func recruitSourceFixture(t *testing.T) (*recruittx.Binding, freshsource.Profile
 			p.Objects[name] = freshsource.ObjectIdentity{OID: uint32(100 + len(p.Objects)), OwnerOID: 3}
 		}
 	}
-	var rules [4]march.RecruitRule
+	var rules [12]march.RecruitRule
 	for i := range rules {
 		rules[i] = march.RecruitRule{UnitCfgID: int32(i + 1), SecondsPerUnit: 1}
 	}

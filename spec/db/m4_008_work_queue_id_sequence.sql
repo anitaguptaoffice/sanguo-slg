@@ -167,7 +167,7 @@ BEGIN
                     'PRIMARY KEY (server_id, queue_id)',
                     format('FOREIGN KEY (server_id, queue_id) REFERENCES %I.mil_recruit_origin(server_id, queue_id) ON UPDATE RESTRICT ON DELETE RESTRICT',ns),
                     'CHECK (((queue_id >= 1) AND (queue_id <= ''9007199254740991''::bigint)))',
-                    'CHECK ((intent_version = 1))', 'CHECK (((unit_cfg_id >= 1) AND (unit_cfg_id <= 4)))',
+                    'CHECK ((intent_version = 1))', 'CHECK (((unit_cfg_id >= 1) AND (unit_cfg_id <= 12)))',
                     'CHECK ((count > 0))', 'CHECK ((food_paid >= 0))', 'CHECK ((wood_paid >= 0))',
                     'CHECK ((iron_paid >= 0))', 'CHECK ((stone_paid >= 0))', 'CHECK ((duration_sec > 0))',
                     'CHECK ((octet_length(catalog_version) > 0))', 'CHECK ((octet_length(rule_digest) = 32))',

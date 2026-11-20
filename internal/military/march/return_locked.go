@@ -127,7 +127,7 @@ func classifyReturnGraph(c ReturnCandidate, origin ReturnOrigin, s returnLockedS
 	}
 	var previous int32
 	for i, unit := range s.units {
-		if unit <= previous || unit > 4 || s.counts[i] <= 0 {
+		if unit <= previous || unit > 12 || s.counts[i] <= 0 {
 			return 0
 		}
 		previous = unit

@@ -181,7 +181,8 @@ func (g *recruitGeneration) admit(ctx context.Context, accountID int64, scope ma
 		a.queueID = queueID
 		s.mu.Unlock()
 		phase = "history"
-		if acceptance, r.cause = bundle.military.History(ctx, &access, scope, intent, queueID); r.cause != nil {
+		acceptance, r.cause = bundle.military.History(ctx, &access, scope, intent, queueID)
+		if r.cause != nil {
 			return
 		}
 	} else {

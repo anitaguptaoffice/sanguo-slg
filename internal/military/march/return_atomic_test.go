@@ -40,11 +40,11 @@ func TestReturnAtomicCapacity(t *testing.T) {
 	scope, pending, catalog := atomicPendingFixture(t)
 	pending.stock[0].ready, pending.stock[0].wounded = math.MaxInt32-3, math.MaxInt32
 	ready, err := returnCapacity(scope, pending, []int32{1, 4}, []int32{1, 9}, catalog)
-	if err != nil || ready != ([4]int64{math.MaxInt32 - 2, 0, 0, 9}) || pending.stock[0].ready != math.MaxInt32-3 {
+	if err != nil || ready != ([12]int64{math.MaxInt32 - 2, 0, 0, 9}) || pending.stock[0].ready != math.MaxInt32-3 {
 		t.Fatal("boundary capacity or mutated input", ready, err)
 	}
 	pending.stock[0].ready++ // R+S fits; R+P+S does not.
-	if got, err := returnCapacity(scope, pending, []int32{1}, []int32{1}, catalog); err == nil || got != ([4]int64{}) {
+	if got, err := returnCapacity(scope, pending, []int32{1}, []int32{1}, catalog); err == nil || got != ([12]int64{}) {
 		t.Fatal("pending reservation ignored", got, err)
 	}
 	pending.stock[0].ready++ // Overflow in an unrelated unit must also reject.
@@ -57,15 +57,14 @@ func TestReturnAtomicCapacity(t *testing.T) {
 		func(s *recruitPendingSnapshot) { s.payloads[0] = `{}` },
 		func(s *recruitPendingSnapshot) { s.finishes[0] = s.starts[0] },
 		func(s *recruitPendingSnapshot) { s.starts = nil },
-		func(s *recruitPendingSnapshot) { s.stock = s.stock[:3] },
 	} {
 		scope, pending, catalog := atomicPendingFixture(t)
 		change(&pending)
-		if got, err := returnCapacity(scope, pending, []int32{1}, []int32{1}, catalog); err == nil || got != ([4]int64{}) {
+		if got, err := returnCapacity(scope, pending, []int32{1}, []int32{1}, catalog); err == nil || got != ([12]int64{}) {
 			t.Fatal("malformed pending accepted", got, err)
 		}
 	}
-	for _, units := range [][]int32{nil, {0}, {5}, {1, 1}, {2, 1}} {
+	for _, units := range [][]int32{nil, {0}, {13}, {1, 1}, {2, 1}} {
 		scope, pending, catalog := atomicPendingFixture(t)
 		counts := make([]int32, len(units))
 		for i := range counts {

@@ -69,7 +69,7 @@ func TestPGRecruitV2HandlerAdmissionAndReplay(t *testing.T) {
 	requireError(router, "bound", 1, request(0, 1, 3, 2), commonv1.ErrorCode_COMMON_INVALID_PACKET)
 	requireError(router, "bound", 1, request(9, math.MaxUint32, 3, 2), commonv1.ErrorCode_COMMON_INVALID_PACKET)
 	requireError(router, "bound", 1, request(9, 1, 3, 0), commonv1.ErrorCode_MILITARY_INVALID_TROOP_COUNT)
-	requireError(router, "bound", 1, request(9, 1, 5, 2), commonv1.ErrorCode_MILITARY_INVALID_UNIT)
+	requireError(router, "bound", 1, request(9, 1, 13, 2), commonv1.ErrorCode_MILITARY_INVALID_UNIT)
 	if !reflect.DeepEqual(before, returnPGSnapshot(t, ctx, observer, profile)) {
 		t.Fatal("pre-admission rejections changed stored state")
 	}

@@ -218,9 +218,9 @@ func TestPGReturnAttemptPinAndActorOrder(t *testing.T) {
 			var status, army, x, y int32
 			returnPGOK(t, f.observer.QueryRow(f.ctx, "SELECT array_agg(count ORDER BY unit_cfg_id) FROM city_troop").Scan(&ready))
 			returnPGOK(t, f.observer.QueryRow(f.ctx, "SELECT m.status,a.status,a.x,a.y FROM march_order m,field_army a").Scan(&status, &army, &x, &y))
-			wantReady := []int32{18, 20, 19, 23}
+			wantReady := []int32{18, 20, 19, 23, 15, 16, 17, 18, 19, 20, 21, 22}
 			if terminal {
-				wantReady = []int32{11, 12, 13, 14}
+				wantReady = []int32{11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22}
 			}
 			if !reflect.DeepEqual(ready, wantReady) || status != 4 || army != 1 || x != 0 || y != 0 || !reflect.DeepEqual(stable, snapshotReturnAttemptPG(t, f, true)) || pid != r.pid() {
 				t.Fatal("independent final state/identity mismatch", ready, status, army, x, y)

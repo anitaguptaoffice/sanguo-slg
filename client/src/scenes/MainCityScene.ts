@@ -274,7 +274,7 @@ import {
 } from "@/net/hudFormat";
 import { MainCityDomesticSlotStrip } from "@/ui/MainCityDomesticSlotStrip";
 import { MainCitySlotUpgradeOverlay } from "@/ui/MainCitySlotUpgradeOverlay";
-import { MainCityBuildingPanel, type CityOfficeRow, type TechnicRow } from "@/ui/MainCityBuildingPanel";
+import { MainCityBuildingPanel, type CityOfficeRow, type TechnicRow, type WallDefenseRow } from "@/ui/MainCityBuildingPanel";
 import { MainCityCityOfficePanel, type CityCivicView } from "@/ui/MainCityCityOfficePanel";
 import {
   CITY_CHIEF_HALL_SLOT_KEY,
@@ -566,6 +566,14 @@ export class MainCityScene implements Scene {
             <option value="2">骑兵</option>
             <option value="3">弓兵</option>
             <option value="4">器械</option>
+            <option value="5">民夫</option>
+            <option value="6">义兵</option>
+            <option value="7">斥候</option>
+            <option value="8">长枪兵</option>
+            <option value="9">刀盾兵</option>
+            <option value="10">长弓手</option>
+            <option value="11">轻骑</option>
+            <option value="12">铁骑</option>
           </select>
         </label>
         <label>数量 <input type="number" data-field="recruit-count" min="1" value="20" /></label>
@@ -601,6 +609,10 @@ export class MainCityScene implements Scene {
           <select data-field="march-unit" aria-label="出征兵种">
             <option value="1">步兵</option><option value="2">骑兵</option>
             <option value="3">弓兵</option><option value="4">器械</option>
+            <option value="5">民夫</option><option value="6">义兵</option>
+            <option value="7">斥候</option><option value="8">长枪兵</option>
+            <option value="9">刀盾兵</option><option value="10">长弓手</option>
+            <option value="11">轻骑</option><option value="12">铁骑</option>
           </select>
         </label>
         <label>出征数量 <input type="number" data-field="march-count" min="1" value="50" /></label>
@@ -1039,6 +1051,7 @@ export class MainCityScene implements Scene {
       (slotKey) => void this.demolishBuilding(slotKey),
       (tid) => void this.startTechnicResearch(tid),
       (action, office, heroId) => void this.cityOfficeAction(action, office, heroId),
+      (action, defenseType, unitId) => void this.wallAction(action, defenseType, unitId),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -2169,6 +2182,7 @@ export class MainCityScene implements Scene {
     }
     if (slotKey === "academy") void this.refreshTechnics();
     if (slotKey === "recruit_hall") void this.refreshCityOffices();
+    if (slotKey === "wall") void this.refreshWallDefenses();
   }
 
   private getCityOfficeContext() {
@@ -2221,6 +2235,44 @@ export class MainCityScene implements Scene {
     } catch (error) {
       if (this.session !== session) return;
       this.cityOfficePanel.setFormError(formatPanelGatewayErrorFromUnknown("build", error));
+    }
+  }
+
+  private async refreshWallDefenses(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const res = (await this.gateway.listWallDefenses(session.cityId)) as {
+        defenses?: WallDefenseRow[]; wall_area?: number; area_used?: number;
+      };
+      if (this.session !== session) return;
+      this.buildingPanel.setWallDefenses(res.defenses ?? [], res.wall_area ?? 0, res.area_used ?? 0);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async wallAction(action: string, defenseType: number, unitId: number): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      if (action === "build-defense") {
+        const res = (await this.gateway.buildWallDefense(session.cityId, defenseType)) as {
+          defenses?: WallDefenseRow[]; wall_area?: number; area_used?: number; wallet?: ResourceWallet;
+        };
+        if (res.wallet) session.wallet = mergeCityResourceWallet(session.wallet, res.wallet);
+        this.buildingPanel.setWallDefenses(res.defenses ?? [], res.wall_area ?? 0, res.area_used ?? 0);
+        this.status = "城防已建造";
+      } else if (action === "heal-wounded") {
+        const res = (await this.gateway.healWounded(session.cityId, unitId, 9999)) as { healed?: number };
+        await this.refreshState();
+        this.status = `伤兵已治疗 ${res.healed ?? 0} 人`;
+      }
+      this.renderHud();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
     }
   }
 
@@ -3090,7 +3142,7 @@ export class MainCityScene implements Scene {
   private preparedRecruitIntent() {
     const city = this.session?.cityId ?? 0;
     const { unitCfgId, count } = readTroopRecruitForm(this.militaryPanel);
-    if (!Number.isSafeInteger(city) || city <= 0 || ![1, 2, 3, 4].includes(unitCfgId) ||
+    if (!Number.isSafeInteger(city) || city <= 0 || ![1,2,3,4,5,6,7,8,9,10,11,12].includes(unitCfgId) ||
         !Number.isInteger(count) || count <= 0 || count > 2147483647) return null;
     return { city_id: String(city), unit_cfg_id: unitCfgId, count };
   }

@@ -42,7 +42,7 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
  INSERT INTO city_production_checkpoint(server_id,city_id,player_id,settled_at) VALUES(1,1,1,'2026-01-01'),(1,2,1,'2026-01-01');
  INSERT INTO city_building(server_id,city_id,slot_key,building_cfg_id) VALUES(1,1,'hall',1);
  INSERT INTO mil_city_origin SELECT server_id,2,owner_player_id,cohort_id,format_version,created_at FROM mil_city_origin WHERE city_id=1;
- INSERT INTO city_troop SELECT 1,2,u,0,u FROM generate_series(1,4) u;
+ INSERT INTO city_troop SELECT 1,2,u,0,u FROM generate_series(1,12) u;
  UPDATE work_queue SET status=2 WHERE server_id=1 AND queue_id=1 AND queue_type=1`)
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 	const (
@@ -156,6 +156,8 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 		got := readCity(session, 1, 1, 0)
 		expected := &domesticv1.CityGarrisonSnapshot{Troops: []*domesticv1.ReadyTroopCount{
 			{UnitCfgId: 1, Count: 11}, {UnitCfgId: 2, Count: 12}, {UnitCfgId: 3, Count: unitThree}, {UnitCfgId: 4, Count: 14},
+			{UnitCfgId: 5, Count: 15}, {UnitCfgId: 6, Count: 16}, {UnitCfgId: 7, Count: 17}, {UnitCfgId: 8, Count: 18},
+			{UnitCfgId: 9, Count: 19}, {UnitCfgId: 10, Count: 20}, {UnitCfgId: 11, Count: 21}, {UnitCfgId: 12, Count: 22},
 		}}
 		if !proto.Equal(got.GetGarrison(), expected) || got.GetWallet().GetFood() != food ||
 			len(got.GetBuildings()) != 1 || got.GetBuildings()[0].GetSlotKey() != "hall" || got.GetProductionRates() == nil {

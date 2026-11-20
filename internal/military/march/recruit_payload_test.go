@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-const payloadGolden = `{"v":1,"unit_cfg_id":1,"count":2,"cost_paid":{"food":80,"wood":40,"iron":0,"stone":0},"duration_sec":60,"catalog_version":"recruit-v1:eba0b17092787c8e796ce47af01d956e74885f8dd71d45b76a25d333447b728f","rule_digest":"4c1f706ca9b78d06bc4233a6bf52ac682b2998104754aca5f7f3fc5a68f64082"}`
+const payloadGolden = `{"v":1,"unit_cfg_id":1,"count":2,"cost_paid":{"food":80,"wood":40,"iron":0,"stone":0},"duration_sec":60,"catalog_version":"recruit-v1:614ba218f42c9c37ad29eb6af0fecea199207b1f7c6c53a7cd8b480d184718b3","rule_digest":"4c1f706ca9b78d06bc4233a6bf52ac682b2998104754aca5f7f3fc5a68f64082"}`
 
 func payloadCatalog(t *testing.T) *RecruitCatalog {
 	t.Helper()
@@ -23,7 +23,7 @@ func payloadCatalog(t *testing.T) *RecruitCatalog {
 
 func TestRecruitPayloadRoundTrip(t *testing.T) {
 	c := payloadCatalog(t)
-	for unit := int32(1); unit <= 4; unit++ {
+	for unit := int32(1); unit <= 12; unit++ {
 		e, err := c.Current(unit)
 		if err != nil {
 			t.Fatal(err)
@@ -98,7 +98,7 @@ func TestRecruitPayloadOriginalJSON(t *testing.T) {
 			cases[field+bad] = []byte(strings.Replace(payloadGolden, `"`+field+`":`+original, `"`+field+`":`+bad, 1))
 		}
 	}
-	for field, original := range map[string]string{"catalog_version": `"recruit-v1:eba0b17092787c8e796ce47af01d956e74885f8dd71d45b76a25d333447b728f"`, "rule_digest": `"4c1f706ca9b78d06bc4233a6bf52ac682b2998104754aca5f7f3fc5a68f64082"`} {
+	for field, original := range map[string]string{"catalog_version": `"recruit-v1:614ba218f42c9c37ad29eb6af0fecea199207b1f7c6c53a7cd8b480d184718b3"`, "rule_digest": `"4c1f706ca9b78d06bc4233a6bf52ac682b2998104754aca5f7f3fc5a68f64082"`} {
 		for _, bad := range []string{`null`, `0`, `true`, `""`, `[]`} {
 			cases[field+bad] = []byte(strings.Replace(payloadGolden, `"`+field+`":`+original, `"`+field+`":`+bad, 1))
 		}

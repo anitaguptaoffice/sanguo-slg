@@ -16,6 +16,18 @@ combat:
     cavalry:   { atk: 18, def: 8,  hp: 80,  speed: 100, food_upkeep: 2 }
     archer:    { atk: 14, def: 6,  hp: 70,  speed: 60,  food_upkeep: 1 }
     siege:     { atk: 25, def: 5,  hp: 50,  speed: 30,  food_upkeep: 3 }
+    militia:       { atk: 6,  def: 8,  hp: 80,  speed: 40,  food_upkeep: 1, combat_type: infantry }
+    levy:          { atk: 8,  def: 10, hp: 90,  speed: 45,  food_upkeep: 1, combat_type: infantry }
+    scout:         { atk: 9,  def: 5,  hp: 60,  speed: 120, food_upkeep: 1, combat_type: cavalry }
+    spearman:      { atk: 13, def: 12, hp: 95,  speed: 50,  food_upkeep: 1, combat_type: infantry }
+    shield:        { atk: 9,  def: 20, hp: 120, speed: 40,  food_upkeep: 1, combat_type: infantry }
+    longbow:       { atk: 17, def: 6,  hp: 65,  speed: 65,  food_upkeep: 1, combat_type: archer }
+    light_cavalry: { atk: 16, def: 8,  hp: 85,  speed: 110, food_upkeep: 2, combat_type: cavalry }
+    heavy_cavalry: { atk: 24, def: 14, hp: 110, speed: 85,  food_upkeep: 3, combat_type: cavalry }
+    supply_wagon:  { atk: 4,  def: 6,  hp: 90,  speed: 35,  food_upkeep: 1, combat_type: siege }
+    ballista:      { atk: 28, def: 6,  hp: 55,  speed: 25,  food_upkeep: 3, combat_type: siege }
+    ram:           { atk: 30, def: 18, hp: 140, speed: 20,  food_upkeep: 3, combat_type: siege }
+    catapult:      { atk: 35, def: 8,  hp: 60,  speed: 18,  food_upkeep: 4, combat_type: siege }
   # 克制边：攻击方 → 防御方（见 combat.md 矩阵）
   counter_edges:
     - [cavalry, infantry]

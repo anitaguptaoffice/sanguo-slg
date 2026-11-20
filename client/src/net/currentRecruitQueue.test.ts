@@ -36,7 +36,7 @@ it.each([
   { jobs: [waiting] },
   { jobs: [active, { ...waiting, queue_id: 41 }] },
   { jobs: [active, { ...waiting, status: 1 }] },
-  { jobs: [active, { ...waiting, unit_cfg_id: 5 }] },
+  { jobs: [active, { ...waiting, unit_cfg_id: 13 }] },
   { jobs: [active, { ...waiting, count: 2147483648 }] },
   { jobs: [{ ...active, queue_id: 9007199254740992 }] },
   { jobs: [{ ...active, finish_at_ms: 253402300800000 }] },

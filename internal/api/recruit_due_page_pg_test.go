@@ -42,7 +42,7 @@ func newRecruitDuePG(t *testing.T, trace *recruitDuePGTrace) recruitDuePG {
 	observer, binding, profile := recruitPGFixture(t, &trace.returnPGTrace, func(c *pgxpool.Config) {
 		c.ConnConfig.Tracer = trace
 	})
-	var rules [4]march.RecruitRule
+	var rules [12]march.RecruitRule
 	for i := range rules {
 		rules[i] = march.RecruitRule{UnitCfgID: int32(i + 1), Cost: march.Resources{Food: 2, Wood: 3}, SecondsPerUnit: 120}
 	}

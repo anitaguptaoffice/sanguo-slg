@@ -121,7 +121,7 @@ func TestPGRecruitCompleteOutcomes(t *testing.T) {
 		{[]historyRow{active, waiting}, `UPDATE work_queue SET status=1 WHERE queue_id=41`, cand, 0},
 		{[]historyRow{active, waiting}, `UPDATE work_queue SET status=CASE WHEN queue_id=40 THEN 0 ELSE 1 END WHERE queue_id IN(40,41)`, cand, 0},
 		{[]historyRow{active, waiting}, `DELETE FROM city_troop WHERE unit_cfg_id=4`, cand, 0},
-		{[]historyRow{active, waiting}, `INSERT INTO city_troop VALUES(1,100,5,0,0)`, cand, 0},
+		{[]historyRow{active, waiting}, `INSERT INTO city_troop VALUES(1,100,13,0,0)`, cand, 0},
 		{[]historyRow{active, waiting}, `UPDATE city_troop SET count=2147483647 WHERE unit_cfg_id=1`, cand, 0},
 		{[]historyRow{active, waiting, other}, "", cand, 0},
 		{[]historyRow{active, waiting}, `UPDATE mil_city_origin SET owner_player_id=2`, cand, 0},

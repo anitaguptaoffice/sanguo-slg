@@ -26,7 +26,7 @@ func validRecruitIntent(intent RecruitIntent) error {
 	if intent.Count <= 0 {
 		return ErrRecruitAdmissionCount
 	}
-	if intent.UnitCfgID < 1 || intent.UnitCfgID > 4 {
+	if intent.UnitCfgID < 1 || intent.UnitCfgID > 12 {
 		return ErrRecruitAdmissionUnit
 	}
 	return nil
