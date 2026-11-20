@@ -1,3 +1,4 @@
+import type { AssetLoader } from "@/engine/AssetLoader";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import {
@@ -13,11 +14,20 @@ import {
   MIN_ZOOM,
   type Camera,
 } from "./worldMapMath";
+import {
+  worldCityAssetId,
+  worldFlagAssetId,
+  worldMarchAssetId,
+  worldResourceAssetId,
+  worldTileAssetId,
+} from "./worldMapArt";
 
 export type WorldMapDeps = {
   gateway: () => GatewayPort;
   getSession: () => MainCitySession | null;
   onMarchTarget: (x: number, y: number) => void;
+  /** Optional R1-S6 art; procedural shapes remain the fallback. */
+  assets?: AssetLoader;
 };
 
 type Tile = {
@@ -33,6 +43,7 @@ type Tile = {
   owner_name: string;
   npc_kind: number;
   npc_level: number;
+  city_level: number;
   in_battle: boolean;
 };
 
@@ -480,6 +491,8 @@ export class WorldMapScene {
         if (!tile) continue;
         const point = projectTile(x, y, this.camera, size);
         if (point.x < -halfW || point.x > size.width + halfW || point.y < -halfH || point.y > size.height + halfH * 3) continue;
+        // The flat fill runs underneath the texture so antialiased diamond
+        // edges never expose the dark canvas background between tiles.
         ctx.beginPath();
         ctx.moveTo(point.x, point.y - halfH);
         ctx.lineTo(point.x + halfW, point.y);
@@ -488,9 +501,25 @@ export class WorldMapScene {
         ctx.closePath();
         ctx.fillStyle = terrainFill(tile.terrain);
         ctx.fill();
-        ctx.strokeStyle = "rgba(0,0,0,0.18)";
-        ctx.stroke();
+        const textured = this.drawAsset(
+          ctx,
+          worldTileAssetId(tile.terrain),
+          point.x - halfW,
+          point.y - halfH,
+          halfW * 2,
+          halfH * 2,
+        );
+        if (!textured) {
+          ctx.strokeStyle = "rgba(0,0,0,0.18)";
+          ctx.stroke();
+        }
         if (this.selected && this.selected.x === x && this.selected.y === y) {
+          ctx.beginPath();
+          ctx.moveTo(point.x, point.y - halfH);
+          ctx.lineTo(point.x + halfW, point.y);
+          ctx.lineTo(point.x, point.y + halfH);
+          ctx.lineTo(point.x - halfW, point.y);
+          ctx.closePath();
           ctx.strokeStyle = "#fff3c4";
           ctx.lineWidth = 2;
           ctx.stroke();
@@ -512,16 +541,42 @@ export class WorldMapScene {
   ): void {
     if (tile.terrain === 0 || tile.owner_city_id > 0) {
       const city = tile.terrain === 0;
-      ctx.strokeStyle = city ? "#ffd166" : "#9ad0f5";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(point.x, point.y - halfH);
-      ctx.lineTo(point.x + halfW, point.y);
-      ctx.lineTo(point.x, point.y + halfH);
-      ctx.lineTo(point.x - halfW, point.y);
-      ctx.closePath();
-      ctx.stroke();
-      ctx.lineWidth = 1;
+      const spriteScale = this.camera.zoom * 0.5;
+      const cityDrawn = city
+        ? this.drawAssetAt(
+            ctx,
+            worldCityAssetId(tile.city_level || tile.level),
+            point.x,
+            point.y + halfH * 0.6,
+            spriteScale,
+          )
+        : false;
+      if (!cityDrawn) {
+        ctx.strokeStyle = city ? "#ffd166" : "#9ad0f5";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(point.x, point.y - halfH);
+        ctx.lineTo(point.x + halfW, point.y);
+        ctx.lineTo(point.x, point.y + halfH);
+        ctx.lineTo(point.x - halfW, point.y);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.lineWidth = 1;
+      }
+      if (!city) {
+        const resource = worldResourceAssetId(tile.terrain);
+        if (resource) {
+          this.drawAssetAt(ctx, resource, point.x - halfW * 0.4, point.y + halfH * 0.5, spriteScale);
+        }
+      }
+      const viewer = this.deps.getSession()?.player?.player_id ?? 0;
+      this.drawAssetAt(
+        ctx,
+        worldFlagAssetId(tile.owner_player_id, viewer),
+        point.x + halfW * 0.7,
+        point.y + halfH * 0.3,
+        spriteScale * (city ? 0.55 : 0.7),
+      );
       const label = (tile.owner_name || (city ? "城" : "野地")).slice(0, 5);
       ctx.font = "11px system-ui, sans-serif";
       ctx.textAlign = "center";
@@ -533,19 +588,31 @@ export class WorldMapScene {
       return;
     }
     if (tile.npc_kind === 1) {
-      ctx.fillStyle = "#c0392b";
-      ctx.beginPath();
-      ctx.moveTo(point.x, point.y - halfH - 12);
-      ctx.lineTo(point.x + 6, point.y - halfH - 2);
-      ctx.lineTo(point.x - 6, point.y - halfH - 2);
-      ctx.closePath();
-      ctx.fill();
+      const drawn = this.drawAssetAt(
+        ctx,
+        "world.obj.huangjin.v1",
+        point.x,
+        point.y + halfH * 0.55,
+        this.camera.zoom * 0.5,
+      );
+      if (!drawn) {
+        ctx.fillStyle = "#c0392b";
+        ctx.beginPath();
+        ctx.moveTo(point.x, point.y - halfH - 12);
+        ctx.lineTo(point.x + 6, point.y - halfH - 2);
+        ctx.lineTo(point.x - 6, point.y - halfH - 2);
+        ctx.closePath();
+        ctx.fill();
+      }
       ctx.fillStyle = "#f4e6c8";
       ctx.font = "10px system-ui, sans-serif";
       ctx.textAlign = "center";
       ctx.fillText("黄巾", point.x, point.y + 3);
+      ctx.fillStyle = "rgba(20,16,10,0.65)";
+      ctx.fillText(`Lv${tile.level}`, point.x, point.y + 14);
       return;
     }
+
     // Wild level: only the more valuable tiles keep a label at 1× to limit noise.
     if (tile.level >= 5 || this.camera.zoom >= 2) {
       ctx.fillStyle = tile.level >= 8 ? "#f4e6c8" : "rgba(20,16,10,0.65)";
@@ -561,6 +628,40 @@ export class WorldMapScene {
     }
   }
 
+  /** Draws one registered world texture at an exact rectangle. */
+  private drawAsset(
+    ctx: CanvasRenderingContext2D,
+    assetId: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+  ): boolean {
+    const art = this.deps.assets?.getImageForAsset(assetId);
+    if (!art) return false;
+    ctx.drawImage(art.img, x, y, w, h);
+    return true;
+  }
+
+  /** Draws one sprite at its manifest anchor, scaled by the camera. */
+  private drawAssetAt(
+    ctx: CanvasRenderingContext2D,
+    assetId: string,
+    x: number,
+    y: number,
+    scale: number,
+  ): boolean {
+    const art = this.deps.assets?.getImageForAsset(assetId);
+    if (!art) return false;
+    const meta = art.meta;
+    const w = meta.display_size.w * scale;
+    const h = meta.display_size.h * scale;
+    const ax = meta.display_size.w > 0 ? meta.anchor.x / meta.display_size.w : 0.5;
+    const ay = meta.display_size.h > 0 ? meta.anchor.y / meta.display_size.h : 0.5;
+    ctx.drawImage(art.img, x - w * ax, y - h * ay, w, h);
+    return true;
+  }
+
   private drawMarches(ctx: CanvasRenderingContext2D, size: { width: number; height: number }): void {
     if (!this.marches.length) return;
     ctx.save();
@@ -574,6 +675,9 @@ export class WorldMapScene {
       ctx.moveTo(from.x, from.y);
       ctx.lineTo(to.x, to.y);
       ctx.stroke();
+      const markerX = from.x + (to.x - from.x) * 0.6;
+      const markerY = from.y + (to.y - from.y) * 0.6;
+      this.drawAssetAt(ctx, worldMarchAssetId(march.phase), markerX, markerY + 8, this.camera.zoom * 0.5);
       const angle = Math.atan2(to.y - from.y, to.x - from.x);
       ctx.setLineDash([]);
       ctx.fillStyle = "#ffd166";

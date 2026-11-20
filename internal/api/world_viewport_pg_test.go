@@ -29,7 +29,8 @@ func TestPGWorldViewportGateway(t *testing.T) {
 	if _, err := pool.Exec(ctx, `
 		INSERT INTO account(account_id, login_name, password_hash) OVERRIDING SYSTEM VALUE VALUES (1, 'vp', 'x');
 		INSERT INTO player(server_id, player_id, account_id, display_name) VALUES (1, 7, 1, '领主');
-		INSERT INTO player_city(server_id, city_id, player_id, name, x, y, is_capital) VALUES (1, 4, 7, '主城', 21, 20, true)`); err != nil {
+		INSERT INTO player_city(server_id, city_id, player_id, name, x, y, is_capital) VALUES (1, 4, 7, '主城', 21, 20, true);
+		INSERT INTO city_building(server_id, city_id, slot_key, building_cfg_id, level) VALUES (1, 4, 'hall', 1, 4)`); err != nil {
 		t.Fatal(err)
 	}
 
@@ -73,6 +74,9 @@ func TestPGWorldViewportGateway(t *testing.T) {
 	}
 	if tile.GetTile().GetOwnerPlayerId() != 7 || tile.GetDistanceFromCapital() != 0 {
 		t.Fatalf("detail ownership/distance: %+v", &tile)
+	}
+	if tile.GetTile().GetCityLevel() != 4 {
+		t.Fatalf("detail city level: %+v", tile.GetTile())
 	}
 	if len(tile.GetActions()) == 0 {
 		t.Fatal("detail actions empty")

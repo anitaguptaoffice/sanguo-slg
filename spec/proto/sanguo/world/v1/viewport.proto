@@ -29,6 +29,8 @@ message WorldTileSummary {
   int32 npc_kind = 11;
   int32 npc_level = 12;
   bool in_battle = 13;
+  // 城池官府等级（0=非城池或未知），供 R1-S6 城池外观分档。
+  int32 city_level = 14;
 }
 
 message WorldMarchLine {

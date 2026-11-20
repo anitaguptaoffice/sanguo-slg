@@ -29,6 +29,7 @@ func TestPGViewportReturnsTilesAndOwnership(t *testing.T) {
 		INSERT INTO account(account_id, login_name, password_hash) OVERRIDING SYSTEM VALUE VALUES (1, 'vp', 'x');
 		INSERT INTO player(server_id, player_id, account_id, display_name) VALUES (1, 7, 1, '领主');
 		INSERT INTO player_city(server_id, city_id, player_id, name, x, y) VALUES (1, 9, 7, '主城', 6, 5);
+		INSERT INTO city_building(server_id, city_id, slot_key, building_cfg_id, level) VALUES (1, 9, 'hall', 1, 6);
 		INSERT INTO field_army(server_id, army_id, owner_player_id, x, y) VALUES (1, 3, 7, 5, 5);
 		INSERT INTO march_order(server_id, march_id, army_id, from_x, from_y, to_x, to_y, purpose, depart_at, arrive_at)
 		VALUES (1, 11, 3, 5, 5, 6, 5, 1, now(), now() + interval '5 minutes')`); err != nil {
@@ -53,6 +54,9 @@ func TestPGViewportReturnsTilesAndOwnership(t *testing.T) {
 	}
 	if owned.OwnerPlayerID != 7 || owned.OwnerName != "领主" || owned.OwnerCityName != "主城" {
 		t.Fatalf("owner join missing: %+v", owned)
+	}
+	if owned.CityLevel != 6 {
+		t.Fatalf("city hall level missing: %+v", owned)
 	}
 	if len(marches) != 1 || marches[0].MarchID != 11 || marches[0].OwnerID != 7 {
 		t.Fatalf("marches: %+v", marches)

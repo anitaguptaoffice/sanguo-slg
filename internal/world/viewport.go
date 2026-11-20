@@ -8,6 +8,7 @@ import (
 // TileView is one map tile as returned to the world map viewport.
 type TileView struct {
 	Cell
+	CityLevel     int32
 	OwnerPlayerID int64
 	OwnerName     string
 	OwnerCityName string

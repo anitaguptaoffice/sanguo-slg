@@ -161,12 +161,15 @@ func (p *PGStore) Viewport(ctx context.Context, sid int32, minX, minY, maxX, max
 		       m.garrison_json, m.recover_at,
 		       COALESCE(owner.player_id, site.player_id, 0),
 		       COALESCE(owner_pl.display_name, site_pl.display_name, ''),
-		       COALESCE(owner.name, site.name, '')
+		       COALESCE(owner.name, site.name, ''),
+		       COALESCE(site_hall.level, owner_hall.level, 0)
 		FROM map_cell m
 		LEFT JOIN player_city site ON site.server_id = m.server_id AND site.x = m.x AND site.y = m.y
 		LEFT JOIN player_city owner ON owner.server_id = m.server_id AND owner.city_id = m.owner_city_id
 		LEFT JOIN player owner_pl ON owner_pl.server_id = owner.server_id AND owner_pl.player_id = owner.player_id
 		LEFT JOIN player site_pl ON site_pl.server_id = site.server_id AND site_pl.player_id = site.player_id
+		LEFT JOIN city_building site_hall ON site_hall.server_id = m.server_id AND site_hall.city_id = site.city_id AND site_hall.slot_key = 'hall'
+		LEFT JOIN city_building owner_hall ON owner_hall.server_id = m.server_id AND owner_hall.city_id = m.owner_city_id AND owner_hall.slot_key = 'hall'
 		WHERE m.server_id = $1 AND m.x BETWEEN $2 AND $3 AND m.y BETWEEN $4 AND $5
 		ORDER BY m.y, m.x`, sid, minX, maxX, minY, maxY)
 	if err != nil {
@@ -180,7 +183,7 @@ func (p *PGStore) Viewport(ctx context.Context, sid int32, minX, minY, maxX, max
 		if err := rows.Scan(&tile.X, &tile.Y, &tile.Terrain, &tile.ResourceType, &tile.ResourceLevel,
 			&tile.Level, &tile.MaxLevel, &tile.ProvinceID, &tile.OwnerCityID, &tile.NpcKind,
 			&tile.GarrisonJSON, &recoverAt,
-			&tile.OwnerPlayerID, &tile.OwnerName, &tile.OwnerCityName); err != nil {
+			&tile.OwnerPlayerID, &tile.OwnerName, &tile.OwnerCityName, &tile.CityLevel); err != nil {
 			return nil, err
 		}
 		if recoverAt != nil {

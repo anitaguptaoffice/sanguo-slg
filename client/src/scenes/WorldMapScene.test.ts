@@ -90,6 +90,30 @@ describe("WorldMapScene", () => {
     scene.attach();
   });
 
+  it("draws registered world art when the loader provides it", async () => {
+    const drawImage = vi.fn();
+    (ctx as Record<string, unknown>).drawImage = drawImage;
+    const getImageForAsset = vi.fn((id: string) => ({
+      img: { id } as unknown as HTMLImageElement,
+      meta: { id, display_size: { w: 128, h: 64 }, anchor: { x: 64, y: 32 } },
+      scale: 1,
+    }));
+    const artScene = new WorldMapScene(parent, {
+      gateway: () => gateway as never,
+      getSession: () => ({ player: { player_id: 7 }, cityX: 60, cityY: 60 }) as never,
+      onMarchTarget,
+      assets: { getImageForAsset } as never,
+    });
+    artScene.attach();
+    artScene.open(61, 61);
+    await vi.waitFor(() => expect(gateway.getWorldViewport).toHaveBeenCalled());
+    await vi.waitFor(() => expect(drawImage.mock.calls.length).toBeGreaterThan(0));
+    expect(getImageForAsset).toHaveBeenCalledWith("world.tile.forest.v1");
+    expect(getImageForAsset).toHaveBeenCalledWith("world.obj.huangjin.v1");
+    expect(getImageForAsset).toHaveBeenCalledWith("world.flag.self.v1");
+    artScene.detach?.();
+  });
+
   it("opens, fetches the viewport and lists provinces", async () => {
     scene.open(61, 61);
     expect(scene.isOpen()).toBe(true);

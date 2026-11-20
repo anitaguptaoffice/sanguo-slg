@@ -105,9 +105,11 @@ type WorldTileSummary struct {
 	OwnerCityId   int64  `protobuf:"varint,9,opt,name=owner_city_id,json=ownerCityId,proto3" json:"owner_city_id,omitempty"`
 	OwnerName     string `protobuf:"bytes,10,opt,name=owner_name,json=ownerName,proto3" json:"owner_name,omitempty"`
 	// 0=普通野地 1=黄巾营寨
-	NpcKind       int32 `protobuf:"varint,11,opt,name=npc_kind,json=npcKind,proto3" json:"npc_kind,omitempty"`
-	NpcLevel      int32 `protobuf:"varint,12,opt,name=npc_level,json=npcLevel,proto3" json:"npc_level,omitempty"`
-	InBattle      bool  `protobuf:"varint,13,opt,name=in_battle,json=inBattle,proto3" json:"in_battle,omitempty"`
+	NpcKind  int32 `protobuf:"varint,11,opt,name=npc_kind,json=npcKind,proto3" json:"npc_kind,omitempty"`
+	NpcLevel int32 `protobuf:"varint,12,opt,name=npc_level,json=npcLevel,proto3" json:"npc_level,omitempty"`
+	InBattle bool  `protobuf:"varint,13,opt,name=in_battle,json=inBattle,proto3" json:"in_battle,omitempty"`
+	// 城池官府等级（0=非城池或未知），供 R1-S6 城池外观分档。
+	CityLevel     int32 `protobuf:"varint,14,opt,name=city_level,json=cityLevel,proto3" json:"city_level,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -231,6 +233,13 @@ func (x *WorldTileSummary) GetInBattle() bool {
 		return x.InBattle
 	}
 	return false
+}
+
+func (x *WorldTileSummary) GetCityLevel() int32 {
+	if x != nil {
+		return x.CityLevel
+	}
+	return 0
 }
 
 type WorldMarchLine struct {
@@ -1412,7 +1421,7 @@ const file_sanguo_world_v1_viewport_proto_rawDesc = "" +
 	"\bcenter_x\x18\x01 \x01(\x05R\acenterX\x12\x19\n" +
 	"\bcenter_y\x18\x02 \x01(\x05R\acenterY\x12\x19\n" +
 	"\bradius_x\x18\x03 \x01(\x05R\aradiusX\x12\x19\n" +
-	"\bradius_y\x18\x04 \x01(\x05R\aradiusY\"\x81\x03\n" +
+	"\bradius_y\x18\x04 \x01(\x05R\aradiusY\"\xa0\x03\n" +
 	"\x10WorldTileSummary\x12\f\n" +
 	"\x01x\x18\x01 \x01(\x05R\x01x\x12\f\n" +
 	"\x01y\x18\x02 \x01(\x05R\x01y\x12\x18\n" +
@@ -1429,7 +1438,9 @@ const file_sanguo_world_v1_viewport_proto_rawDesc = "" +
 	" \x01(\tR\townerName\x12\x19\n" +
 	"\bnpc_kind\x18\v \x01(\x05R\anpcKind\x12\x1b\n" +
 	"\tnpc_level\x18\f \x01(\x05R\bnpcLevel\x12\x1b\n" +
-	"\tin_battle\x18\r \x01(\bR\binBattle\"\xdf\x01\n" +
+	"\tin_battle\x18\r \x01(\bR\binBattle\x12\x1d\n" +
+	"\n" +
+	"city_level\x18\x0e \x01(\x05R\tcityLevel\"\xdf\x01\n" +
 	"\x0eWorldMarchLine\x12\x19\n" +
 	"\bmarch_id\x18\x01 \x01(\x03R\amarchId\x12\x15\n" +
 	"\x06from_x\x18\x02 \x01(\x05R\x05fromX\x12\x15\n" +
