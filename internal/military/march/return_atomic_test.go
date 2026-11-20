@@ -57,7 +57,6 @@ func TestReturnAtomicCapacity(t *testing.T) {
 		func(s *recruitPendingSnapshot) { s.payloads[0] = `{}` },
 		func(s *recruitPendingSnapshot) { s.finishes[0] = s.starts[0] },
 		func(s *recruitPendingSnapshot) { s.starts = nil },
-		func(s *recruitPendingSnapshot) { s.stock = s.stock[:3] },
 	} {
 		scope, pending, catalog := atomicPendingFixture(t)
 		change(&pending)

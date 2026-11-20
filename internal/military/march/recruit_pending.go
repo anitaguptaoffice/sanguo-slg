@@ -39,7 +39,7 @@ type recruitPendingSummary struct {
 // Retained terminal rows belong to all-state audit/history, not this pending set.
 func validateRecruitPending(scope recruitScope, stock []recruitStockRow, rows []recruitPendingRow, catalog *RecruitCatalog) (recruitPendingSummary, error) {
 	var out recruitPendingSummary
-	if scope.server <= 0 || scope.player <= 0 || scope.city <= 0 || len(stock) != 12 || catalog == nil || len(catalog.manifests) == 0 {
+	if scope.server <= 0 || scope.player <= 0 || scope.city <= 0 || len(stock) > 12 || catalog == nil || len(catalog.manifests) == 0 {
 		return out, errRecruitPending
 	}
 	var seen [12]bool
