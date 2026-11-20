@@ -78,7 +78,8 @@ func (p *PGStore) saveCityInTx(ctx context.Context, sid int32, c *CityState, cat
 	}
 
 	var authoritative Resources
-	err = tx.QueryRow(ctx, `SELECT food,wood,stone,iron FROM player_wallet WHERE server_id=$1 AND player_id=$2 FOR UPDATE`, sid, c.PlayerID).Scan(&authoritative.Food, &authoritative.Wood, &authoritative.Stone, &authoritative.Iron)
+	var authoritativeGold int64
+	err = tx.QueryRow(ctx, `SELECT food,wood,stone,iron,gold FROM player_wallet WHERE server_id=$1 AND player_id=$2 FOR UPDATE`, sid, c.PlayerID).Scan(&authoritative.Food, &authoritative.Wood, &authoritative.Stone, &authoritative.Iron, &authoritativeGold)
 	if err != nil {
 		return err
 	}
@@ -104,16 +105,27 @@ func (p *PGStore) saveCityInTx(ctx context.Context, sid int32, c *CityState, cat
 		}
 	}
 	work.Wallet = authoritative
+	localGold := int64(0)
+	if c.goldSaved {
+		localGold = c.Gold - c.goldBase
+	}
+	if localGold > 0 && authoritativeGold > (1<<62)-localGold {
+		return ErrInsufficientRes
+	}
+	work.Gold = authoritativeGold + localGold
 	if mutate != nil {
 		if err = mutate(work, tx); err != nil {
 			return err
 		}
 	}
-	_, err = tx.Exec(ctx, `UPDATE player_wallet SET food=$3,wood=$4,stone=$5,iron=$6,updated_at=$7 WHERE server_id=$1 AND player_id=$2`, sid, c.PlayerID, work.Wallet.Food, work.Wallet.Wood, work.Wallet.Stone, work.Wallet.Iron, now)
+	_, err = tx.Exec(ctx, `UPDATE player_wallet SET food=$3,wood=$4,stone=$5,iron=$6,updated_at=$7,gold=$8 WHERE server_id=$1 AND player_id=$2`, sid, c.PlayerID, work.Wallet.Food, work.Wallet.Wood, work.Wallet.Stone, work.Wallet.Iron, now, work.Gold)
 	if err != nil {
 		return err
 	}
 	if err := saveProductionCheckpoint(ctx, tx, sid, work); err != nil {
+		return err
+	}
+	if err := saveCivic(ctx, tx, sid, work, now); err != nil {
 		return err
 	}
 	original := c
@@ -168,6 +180,7 @@ func (p *PGStore) saveCityInTx(ctx context.Context, sid int32, c *CityState, cat
 		return err
 	}
 	c.walletBase, c.walletSaved = c.Wallet, true
+	c.goldBase, c.goldSaved = c.Gold, true
 	*original = *c
 	return nil
 }
@@ -180,15 +193,22 @@ func (p *PGStore) LoadCity(ctx context.Context, sid int32, cityID, playerID int6
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var w Resources
-	err = tx.QueryRow(ctx, `SELECT food,wood,iron,stone FROM player_wallet
- WHERE server_id=$1 AND player_id=$2 FOR UPDATE`, sid, playerID).Scan(&w.Food, &w.Wood, &w.Iron, &w.Stone)
+	var gold int64
+	err = tx.QueryRow(ctx, `SELECT food,wood,iron,stone,gold FROM player_wallet
+ WHERE server_id=$1 AND player_id=$2 FOR UPDATE`, sid, playerID).Scan(&w.Food, &w.Wood, &w.Iron, &w.Stone, &gold)
 	if err != nil {
 		return nil, err
 	}
 	if _, err := reconcileWallet(w, Resources{}, Resources{}); err != nil {
 		return nil, err
 	}
-	c := &CityState{ID: cityID, PlayerID: playerID, Wallet: w, Buildings: make(map[string]*BuildingInstance)}
+	c := &CityState{ID: cityID, PlayerID: playerID, Wallet: w, Gold: gold, Buildings: make(map[string]*BuildingInstance)}
+	if err := loadCityName(ctx, tx, sid, cityID, c); err != nil {
+		return nil, err
+	}
+	if err := loadCivic(ctx, tx, sid, cityID, c); err != nil {
+		return nil, err
+	}
 	if err := loadProductionCheckpoint(ctx, tx, sid, c, false, time.Time{}); err != nil {
 		return nil, err
 	}
@@ -248,6 +268,7 @@ func (p *PGStore) LoadCity(ctx context.Context, sid int32, cityID, playerID int6
 		return nil, err
 	}
 	c.walletBase, c.walletSaved = c.Wallet, true
+	c.goldBase, c.goldSaved = c.Gold, true
 	c.nextJobID = maxID
 	return c, nil
 }
@@ -289,4 +310,44 @@ func reconcileWallet(current, local, base Resources) (Resources, error) {
 		*v += delta
 	}
 	return current, nil
+}
+
+func loadCityName(ctx context.Context, tx pgx.Tx, sid int32, cityID int64, c *CityState) error {
+	return tx.QueryRow(ctx, `SELECT name FROM player_city WHERE server_id=$1 AND city_id=$2`, sid, cityID).Scan(&c.Name)
+}
+
+func loadCivic(ctx context.Context, tx pgx.Tx, sid int32, cityID int64, c *CityState) error {
+	err := tx.QueryRow(ctx, `SELECT population,morale,tax_rate,work_rate,last_civic_at,pop_remainder,tax_remainder
+		FROM city_civic WHERE server_id=$1 AND city_id=$2`, sid, cityID).
+		Scan(&c.Civic.Population, &c.Civic.Morale, &c.Civic.TaxRate, &c.Civic.WorkRate,
+			&c.Civic.LastCivicAt, &c.Civic.popRemainder, &c.Civic.taxRemainder)
+	if errors.Is(err, pgx.ErrNoRows) {
+		ensureCivic(c, time.Now())
+		return nil
+	}
+	return err
+}
+
+func saveCivic(ctx context.Context, tx pgx.Tx, sid int32, c *CityState, now time.Time) error {
+	ensureCivic(c, now)
+	_, err := tx.Exec(ctx, `INSERT INTO city_civic(server_id,city_id,population,morale,tax_rate,work_rate,last_civic_at,pop_remainder,tax_remainder)
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
+		ON CONFLICT (server_id,city_id) DO UPDATE SET population=EXCLUDED.population,morale=EXCLUDED.morale,
+		tax_rate=EXCLUDED.tax_rate,work_rate=EXCLUDED.work_rate,last_civic_at=EXCLUDED.last_civic_at,
+		pop_remainder=EXCLUDED.pop_remainder,tax_remainder=EXCLUDED.tax_remainder`,
+		sid, c.ID, c.Civic.Population, c.Civic.Morale, c.Civic.TaxRate, c.Civic.WorkRate,
+		c.Civic.LastCivicAt, c.Civic.popRemainder, c.Civic.taxRemainder)
+	return err
+}
+
+func (p *PGStore) renameCity(ctx context.Context, sid int32, cityID, playerID int64, name string) error {
+	tag, err := p.Pool.Exec(ctx, `UPDATE player_city SET name=$3 WHERE server_id=$1 AND city_id=$2 AND player_id=$4`,
+		sid, cityID, name, playerID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() != 1 {
+		return ErrCityNotFound
+	}
+	return nil
 }

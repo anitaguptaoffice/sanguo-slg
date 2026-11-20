@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package sanguo.domestic.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/domestic/v1;domesticv1";
+
+// 城池人口/民心/税率/开工率快照（R2-S2）。
+message CityCivicView {
+  string name = 1;
+  int64 population = 2;
+  int64 population_cap = 3;
+  int32 morale = 4;
+  int32 tax_rate = 5;
+  int32 work_rate = 6;
+  int32 effective_work_rate = 7;
+  int64 idle_population = 8;
+  int64 troops = 9;
+  int64 food_upkeep_per_hour = 10;
+  int64 gold_per_hour = 11;
+  int64 gold = 12;
+}
+
+// route: domestic.v1.GetCityCivic
+message GetCityCivicRequest {
+  int64 city_id = 1;
+}
+
+message GetCityCivicResponse {
+  CityCivicView civic = 1;
+}
+
+// route: domestic.v1.ApplyCityDecree
+// decree: 1=调整税率 2=调整开工率 3=安抚百姓 4=征收物资 5=城池改名
+message ApplyCityDecreeRequest {
+  int64 city_id = 1;
+  int32 decree = 2;
+  int32 value = 3;
+  string name = 4;
+}
+
+message ApplyCityDecreeResponse {
+  CityCivicView civic = 1;
+  sanguo.common.v1.ResourceWallet wallet = 2;
+}

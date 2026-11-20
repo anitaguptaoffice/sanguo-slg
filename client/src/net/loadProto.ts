@@ -63,6 +63,8 @@ export const Routes = {
   GetCityState: "domestic.v1.GetCityState",
   StartBuildingUpgrade: "domestic.v1.StartBuildingUpgrade",
   DemolishBuilding: "domestic.v1.DemolishBuilding",
+  GetCityCivic: "domestic.v1.GetCityCivic",
+  ApplyCityDecree: "domestic.v1.ApplyCityDecree",
   RecruitTroop: "military.v1.RecruitTroop",
   StartMarch: "military.v1.StartMarch",
   RecallMarch: "military.v1.RecallMarch",
@@ -164,6 +166,10 @@ export type ProtoTypes = {
   StartBuildingUpgradeRequest: protobuf.Type;
   DemolishBuildingRequest: protobuf.Type;
   DemolishBuildingResponse: protobuf.Type;
+  GetCityCivicRequest: protobuf.Type;
+  GetCityCivicResponse: protobuf.Type;
+  ApplyCityDecreeRequest: protobuf.Type;
+  ApplyCityDecreeResponse: protobuf.Type;
   StartBuildingUpgradeResponse: protobuf.Type;
   RecruitTroopRequest: protobuf.Type;
   RecruitTroopResponse: protobuf.Type;
@@ -311,6 +317,10 @@ export function getTypes(): ProtoTypes {
     StartBuildingUpgradeRequest: r.lookupType("sanguo.domestic.v1.StartBuildingUpgradeRequest"),
     DemolishBuildingRequest: r.lookupType("sanguo.domestic.v1.DemolishBuildingRequest"),
     DemolishBuildingResponse: r.lookupType("sanguo.domestic.v1.DemolishBuildingResponse"),
+    GetCityCivicRequest: r.lookupType("sanguo.domestic.v1.GetCityCivicRequest"),
+    GetCityCivicResponse: r.lookupType("sanguo.domestic.v1.GetCityCivicResponse"),
+    ApplyCityDecreeRequest: r.lookupType("sanguo.domestic.v1.ApplyCityDecreeRequest"),
+    ApplyCityDecreeResponse: r.lookupType("sanguo.domestic.v1.ApplyCityDecreeResponse"),
     StartBuildingUpgradeResponse: r.lookupType("sanguo.domestic.v1.StartBuildingUpgradeResponse"),
     RecruitTroopRequest: r.lookupType("sanguo.military.v1.RecruitTroopRequest"),
     RecruitTroopResponse: r.lookupType("sanguo.military.v1.RecruitTroopResponse"),

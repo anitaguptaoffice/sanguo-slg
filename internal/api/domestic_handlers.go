@@ -194,3 +194,76 @@ func (s *Server) handleDemolishBuilding(ctx context.Context, pkt *commonv1.Clien
 	}
 	return okResp(pkt.GetTraceId(), data), nil
 }
+
+func civicProto(v domestic.CivicView) *domesticv1.CityCivicView {
+	return &domesticv1.CityCivicView{
+		Name: v.Name, Population: v.Population, PopulationCap: v.PopulationCap,
+		Morale: v.Morale, TaxRate: v.TaxRate, WorkRate: v.WorkRate,
+		EffectiveWorkRate: v.EffectiveWork, IdlePopulation: v.IdlePopulation,
+		Troops: v.Troops, FoodUpkeepPerHour: v.FoodUpkeepHour, GoldPerHour: v.GoldPerHour,
+		Gold: v.Gold,
+	}
+}
+
+func (s *Server) handleGetCityCivic(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+	pc, errPkt := s.playerCtx(ctx, pkt)
+	if errPkt != nil {
+		return errPkt, nil
+	}
+	var req domesticv1.GetCityCivicRequest
+	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
+	}
+	if !s.ownsCity(ctx, pc, req.GetCityId()) {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
+	}
+	view, err := s.domestic.Civic(ctx, req.GetCityId())
+	if err != nil {
+		if errors.Is(err, domestic.ErrCityNotFound) {
+			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
+		}
+		return nil, err
+	}
+	data, err := marshal(&domesticv1.GetCityCivicResponse{Civic: civicProto(view)})
+	if err != nil {
+		return nil, err
+	}
+	return okResp(pkt.GetTraceId(), data), nil
+}
+
+func (s *Server) handleApplyCityDecree(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+	pc, errPkt := s.playerCtx(ctx, pkt)
+	if errPkt != nil {
+		return errPkt, nil
+	}
+	var req domesticv1.ApplyCityDecreeRequest
+	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
+	}
+	city := s.citySnapshot(req.GetCityId())
+	if !s.ownsCity(ctx, pc, req.GetCityId()) || city == nil || city.PlayerID != pc.PlayerID {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
+	}
+	view, err := s.domestic.ApplyCivicDecree(ctx, req.GetCityId(), req.GetDecree(), req.GetValue(), req.GetName())
+	if err != nil {
+		switch {
+		case errors.Is(err, domestic.ErrInsufficientGold):
+			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_DOMESTIC_INSUFFICIENT_RESOURCE, "insufficient gold"), nil
+		case errors.Is(err, domestic.ErrCivicInvalid):
+			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error()), nil
+		case errors.Is(err, domestic.ErrCityNotFound):
+			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
+		}
+		return nil, err
+	}
+	city = s.citySnapshot(req.GetCityId())
+	wallet := domestic.Resources{}
+	if city != nil {
+		wallet = city.Wallet
+	}
+	data, err := marshal(&domesticv1.ApplyCityDecreeResponse{Civic: civicProto(view), Wallet: walletProto(wallet)})
+	if err != nil {
+		return nil, err
+	}
+	return okResp(pkt.GetTraceId(), data), nil
+}

@@ -179,7 +179,7 @@ func TestHotelAtomicPGDoesNotWaitForHubWhileHoldingWallet(t *testing.T) {
 	}
 	writer := make(chan error, 1)
 	go func() { _, err := s.domestic.SettleCity(ctx, 1); writer <- err }()
-	hotelWaitForLock(t, ctx, pool, "SELECT food,wood,stone,iron FROM player_wallet%")
+	hotelWaitForLock(t, ctx, pool, "SELECT food,wood,stone,iron% FROM player_wallet%")
 	close(release)
 	if out := <-hotelDone; out.Code != 0 {
 		t.Fatalf("Hub-wallet cycle %+v", out)

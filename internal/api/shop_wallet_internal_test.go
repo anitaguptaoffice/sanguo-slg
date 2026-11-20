@@ -127,7 +127,7 @@ func walletBoundaryPool(t *testing.T, fullSchema ...bool) *pgxpool.Pool {
 		}
 		return pool
 	}
-	for _, file := range []string{"001_account.sql", "002_world.sql", "003_domestic.sql", "007_domestic_production_checkpoint.sql", "m4_008_work_queue_id_sequence.sql"} {
+	for _, file := range []string{"001_account.sql", "002_world.sql", "003_domestic.sql", "007_domestic_production_checkpoint.sql", "m4_042_city_civic.sql", "m4_008_work_queue_id_sequence.sql"} {
 		sql, err := os.ReadFile("../../spec/db/" + file)
 		if err != nil {
 			t.Fatal(err)

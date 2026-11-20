@@ -106,6 +106,11 @@ type BuildJob struct {
 type CityState struct {
 	ID           int64
 	PlayerID     int64
+	Name         string
+	Gold         int64
+	goldBase     int64
+	goldSaved    bool
+	Civic        CivicState
 	Wallet       Resources
 	LastSettleAt time.Time
 	Buildings    map[string]*BuildingInstance
@@ -239,12 +244,16 @@ func settleProductionWithBonus(c *CityState, cat map[int32]BuildingSpec, now tim
 		rate, _ := new(big.Float).SetFloat64(math.Floor(float64(sp.ProdPerHour) * float64(inst.Level) * bonus)).Int(nil)
 		earned[sp.ProdRes].Add(&earned[sp.ProdRes], rate)
 	}
+	workRate := EffectiveWorkRate(c)
 	for i := range earned {
-		if fieldBonus[i] <= 0 {
-			continue
+		if fieldBonus[i] > 0 {
+			earned[i].Mul(&earned[i], big.NewInt(100+fieldBonus[i]))
+			earned[i].Quo(&earned[i], big.NewInt(100))
 		}
-		earned[i].Mul(&earned[i], big.NewInt(100+fieldBonus[i]))
-		earned[i].Quo(&earned[i], big.NewInt(100))
+		if workRate < 100 {
+			earned[i].Mul(&earned[i], big.NewInt(int64(workRate)))
+			earned[i].Quo(&earned[i], big.NewInt(100))
+		}
 	}
 	elapsed, denominator := big.NewInt(int64(el)), big.NewInt(int64(time.Hour))
 	wallet := []*int64{&c.Wallet.Food, &c.Wallet.Wood, &c.Wallet.Stone, &c.Wallet.Iron}
@@ -482,6 +491,7 @@ type Hub struct {
 	serverID   int32
 	flushEvery time.Duration
 	lastFlush  time.Time
+	troops     func(cityID int64) int64
 	fieldBonus func(ctx context.Context, serverID int32, cityID int64) [4]int64
 }
 
@@ -496,7 +506,13 @@ func (h *Hub) settle(ctx context.Context, c *CityState) {
 	if h.fieldBonus != nil {
 		bonus = h.fieldBonus(ctx, h.serverID, c.ID)
 	}
-	settleProductionWithBonus(c, h.cat, h.now(), bonus)
+	troops := int64(0)
+	if h.troops != nil {
+		troops = h.troops(c.ID)
+	}
+	now := h.now()
+	settleCivic(c, now, troops)
+	settleProductionWithBonus(c, h.cat, now, bonus)
 }
 
 func NewHub(now func() time.Time) *Hub {
@@ -513,6 +529,11 @@ func NewHubWithCatalog(now func() time.Time, catalog map[int32]BuildingSpec) *Hu
 }
 
 // UseStore enables PostgreSQL snapshots (optional). flushEvery<=0 defaults to 30s.
+// UseTroopCount installs the ready-troop provider used for food upkeep.
+func (h *Hub) UseTroopCount(provider func(cityID int64) int64) {
+	h.troops = provider
+}
+
 func (h *Hub) UseStore(store *PGStore, serverID int32, flushEvery time.Duration) {
 	h.store = store
 	h.serverID = serverID

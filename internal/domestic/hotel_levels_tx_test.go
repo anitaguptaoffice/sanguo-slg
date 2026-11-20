@@ -204,7 +204,7 @@ func TestPGHotelLevelsTxDoesNotInvertHubWalletOrder(t *testing.T) {
 		var blocked bool
 		err := pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM pg_stat_activity
 			WHERE datname=current_database() AND wait_event_type='Lock'
-			AND query LIKE 'SELECT food,wood,stone,iron FROM player_wallet%')`).Scan(&blocked)
+			AND query LIKE 'SELECT food,wood,stone,iron% FROM player_wallet%')`).Scan(&blocked)
 		if err != nil {
 			t.Fatal(err)
 		}
