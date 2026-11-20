@@ -152,6 +152,9 @@ func (p *ReturnParticipant) returnApply(ctx context.Context, a *recruittx.Access
 		return nil
 	}
 	for _, row := range st.pending.stock {
+		if row.unit == 0 {
+			continue
+		}
 		if ready[row.unit-1] == row.ready {
 			continue
 		}
