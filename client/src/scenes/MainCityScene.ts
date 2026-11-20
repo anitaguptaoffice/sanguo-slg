@@ -2243,6 +2243,7 @@ export class MainCityScene implements Scene {
         })),
       );
     } catch (error) {
+      console.log("office error", String(error));
       this.status = formatPanelGatewayErrorFromUnknown("build", error);
       this.renderHud();
     }

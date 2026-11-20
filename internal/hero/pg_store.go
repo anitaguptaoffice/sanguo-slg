@@ -370,7 +370,7 @@ func (p *PGStore) DeleteCityOffice(ctx context.Context, serverID int32, cityID i
 }
 
 func (p *PGStore) CityOffices(ctx context.Context, serverID int32, cityID int64) ([]CityOffice, error) {
-	rows, err := p.Pool.Query(ctx, `SELECT o.city_id,o.office,o.hero_id,h.player_id,h.level,h.display_name,h.loyalty,h.politics,h.intel,h.command,h.force
+	rows, err := p.Pool.Query(ctx, `SELECT o.city_id,o.office,o.hero_id,h.player_id,h.level,COALESCE(h.display_name,''),h.loyalty,h.politics,h.intel,h.command,h.force
 		FROM city_office o JOIN player_hero h ON h.server_id=o.server_id AND h.hero_id=o.hero_id
 		WHERE o.server_id=$1 AND o.city_id=$2 ORDER BY o.office`, serverID, cityID)
 	if err != nil {
