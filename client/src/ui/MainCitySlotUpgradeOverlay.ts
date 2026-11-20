@@ -17,8 +17,21 @@ export class MainCitySlotUpgradeOverlay {
   private readonly anchors = new Map<string, UpgradeProgressAnchor>();
   private readonly tags = new Map<string, HTMLElement>();
   private mutualHighlightSlotKey: string | null = null;
+  private slots: MainCitySlotDef[] = MAIN_CITY_SLOTS;
 
   constructor(private readonly mount: HTMLElement) {}
+
+  /** Restricts overlay tags to the active city scene (inner or outer). */
+  setSlots(slots: MainCitySlotDef[]): void {
+    this.slots = slots;
+    for (const [key, tag] of this.tags) {
+      if (!slots.some((slot) => slot.slot_key === key)) {
+        tag.remove();
+        this.tags.delete(key);
+        this.anchors.delete(key);
+      }
+    }
+  }
 
   getOverlayLayer(): HTMLElement | undefined {
     return this.layer;
@@ -54,7 +67,7 @@ export class MainCitySlotUpgradeOverlay {
   sync(buildings: CityBuilding[] | undefined, nowMs = Date.now()): void {
     if (!this.layer) return;
     const activeKeys = new Set<string>();
-    for (const slot of MAIN_CITY_SLOTS) {
+    for (const slot of this.slots) {
       const building = buildingBySlot(buildings, slot.slot_key);
       const finish = building?.upgrade_finish_at_ms ?? 0;
       if (finish <= nowMs) {
@@ -71,8 +84,16 @@ export class MainCitySlotUpgradeOverlay {
       if (!activeKeys.has(key)) this.anchors.delete(key);
     }
 
-    for (const slot of MAIN_CITY_SLOTS) {
+    for (const slot of this.slots) {
       const building = buildingBySlot(buildings, slot.slot_key);
+      if (!building) {
+        const stale = this.tags.get(slot.slot_key);
+        if (stale) {
+          stale.remove();
+          this.tags.delete(slot.slot_key);
+        }
+        continue;
+      }
       const finish = building?.upgrade_finish_at_ms ?? 0;
       const upgrading = finish > nowMs;
       const anchor = upgrading ? this.anchors.get(slot.slot_key) : undefined;

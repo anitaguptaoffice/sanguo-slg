@@ -14,6 +14,7 @@ PARAMS = ROOT / "spec/rules/params.yml"
 SOURCE = ROOT / "spec/data/source"
 OUT = ROOT / "spec/data/generated"
 CATALOG_EMBED = ROOT / "internal/content/seed/catalog.json"
+BUILDING_EMBED = ROOT / "internal/domestic/seed/building_catalog.json"
 
 UNIT_ORDER = ["infantry", "cavalry", "archer", "siege"]
 UNIT_NAMES = {"infantry": "步兵", "cavalry": "骑兵", "archer": "弓兵", "siege": "器械"}
@@ -364,15 +365,46 @@ def build_buildings(params: dict, meta_source: dict) -> list[dict]:
         params["domestic"]["production"],
         params["domestic"]["main_hall"],
     )
+    cost_growth = float(build["cost_growth"])
+    time_growth = float(build["time_growth"])
+    max_level = 16
     rows = []
     for b in meta_source.get("buildings", []):
         code = b["code"]
         cfg = build["buildings"].get(code, {})
+        base_cost = cfg.get("base_cost") or {}
+        base_time = int(cfg.get("base_time_sec") or 0)
+        unlock_hall = int(b.get("unlock_hall") or 0)
+        extra = b.get("extra_prereqs") or []
+        levels = []
+        for level in range(1, max_level + 1):
+            factor = cost_growth ** (level - 1)
+            cost = {
+                key: int((base_cost.get(key) or 0) * factor)
+                for key in ("food", "wood", "stone", "iron")
+            }
+            prereqs = []
+            hall_level = 0 if code == "main_hall" else max(unlock_hall, level)
+            for req in extra:
+                if level >= int(req["at_level"]):
+                    prereqs.append({"cfg_id": int(req["cfg_id"]), "level": int(req["level"])})
+            levels.append(
+                {
+                    "level": level,
+                    "cost": cost,
+                    "time_sec": int(base_time * (time_growth ** (level - 1))),
+                    "hall_level": hall_level,
+                    "prereqs": prereqs,
+                }
+            )
         row = {
             "building_cfg_id": b["building_cfg_id"],
             "code": code,
             "name": b["name"],
             "category": b["category"],
+            "slot_type": b.get("slot_type", "inner"),
+            "unlock_hall": unlock_hall,
+            "max_level": max_level,
             "base_time_sec": cfg.get("base_time_sec"),
             "base_cost": cfg.get("base_cost"),
             "cost_growth": build.get("cost_growth"),
@@ -380,6 +412,7 @@ def build_buildings(params: dict, meta_source: dict) -> list[dict]:
             "main_hall_production_bonus_per_level": main_hall.get(
                 "production_bonus_per_level"
             ),
+            "levels": levels,
         }
         if code in production:
             row["production"] = production[code]
@@ -527,6 +560,12 @@ def generate() -> dict[str, str]:
         + "\n",
         "catalog.json": build_catalog_json(items),
         "world_wild.json": build_world_wild(world_wild_src, item_by_code),
+        "__building_embed__": json.dumps(
+            {"version": 1, "buildings": build_buildings(params, buildings_src)},
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+        + "\n",
     }
 
 
@@ -541,6 +580,8 @@ def main() -> int:
         return 1
     if args.check:
         for name, content in outputs.items():
+            if name.startswith("__"):
+                continue
             path = OUT / name
             if not path.exists() or path.read_text(encoding="utf-8") != content:
                 print(f"stale or missing: {path}", file=sys.stderr)
@@ -548,12 +589,20 @@ def main() -> int:
         if CATALOG_EMBED.read_text(encoding="utf-8") != outputs["catalog.json"]:
             print(f"stale or missing: {CATALOG_EMBED}", file=sys.stderr)
             return 1
+        if BUILDING_EMBED.read_text(encoding="utf-8") != outputs["__building_embed__"]:
+            print(f"stale or missing: {BUILDING_EMBED}", file=sys.stderr)
+            return 1
         print("check ok")
         return 0
-    changed = [n for n, c in outputs.items() if write_if_changed(OUT / n, c)]
-    embed = outputs["catalog.json"]
-    if write_if_changed(CATALOG_EMBED, embed):
+    changed = [
+        n
+        for n, c in outputs.items()
+        if not n.startswith("__") and write_if_changed(OUT / n, c)
+    ]
+    if write_if_changed(CATALOG_EMBED, outputs["catalog.json"]):
         changed.append("internal/content/seed/catalog.json")
+    if write_if_changed(BUILDING_EMBED, outputs["__building_embed__"]):
+        changed.append("internal/domestic/seed/building_catalog.json")
     print("updated: " + ", ".join(changed) if changed else "unchanged")
     return 0
 

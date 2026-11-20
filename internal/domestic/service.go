@@ -20,6 +20,9 @@ var (
 	ErrPrereqBarracks    = errors.New("domestic: barracks requires main hall level 2")
 	ErrPrereqWall        = errors.New("domestic: wall requires main hall level 3")
 	ErrPrereqMainHallLow = errors.New("domestic: main hall level below other buildings")
+	ErrPrereqBuilding    = errors.New("domestic: required building level missing")
+	ErrBuildingMaxLevel  = errors.New("domestic: building already at max level")
+	ErrCannotDemolish    = errors.New("domestic: cannot demolish this building")
 )
 
 const (
@@ -68,6 +71,30 @@ func DefaultCatalog() map[int32]BuildingSpec {
 	}
 }
 
+// FullCatalog is the R2-S1 20-building runtime catalog. DefaultCatalog stays
+// the frozen seven-building fresh-template contract used by older fixtures.
+func FullCatalog() map[int32]BuildingSpec {
+	cat := DefaultCatalog()
+	for id, spec := range map[int32]BuildingSpec{
+		8:  {8, 100, Resources{120, 180, 80, 40}, 0, 0},
+		9:  {9, 95, Resources{160, 160, 120, 80}, 0, 0},
+		10: {10, 70, Resources{100, 120, 60, 20}, 0, 0},
+		11: {11, 85, Resources{140, 160, 90, 40}, 0, 0},
+		12: {12, 80, Resources{120, 150, 100, 30}, 0, 0},
+		13: {13, 110, Resources{100, 140, 180, 160}, 0, 0},
+		14: {14, 105, Resources{110, 170, 140, 110}, 0, 0},
+		15: {15, 115, Resources{150, 180, 100, 90}, 0, 0},
+		16: {16, 75, Resources{90, 200, 120, 50}, 0, 0},
+		17: {17, 130, Resources{160, 150, 120, 60}, 0, 0},
+		18: {18, 100, Resources{120, 140, 90, 40}, 0, 0},
+		19: {19, 90, Resources{100, 120, 220, 60}, 0, 0},
+		20: {20, 40, Resources{60, 80, 40, 0}, 0, 0},
+	} {
+		cat[id] = spec
+	}
+	return cat
+}
+
 type BuildingInstance struct{ CfgID, Level int32 }
 type BuildJob struct {
 	ID            int64
@@ -95,6 +122,70 @@ type UpgradeResult struct {
 	FinishAt   time.Time
 	Wallet     Resources
 	InProgress bool
+}
+
+// DemolishResult reports one downgrade or removal.
+type DemolishResult struct {
+	Slot    string
+	CfgID   int32
+	Level   int32
+	Removed bool
+	Refund  Resources
+	Wallet  Resources
+}
+
+// DemolishBuilding downgrades one building by one level, refunding 25% of the
+// removed level's cost. A level-1 non-hall building is removed entirely.
+func (h *Hub) DemolishBuilding(ctx context.Context, cityID int64, slot string) (res DemolishResult, err error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	err = h.updateCityLocked(ctx, cityID, func(c *CityState) error {
+		h.settle(ctx, c)
+		for _, job := range c.BuildJobs {
+			if job.Slot == slot && (job.Status == QueueWaiting || job.Status == QueueActive) {
+				return ErrInvalidUpgrade
+			}
+		}
+		inst := slotB(c, slot)
+		if inst == nil {
+			return ErrUnknownBuilding
+		}
+		if inst.CfgID == mainHallID && inst.Level <= 1 {
+			return ErrCannotDemolish
+		}
+		sp, ok := h.cat[inst.CfgID]
+		if !ok {
+			return ErrUnknownBuilding
+		}
+		cost := upCost(sp, inst.Level)
+		refund := Resources{
+			Food:  cost.Food * 25 / 100,
+			Wood:  cost.Wood * 25 / 100,
+			Stone: cost.Stone * 25 / 100,
+			Iron:  cost.Iron * 25 / 100,
+		}
+		res = DemolishResult{Slot: slot, CfgID: inst.CfgID, Level: inst.Level, Refund: refund}
+		if inst.Level <= 1 {
+			delete(c.Buildings, slot)
+			res.Removed = true
+			res.Level = 0
+		} else {
+			inst.Level--
+			res.Level = inst.Level
+		}
+		w := c.Wallet
+		w.Food += refund.Food
+		w.Wood += refund.Wood
+		w.Stone += refund.Stone
+		w.Iron += refund.Iron
+		c.Wallet = w
+		res.Wallet = w
+		return nil
+	})
+	if err != nil {
+		return DemolishResult{}, err
+	}
+	return res, nil
 }
 
 func mainHallLvl(c *CityState) int32 {
@@ -201,15 +292,24 @@ func ValidateUpgrade(c *CityState, cat map[int32]BuildingSpec, slot string, cfgI
 	if tgt != cur+1 {
 		return ErrInvalidUpgrade
 	}
-	mh := mainHallLvl(c)
-	if cfgID != mainHallID && tgt > mh {
-		return ErrPrereqMainHall
-	}
-	if cfgID == 6 && tgt == 1 && mh < 2 {
-		return ErrPrereqBarracks
-	}
-	if cfgID == 7 && tgt == 1 && mh < 3 {
-		return ErrPrereqWall
+	def, hasDef := DefaultBuildingTree()[cfgID]
+	if hasDef {
+		if tgt > def.MaxLevel {
+			return ErrBuildingMaxLevel
+		}
+		row := def.Level(tgt)
+		if row == nil {
+			return ErrBuildingMaxLevel
+		}
+		mh := mainHallLvl(c)
+		if cfgID != mainHallID && row.HallLevel > 0 && mh < row.HallLevel {
+			return ErrPrereqMainHall
+		}
+		for _, req := range row.Prereqs {
+			if buildingLevel(c, req.CfgID) < req.Level {
+				return ErrPrereqBuilding
+			}
+		}
 	}
 	if cfgID == mainHallID {
 		for _, b := range c.Buildings {
@@ -222,12 +322,22 @@ func ValidateUpgrade(c *CityState, cat map[int32]BuildingSpec, slot string, cfgI
 }
 
 func upCost(sp BuildingSpec, lvl int32) Resources {
+	if def, ok := DefaultBuildingTree()[sp.ID]; ok {
+		if row := def.Level(lvl); row != nil {
+			return row.Cost
+		}
+	}
 	e := math.Pow(costGrow, float64(lvl-1))
 	s := func(v int64) int64 { return int64(math.Floor(float64(v) * e)) }
 	c := sp.BaseCost
 	return Resources{s(c.Food), s(c.Wood), s(c.Stone), s(c.Iron)}
 }
 func upDur(sp BuildingSpec, lvl int32) time.Duration {
+	if def, ok := DefaultBuildingTree()[sp.ID]; ok {
+		if row := def.Level(lvl); row != nil {
+			return time.Duration(row.TimeSec) * time.Second
+		}
+	}
 	sec := int64(math.Floor(float64(sp.BaseTimeSec) * math.Pow(timeGrow, float64(lvl-1))))
 	return time.Duration(sec) * time.Second
 }
@@ -390,10 +500,16 @@ func (h *Hub) settle(ctx context.Context, c *CityState) {
 }
 
 func NewHub(now func() time.Time) *Hub {
+	return NewHubWithCatalog(now, DefaultCatalog())
+}
+
+// NewHubWithCatalog builds a hub with an explicit catalog; the production
+// runtime passes FullCatalog while frozen fixtures keep DefaultCatalog.
+func NewHubWithCatalog(now func() time.Time, catalog map[int32]BuildingSpec) *Hub {
 	if now == nil {
 		now = time.Now
 	}
-	return &Hub{cat: DefaultCatalog(), cities: make(map[int64]*CityState), now: now}
+	return &Hub{cat: catalog, cities: make(map[int64]*CityState), now: now}
 }
 
 // UseStore enables PostgreSQL snapshots (optional). flushEvery<=0 defaults to 30s.

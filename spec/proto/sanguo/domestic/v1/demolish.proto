@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package sanguo.domestic.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/domestic/v1;domesticv1";
+
+// route: domestic.v1.DemolishBuilding
+// 拆除/降级：等级 >1 时降一级，1 级非官府建筑直接移除；返还该级 25% 资源。
+message DemolishBuildingRequest {
+  int64 city_id = 1;
+  string slot_key = 2;
+}
+
+message DemolishBuildingResponse {
+  // 降级后的建筑快照；removed=true 时 building 为 null。
+  sanguo.common.v1.CityBuilding building = 1;
+  sanguo.common.v1.ResourceWallet wallet = 2;
+  bool removed = 3;
+  sanguo.common.v1.ResourceWallet refund = 4;
+}
