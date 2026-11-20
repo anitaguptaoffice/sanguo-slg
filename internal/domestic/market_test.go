@@ -1,6 +1,8 @@
 package domestic
 
 import (
+	"context"
+	"errors"
 	"testing"
 	"time"
 )
@@ -86,5 +88,25 @@ func TestStorehouseCapacityRaisesProductionCap(t *testing.T) {
 	want := int64(whCapBase) + whCapPerLvl + StorehouseCapacityBonus(2)
 	if withStore.Wallet.Food != want {
 		t.Fatalf("storehouse cap = %d, want %d", withStore.Wallet.Food, want)
+	}
+}
+
+func TestHubStorehouseView(t *testing.T) {
+	now := time.Date(2026, 11, 21, 12, 0, 0, 0, time.UTC)
+	h := NewHub(func() time.Time { return now })
+	h.cities[1] = &CityState{
+		ID: 1, Wallet: Resources{Food: 1000, Wood: 500, Stone: 250, Iron: 100},
+		Buildings: map[string]*BuildingInstance{"warehouse": {CfgID: 16, Level: 5}},
+	}
+	view, err := h.Storehouse(context.Background(), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if view.Level != 5 || view.ProtectionPercent != 20 || view.CapacityBonus != StorehouseCapacityBonus(5) ||
+		view.Protected != (Resources{Food: 200, Wood: 100, Stone: 50, Iron: 20}) {
+		t.Fatalf("storehouse view = %+v", view)
+	}
+	if _, err := h.Storehouse(context.Background(), 2); !errors.Is(err, ErrCityNotFound) {
+		t.Fatalf("unknown city = %v", err)
 	}
 }

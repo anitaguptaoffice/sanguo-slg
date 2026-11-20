@@ -14,8 +14,10 @@ func StorehouseCapacityBonus(level int32) int64 {
 	return int64(level) * int64(level+1) * 5000
 }
 
-// StorehouseProtectionPercent is the share of the four resources protected
-// from looting. Four percent per level, capped at sixty percent.
+// StorehouseProtectionPercent is the bounded project policy for R2-S6: four
+// percent per warehouse level, capped at sixty percent so at least forty
+// percent of each resource remains lootable. R4-S3's raiding skill can reduce
+// this percentage when player-city looting is implemented.
 func StorehouseProtectionPercent(level int32) int32 {
 	if level <= 0 {
 		return 0
