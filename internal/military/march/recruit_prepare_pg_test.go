@@ -17,7 +17,7 @@ func prepareBase(t *testing.T, pool *pgxpool.Pool, p freshsource.Profile) {
 	at := time.Now().UTC().Add(24 * time.Hour).Truncate(time.Millisecond)
 	_, err := pool.Exec(context.Background(), `INSERT INTO mil_city_origin VALUES(1,100,1,$1,1,$2)`, p.Cohort[:], at)
 	baseOK(t, err)
-	_, err = pool.Exec(context.Background(), `INSERT INTO city_troop VALUES(1,100,1,5,1),(1,100,2,0,0),(1,100,3,0,0),(1,100,4,0,0)`)
+	_, err = pool.Exec(context.Background(), `INSERT INTO city_troop SELECT 1,100,u,CASE WHEN u=1 THEN 5 ELSE 0 END,CASE WHEN u=1 THEN 1 ELSE 0 END FROM generate_series(1,12) u`)
 	baseOK(t, err)
 }
 

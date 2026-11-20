@@ -39,17 +39,15 @@ func readRecruitPending(ctx context.Context, a *recruittx.Access, s *freshMilita
 	if err := recruitHistoryRead(ctx, a, s, `SELECT COALESCE(pg_catalog.array_agg(unit_cfg_id ORDER BY unit_cfg_id),'{}'::pg_catalog.int4[]),COALESCE(pg_catalog.array_agg(count ORDER BY unit_cfg_id),'{}'::pg_catalog.int4[]),COALESCE(pg_catalog.array_agg(wounded ORDER BY unit_cfg_id),'{}'::pg_catalog.int4[]) FROM (SELECT unit_cfg_id,count,wounded FROM `+pgx.Identifier{s.profile.SchemaName, "city_troop"}.Sanitize()+` WHERE server_id OPERATOR(pg_catalog.=) $1 AND city_id OPERATOR(pg_catalog.=) $2 ORDER BY unit_cfg_id FOR UPDATE) q`, []any{scope.server, scope.city}, &units, &counts, &wounded); err != nil {
 		return recruitPendingSnapshot{}, err
 	}
-	if len(units) != len(counts) || len(units) != len(wounded) || len(units) > 12 {
+	if len(units) != 12 || len(counts) != 12 || len(wounded) != 12 {
 		return recruitPendingSnapshot{}, ErrRecruitUnavailable
 	}
 	stock := make([]recruitStockRow, 12)
-	seen := [13]bool{}
 	for i := range units {
-		if units[i] < 1 || units[i] > 12 || seen[units[i]] {
+		if units[i] != int32(i+1) {
 			return recruitPendingSnapshot{}, ErrRecruitUnavailable
 		}
-		seen[units[i]] = true
-		stock[units[i]-1] = recruitStockRow{server: scope.server, city: scope.city, unit: units[i], ready: int64(counts[i]), wounded: int64(wounded[i])}
+		stock[i] = recruitStockRow{server: scope.server, city: scope.city, unit: units[i], ready: int64(counts[i]), wounded: int64(wounded[i])}
 	}
 	var ids, players []int64
 	var statuses []int16

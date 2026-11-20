@@ -77,7 +77,7 @@ func TestPGRecruitPendingReadRejects(t *testing.T) {
 		{"wrong owner", `UPDATE mil_city_origin SET owner_player_id=2`},
 		{"wrong cohort", `UPDATE mil_city_origin SET cohort_id=decode(repeat('04',16),'hex')`},
 		{"missing stock", `DELETE FROM city_troop WHERE unit_cfg_id=4`},
-		{"extra stock", `INSERT INTO city_troop VALUES(1,100,5,0,0)`},
+		{"extra stock", `INSERT INTO city_troop VALUES(1,100,13,0,0)`},
 		{"SQL failure after stock", `ALTER TABLE work_queue RENAME TO hidden_queue`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

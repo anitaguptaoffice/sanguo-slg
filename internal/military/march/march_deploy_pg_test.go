@@ -116,8 +116,8 @@ func TestPGMarchDeploymentAndCreate(t *testing.T) {
 	baseOK(t, o.Commit(ctx))
 	var exact bool
 	baseOK(t, f.pool.QueryRow(ctx, `SELECT
-		(SELECT array_agg(count ORDER BY unit_cfg_id) FROM city_troop)=ARRAY[2,5,0,7]
-		AND (SELECT array_agg(wounded ORDER BY unit_cfg_id) FROM city_troop)=ARRAY[1,2,0,17]
+		(SELECT array_agg(count ORDER BY unit_cfg_id) FROM city_troop)=ARRAY[2,5,0,7,0,0,0,0,0,0,0,0]
+		AND (SELECT array_agg(wounded ORDER BY unit_cfg_id) FROM city_troop)=ARRAY[1,2,0,17,0,0,0,0,0,0,0,0]
 		AND EXISTS (SELECT FROM march_order WHERE march_id=$1 AND army_id=$2 AND origin_city_id=100 AND status=1)
 		AND (SELECT array_agg(count ORDER BY unit_cfg_id) FROM army_troop WHERE army_id=$2)=ARRAY[3,4]
 		AND (SELECT array_agg(status ORDER BY queue_id) FROM work_queue)=ARRAY[1,0]::smallint[]

@@ -38,16 +38,14 @@ FROM ` + s.table("mil_city_origin") + ` m CROSS JOIN LATERAL (
 		return out, err
 	}
 	if s.retired.Load() || owner != playerID || format != 1 || !bytes.Equal(cohort, s.profile.Cohort[:]) ||
-		len(units) != len(ready) || len(units) != len(wounded) || len(units) > len(out) {
+		len(units) != len(out) || len(ready) != len(out) || len(wounded) != len(out) {
 		return out, ErrRecruitUnavailable
 	}
-	seen := [13]bool{}
 	for i, unit := range units {
-		if unit < 1 || unit > 12 || seen[unit] || ready[i] < 0 || wounded[i] < 0 {
+		if unit != int32(i+1) || ready[i] < 0 || wounded[i] < 0 {
 			return out, ErrRecruitUnavailable
 		}
-		seen[unit] = true
-		out[unit-1] = ready[i]
 	}
+	copy(out[:], ready)
 	return out, nil
 }
