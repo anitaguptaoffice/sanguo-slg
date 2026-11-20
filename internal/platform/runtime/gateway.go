@@ -106,6 +106,14 @@ func (a *App) newAPIServer(ctx context.Context) (*api.Server, error) {
 	})
 	reportSvc := api.WireM2Combat(defaultShardID, a.DB, militaryHub, api.NewWorldGarrisons(worldSvc, defaultShardID))
 	srv := api.NewServer(a.Log, a.DB, worldSvc, hub, militaryHub)
+	hub.UseOfficeBonus(func(ctx context.Context, sid int32, cityID int64) (int64, int64, int64) {
+		svc := srv.HeroService()
+		if svc == nil {
+			return 0, 0, 0
+		}
+		prod, build, research, _, _ := svc.OfficeBonuses(ctx, sid, cityID)
+		return prod, build, research
+	})
 	srv.AttachBattleReports(reportSvc)
 
 	military, profiles, err := composeRuntimeMilitary(ctx, a.DB)

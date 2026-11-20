@@ -209,7 +209,11 @@ func (h *Hub) StartTechnicResearch(ctx context.Context, cityID int64, tid int32)
 			return ErrInsufficientRes
 		}
 		dur := time.Duration(row.TimeSec) * time.Second
-		if pct := TechnicBonus(c, "research_speed_pct"); pct > 0 {
+		pct := TechnicBonus(c, "research_speed_pct") + c.OfficeResearchPct
+		if pct > 90 {
+			pct = 90
+		}
+		if pct > 0 {
 			dur = dur * time.Duration(100-pct) / 100
 			if dur < time.Second {
 				dur = time.Second

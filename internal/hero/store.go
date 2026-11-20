@@ -2,6 +2,7 @@ package hero
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"sync"
 	"time"
@@ -42,6 +43,7 @@ type MemStore struct {
 	lastLargessAt map[heroKey]time.Time
 	exprSessions  map[heroKey]ExprSession
 	marchForce    map[heroKey]MarchForceState
+	cityOffices   map[string]CityOffice
 }
 
 func NewMemStore() *MemStore {
@@ -51,6 +53,7 @@ func NewMemStore() *MemStore {
 		lastLargessAt: map[heroKey]time.Time{},
 		exprSessions:  map[heroKey]ExprSession{},
 		marchForce:    map[heroKey]MarchForceState{},
+		cityOffices:   map[string]CityOffice{},
 	}
 }
 
@@ -251,4 +254,51 @@ func (m *MemStore) SetLastLargessAt(_ context.Context, sid int32, heroID int64, 
 	}
 	m.lastLargessAt[heroKey{sid, heroID}] = at
 	return nil
+}
+
+func officeKey(serverID int32, cityID int64, office int16) string {
+	return fmt.Sprintf("%d:%d:%d", serverID, cityID, office)
+}
+
+func (m *MemStore) SaveCityOffice(_ context.Context, serverID int32, cityID int64, office int16, heroID int64) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.cityOffices[officeKey(serverID, cityID, office)] = CityOffice{CityID: cityID, Office: office, HeroID: heroID}
+	return nil
+}
+
+func (m *MemStore) DeleteCityOffice(_ context.Context, serverID int32, cityID int64, office int16) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.cityOffices, officeKey(serverID, cityID, office))
+	return nil
+}
+
+func (m *MemStore) CityOffices(_ context.Context, serverID int32, cityID int64) ([]CityOffice, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var out []CityOffice
+	for _, row := range m.cityOffices {
+		if row.CityID != cityID {
+			continue
+		}
+		if h := m.heroes[heroKey{serverID, row.HeroID}]; h != nil {
+			row.PlayerID, row.Level, row.Name, row.Loyalty = h.PlayerID, h.Level, h.DisplayName, h.Loyalty
+			row.Politics, row.Intel, row.Command, row.Force = h.Politics, h.Intel, h.Command, h.Force
+		}
+		out = append(out, row)
+	}
+	return out, nil
+}
+
+func (m *MemStore) FindCityOfficeByHero(_ context.Context, serverID int32, heroID int64) (*CityOffice, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, row := range m.cityOffices {
+		if row.HeroID == heroID {
+			cp := row
+			return &cp, nil
+		}
+	}
+	return nil, nil
 }

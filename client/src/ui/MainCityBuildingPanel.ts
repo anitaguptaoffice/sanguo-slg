@@ -31,11 +31,29 @@ export type TechnicRow = {
   next_time_sec?: number;
 };
 
+export type CityOfficeRow = {
+  office?: number;
+  hero_id?: number;
+  name?: string;
+  level?: number;
+  loyalty?: number;
+  salary?: number;
+  production_pct?: number;
+  build_pct?: number;
+  research_pct?: number;
+  defense_pct?: number;
+  attack_pct?: number;
+};
+
+export type OfficeHeroOption = { hero_id?: number; name?: string; level?: number; status?: number };
+
 export class MainCityBuildingPanel {
   private panel!: HTMLElement;
   private selectedSlotKey: string | null = null;
   private technics: TechnicRow[] = [];
   private researchJob: { tid?: number; target?: number; finish_at_ms?: number } | null = null;
+  private offices: CityOfficeRow[] = [];
+  private officeHeroes: OfficeHeroOption[] = [];
   private focusTrap: CenterPanelFocusTrap | null = null;
 
   constructor(
@@ -48,6 +66,7 @@ export class MainCityBuildingPanel {
     private readonly defaultDismissTrigger?: () => HTMLElement | null,
     private readonly onDemolish?: (slotKey: string) => void,
     private readonly onResearchTechnic?: (tid: number) => void,
+    private readonly onOfficeAction?: (action: string, office: number, heroId: number) => void,
   ) {}
 
   attach(): void {
@@ -67,6 +86,20 @@ export class MainCityBuildingPanel {
         <button type="button" class="build-demolish hidden" data-action="demolish-building">
           降级/拆除（返还 25%）
         </button>
+        <div class="city-offices hidden" data-role="city-offices">
+          <h4>招贤馆三职</h4>
+          <p data-role="office-status"></p>
+          <label>职位 <select data-field="office-kind">
+            <option value="1">城守</option><option value="2">军师</option><option value="3">主将</option>
+          </select></label>
+          <label>将领 <select data-field="office-hero"></select></label>
+          <div class="city-civic-actions">
+            <button type="button" data-action="appoint-office">任命</button>
+            <button type="button" data-action="clear-office">卸任</button>
+            <button type="button" data-action="pay-office">发俸禄</button>
+            <button type="button" data-action="reward-office">赏赐（500 金）</button>
+          </div>
+        </div>
         <div class="academy-technic-section hidden" data-role="academy-technics">
           <h4>书院科技</h4>
           <p data-role="technic-status"></p>
@@ -119,6 +152,17 @@ export class MainCityBuildingPanel {
     this.renderTechnics();
   }
 
+  setCityOffices(offices: CityOfficeRow[], heroes: OfficeHeroOption[]): void {
+    this.offices = offices;
+    this.officeHeroes = heroes;
+    this.renderOffices();
+  }
+
+  updateCityOffices(offices: CityOfficeRow[]): void {
+    this.offices = offices;
+    this.renderOffices();
+  }
+
   sync(): void {
     if (!this.isOpen() || !this.selectedSlotKey) return;
     this.render();
@@ -168,6 +212,9 @@ export class MainCityBuildingPanel {
     const academy = this.panel.querySelector<HTMLElement>('[data-role="academy-technics"]');
     academy?.classList.toggle("hidden", slotKey !== "academy");
     if (slotKey === "academy") this.renderTechnics();
+    const officesEl = this.panel.querySelector<HTMLElement>('[data-role="city-offices"]');
+    officesEl?.classList.toggle("hidden", slotKey !== "recruit_hall");
+    if (slotKey === "recruit_hall") this.renderOffices();
     if (demolishBtn) {
       demolishBtn.classList.toggle("hidden", level <= 0);
       demolishBtn.disabled = upgrading || (building?.building_cfg_id === 1 && level <= 1);
@@ -225,6 +272,34 @@ export class MainCityBuildingPanel {
     }
   }
 
+  private renderOffices(): void {
+    const section = this.panel?.querySelector<HTMLElement>('[data-role="city-offices"]');
+    if (!section || section.classList.contains("hidden")) return;
+    const status = section.querySelector<HTMLElement>('[data-role="office-status"]');
+    const select = section.querySelector<HTMLSelectElement>('[data-field="office-hero"]');
+    if (!status || !select) return;
+    const nameOf = (office: number) => {
+      const row = this.offices.find((o) => o.office === office);
+      return row ? `${row.name} Lv${row.level} 忠诚${row.loyalty}` : "空缺";
+    };
+    status.textContent = `城守：${nameOf(1)} · 军师：${nameOf(2)} · 主将：${nameOf(3)}`;
+    const prev = Number(select.value);
+    select.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = this.officeHeroes.length ? "选择将领" : "暂无空闲将领";
+    select.appendChild(placeholder);
+    for (const h of this.officeHeroes) {
+      const id = Number(h.hero_id ?? 0);
+      if (id <= 0) continue;
+      const option = document.createElement("option");
+      option.value = String(id);
+      option.textContent = `${h.name ?? "将领"} Lv${h.level ?? 1}`;
+      select.appendChild(option);
+    }
+    if (prev) select.value = String(prev);
+  }
+
   private renderTechnics(): void {
     const section = this.panel?.querySelector<HTMLElement>('[data-role="academy-technics"]');
     if (!section || section.classList.contains("hidden")) return;
@@ -262,6 +337,18 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    const officeAction = btn?.getAttribute("data-action");
+    if (officeAction && officeAction.endsWith("-office")) {
+      const section = this.panel.querySelector<HTMLElement>('[data-role="city-offices"]');
+      const office = Number(section?.querySelector<HTMLSelectElement>('[data-field="office-kind"]')?.value ?? 0);
+      const heroId = Number(section?.querySelector<HTMLSelectElement>('[data-field="office-hero"]')?.value ?? 0);
+      const action = officeAction.replace("-office", "");
+      if (action === "pay" || action === "reward" || action === "appoint") {
+        if (action === "appoint" && (!heroId || !office)) return;
+      }
+      this.onOfficeAction?.(action, office, heroId);
+      return;
+    }
     if (btn?.getAttribute("data-action") === "research-technic") {
       const select = this.panel.querySelector<HTMLSelectElement>('[data-role="technic-select"]');
       const tid = Number(select?.value ?? 0);

@@ -38,6 +38,11 @@ const (
 	RouteApplyCityDecree      = "domestic.v1.ApplyCityDecree"
 	RouteListTechnics         = "domestic.v1.ListTechnics"
 	RouteStartTechnicResearch = "domestic.v1.StartTechnicResearch"
+	RouteListCityOffices      = "domestic.v1.ListCityOffices"
+	RouteSetCityOffice        = "domestic.v1.SetCityOffice"
+	RouteClearCityOffice      = "domestic.v1.ClearCityOffice"
+	RoutePayCityOfficeSalary  = "domestic.v1.PayCityOfficeSalary"
+	RouteRewardCityOfficeHero = "domestic.v1.RewardCityOfficeHero"
 	RouteGetCityState         = "domestic.v1.GetCityState"
 	defaultServerID           = 1
 )
@@ -268,6 +273,11 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteApplyCityDecree] = s.handleApplyCityDecree
 	handlers[RouteListTechnics] = s.handleListTechnics
 	handlers[RouteStartTechnicResearch] = s.handleStartTechnicResearch
+	handlers[RouteListCityOffices] = s.handleListCityOffices
+	handlers[RouteSetCityOffice] = s.handleSetCityOffice
+	handlers[RouteClearCityOffice] = s.handleClearCityOffice
+	handlers[RoutePayCityOfficeSalary] = s.handlePayCityOfficeSalary
+	handlers[RouteRewardCityOfficeHero] = s.handleRewardCityOfficeHero
 	handlers[RouteGetCityState] = s.handleGetCityState
 	handlers[RouteListMarches] = s.handleListMarches
 	handlers[RouteGetBattleReport] = s.wrapGameplayOnSuccess(obs.EventBattleReportReady, s.handleGetBattleReport)

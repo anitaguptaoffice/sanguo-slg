@@ -67,6 +67,11 @@ export const Routes = {
   ApplyCityDecree: "domestic.v1.ApplyCityDecree",
   ListTechnics: "domestic.v1.ListTechnics",
   StartTechnicResearch: "domestic.v1.StartTechnicResearch",
+  ListCityOffices: "domestic.v1.ListCityOffices",
+  SetCityOffice: "domestic.v1.SetCityOffice",
+  ClearCityOffice: "domestic.v1.ClearCityOffice",
+  PayCityOfficeSalary: "domestic.v1.PayCityOfficeSalary",
+  RewardCityOfficeHero: "domestic.v1.RewardCityOfficeHero",
   RecruitTroop: "military.v1.RecruitTroop",
   StartMarch: "military.v1.StartMarch",
   RecallMarch: "military.v1.RecallMarch",
@@ -176,6 +181,16 @@ export type ProtoTypes = {
   ListTechnicsResponse: protobuf.Type;
   StartTechnicResearchRequest: protobuf.Type;
   StartTechnicResearchResponse: protobuf.Type;
+  ListCityOfficesRequest: protobuf.Type;
+  ListCityOfficesResponse: protobuf.Type;
+  SetCityOfficeRequest: protobuf.Type;
+  SetCityOfficeResponse: protobuf.Type;
+  ClearCityOfficeRequest: protobuf.Type;
+  ClearCityOfficeResponse: protobuf.Type;
+  PayCityOfficeSalaryRequest: protobuf.Type;
+  PayCityOfficeSalaryResponse: protobuf.Type;
+  RewardCityOfficeHeroRequest: protobuf.Type;
+  RewardCityOfficeHeroResponse: protobuf.Type;
   StartBuildingUpgradeResponse: protobuf.Type;
   RecruitTroopRequest: protobuf.Type;
   RecruitTroopResponse: protobuf.Type;
@@ -331,6 +346,16 @@ export function getTypes(): ProtoTypes {
     ListTechnicsResponse: r.lookupType("sanguo.domestic.v1.ListTechnicsResponse"),
     StartTechnicResearchRequest: r.lookupType("sanguo.domestic.v1.StartTechnicResearchRequest"),
     StartTechnicResearchResponse: r.lookupType("sanguo.domestic.v1.StartTechnicResearchResponse"),
+    ListCityOfficesRequest: r.lookupType("sanguo.domestic.v1.ListCityOfficesRequest"),
+    ListCityOfficesResponse: r.lookupType("sanguo.domestic.v1.ListCityOfficesResponse"),
+    SetCityOfficeRequest: r.lookupType("sanguo.domestic.v1.SetCityOfficeRequest"),
+    SetCityOfficeResponse: r.lookupType("sanguo.domestic.v1.SetCityOfficeResponse"),
+    ClearCityOfficeRequest: r.lookupType("sanguo.domestic.v1.ClearCityOfficeRequest"),
+    ClearCityOfficeResponse: r.lookupType("sanguo.domestic.v1.ClearCityOfficeResponse"),
+    PayCityOfficeSalaryRequest: r.lookupType("sanguo.domestic.v1.PayCityOfficeSalaryRequest"),
+    PayCityOfficeSalaryResponse: r.lookupType("sanguo.domestic.v1.PayCityOfficeSalaryResponse"),
+    RewardCityOfficeHeroRequest: r.lookupType("sanguo.domestic.v1.RewardCityOfficeHeroRequest"),
+    RewardCityOfficeHeroResponse: r.lookupType("sanguo.domestic.v1.RewardCityOfficeHeroResponse"),
     StartBuildingUpgradeResponse: r.lookupType("sanguo.domestic.v1.StartBuildingUpgradeResponse"),
     RecruitTroopRequest: r.lookupType("sanguo.military.v1.RecruitTroopRequest"),
     RecruitTroopResponse: r.lookupType("sanguo.military.v1.RecruitTroopResponse"),

@@ -274,7 +274,7 @@ import {
 } from "@/net/hudFormat";
 import { MainCityDomesticSlotStrip } from "@/ui/MainCityDomesticSlotStrip";
 import { MainCitySlotUpgradeOverlay } from "@/ui/MainCitySlotUpgradeOverlay";
-import { MainCityBuildingPanel, type TechnicRow } from "@/ui/MainCityBuildingPanel";
+import { MainCityBuildingPanel, type CityOfficeRow, type TechnicRow } from "@/ui/MainCityBuildingPanel";
 import { MainCityCityOfficePanel, type CityCivicView } from "@/ui/MainCityCityOfficePanel";
 import {
   CITY_CHIEF_HALL_SLOT_KEY,
@@ -1038,6 +1038,7 @@ export class MainCityScene implements Scene {
       () => this.buildingDismissTrigger(),
       (slotKey) => void this.demolishBuilding(slotKey),
       (tid) => void this.startTechnicResearch(tid),
+      (action, office, heroId) => void this.cityOfficeAction(action, office, heroId),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -2167,6 +2168,7 @@ export class MainCityScene implements Scene {
       void this.refreshCityCivic();
     }
     if (slotKey === "academy") void this.refreshTechnics();
+    if (slotKey === "recruit_hall") void this.refreshCityOffices();
   }
 
   private getCityOfficeContext() {
@@ -2222,6 +2224,55 @@ export class MainCityScene implements Scene {
     }
   }
 
+  private async refreshCityOffices(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const [officesRes, heroesRes] = (await Promise.all([
+        this.gateway.listCityOffices(session.cityId),
+        this.gateway.listPlayerHeroes(session.serverId),
+      ])) as [
+        { offices?: CityOfficeRow[] },
+        { heroes?: { hero_id?: number; display_name?: string; name?: string; level?: number; status?: number }[] },
+      ];
+      if (this.session !== session) return;
+      this.buildingPanel.setCityOffices(
+        officesRes.offices ?? [],
+        (heroesRes.heroes ?? []).map((h) => ({
+          hero_id: h.hero_id, name: h.display_name ?? h.name, level: h.level, status: h.status,
+        })),
+      );
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async cityOfficeAction(action: string, office: number, heroId: number): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      let res: { offices?: CityOfficeRow[]; wallet?: ResourceWallet } = {};
+      if (action === "appoint") {
+        res = (await this.gateway.setCityOffice(session.cityId, office, heroId)) as typeof res;
+      } else if (action === "clear") {
+        res = (await this.gateway.clearCityOffice(session.cityId, office)) as typeof res;
+      } else if (action === "pay") {
+        res = (await this.gateway.payCityOfficeSalary(session.cityId)) as typeof res;
+      } else if (action === "reward") {
+        await this.gateway.rewardCityOfficeHero(session.cityId, heroId);
+      }
+      if (res.wallet) session.wallet = mergeCityResourceWallet(session.wallet, res.wallet);
+      if (res.offices) this.buildingPanel.updateCityOffices(res.offices);
+      this.status = "招贤馆任命已更新";
+      this.renderHud();
+      await this.refreshCityOffices();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
   private async refreshTechnics(): Promise<void> {
     const session = this.session;
     if (!session?.cityId) return;
@@ -2247,7 +2298,7 @@ export class MainCityScene implements Scene {
         finish_at_ms?: number;
       };
       if (this.session !== session) return;
-      if (res.wallet) this.session.wallet = mergeCityResourceWallet(this.session.wallet, res.wallet);
+      if (res.wallet) session.wallet = mergeCityResourceWallet(session.wallet, res.wallet);
       this.status = `书院开始研究科技 #${tid}`;
       this.renderHud();
       await this.refreshTechnics();
@@ -2266,7 +2317,7 @@ export class MainCityScene implements Scene {
         wallet?: ResourceWallet;
       };
       if (this.session !== session) return;
-      if (res.wallet) this.session.wallet = mergeCityResourceWallet(this.session.wallet, res.wallet);
+      if (res.wallet) session.wallet = mergeCityResourceWallet(session.wallet, res.wallet);
       if (typeof res.civic?.gold === "number") this.session.wallet.gold = res.civic.gold;
       if (decree === 5 && res.civic?.name) this.session.cityName = res.civic.name;
       this.cityOfficePanel.setCivicView(res.civic ?? null);
@@ -2971,7 +3022,7 @@ export class MainCityScene implements Scene {
         building?: CityBuilding;
       };
       if (!current()) return;
-      if (res.wallet) this.session.wallet = mergeCityResourceWallet(this.session.wallet, res.wallet);
+      if (res.wallet) session.wallet = mergeCityResourceWallet(session.wallet, res.wallet);
       const walletAfter = this.session.wallet;
       const pulseKeys = walletBuildDeductPulseKeys(walletBefore, walletAfter, preview?.cost);
       if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
@@ -3016,7 +3067,7 @@ export class MainCityScene implements Scene {
         refund?: ResourceWallet;
       };
       if (!actor()) return;
-      if (res.wallet) this.session.wallet = mergeCityResourceWallet(this.session.wallet, res.wallet);
+      if (res.wallet) session.wallet = mergeCityResourceWallet(session.wallet, res.wallet);
       if (res.removed) {
         this.session.buildings = this.session.buildings.filter((b) => b.slot_key !== slotKey);
       } else if (res.building) {
@@ -3129,7 +3180,7 @@ export class MainCityScene implements Scene {
       };
       if (!current()) return;
       this.cityStateFetch.clear();
-      if (res.wallet) this.session.wallet = mergeCityResourceWallet(this.session.wallet, res.wallet);
+      if (res.wallet) session.wallet = mergeCityResourceWallet(session.wallet, res.wallet);
       const pulseKeys = walletRecruitTroopDeductPulseKeys(
         walletBefore,
         this.session.wallet,

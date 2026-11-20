@@ -21,7 +21,7 @@ func HeroMayTakeCityOffice(h *Hero) error {
 	switch h.Status {
 	case StatusIdle:
 		return nil
-	case StatusCityChief:
+	case StatusCityChief, StatusCityOffice:
 		return nil
 	default:
 		return ErrHeroBusy
@@ -33,7 +33,7 @@ func MustClearOfficeBeforeMarch(h *Hero) error {
 	if h == nil {
 		return ErrHeroNotFound
 	}
-	if h.Status == StatusCityChief {
+	if h.Status == StatusCityChief || h.Status == StatusCityOffice {
 		return ErrHeroBusy
 	}
 	return nil
