@@ -238,6 +238,9 @@ func settleProductionWithBonus(c *CityState, cat map[int32]BuildingSpec, now tim
 		bonus += prodBonus * float64(mh-1)
 	}
 	cap := int64(whCapBase) + whCapPerLvl*int64(mh)
+	if pct := TechnicBonus(c, "storage_pct"); pct > 0 {
+		cap = cap * (100 + pct) / 100
+	}
 	var earned [4]big.Int
 	for _, inst := range c.Buildings {
 		sp, ok := cat[inst.CfgID]

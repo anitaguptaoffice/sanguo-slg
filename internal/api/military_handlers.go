@@ -145,6 +145,7 @@ func (s *Server) startMarch(ctx context.Context, pkt *commonv1.ClientPacket, pre
 		ToY:          int(req.GetToY()),
 		Purpose:      int16(req.GetPurpose()),
 		Troops:       stacks,
+		SpeedPct:     int32(domestic.TechnicBonus(dom, "march_speed_pct")),
 	})
 	if err != nil {
 		if s.heroSvc != nil {

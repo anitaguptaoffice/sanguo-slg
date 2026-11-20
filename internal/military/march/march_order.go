@@ -25,6 +25,8 @@ type StartMarchRequest struct {
 	ToY          int
 	Purpose      int16
 	Troops       []TroopStack
+	// SpeedPct is the academy march-speed bonus in percent.
+	SpeedPct int32
 }
 
 // BeginMarch transitions pending → marching and returns the order with timing filled in.
@@ -39,6 +41,9 @@ func BeginMarch(
 	}
 	dist := GridDistance(req.FromX, req.FromY, req.ToX, req.ToY)
 	speed := EffectiveMarchSpeed(catalog, troops)
+	if req.SpeedPct > 0 {
+		speed = speed * int(100+req.SpeedPct) / 100
+	}
 	sec := MarchDurationSec(dist, speed)
 	depart := now
 	arrive := depart.Add(time.Duration(sec) * time.Second)

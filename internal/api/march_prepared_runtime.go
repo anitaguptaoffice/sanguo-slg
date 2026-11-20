@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/combat"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
@@ -66,6 +67,13 @@ func (s *Server) WirePreparedMarch(ctx context.Context, profile freshsource.Prof
 		return err
 	}
 	resolver := combat.NewResolver(profile.ServerID, reports, NewWorldGarrisons(s.world, profile.ServerID), nil)
+	resolver.TechBonus = func(order march.MarchOrder) (int32, int32) {
+		city, err := s.domestic.SnapshotCity(order.OriginCityID)
+		if err != nil || city == nil {
+			return 0, 0
+		}
+		return int32(domestic.TechnicBonus(city, "attack_pct")), int32(domestic.TechnicBonus(city, "defense_pct"))
+	}
 	resolver.HeroStats = func(ctx context.Context, serverID, playerID, heroID int64) (combat.HeroCombatStats, error) {
 		detail, err := s.heroSvc.GetHeroDetail(ctx, hero.PlayerRef{ServerID: int32(serverID), PlayerID: playerID}, heroID)
 		if err != nil {
