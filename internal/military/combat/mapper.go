@@ -23,7 +23,11 @@ func ArmyFromStacksWithHero(catalog map[int32]march.UnitSpec, stacks []march.Tro
 		if !ok {
 			continue
 		}
-		tt, err := troopTypeFromCode(spec.Code)
+		code := spec.CombatType
+		if code == "" {
+			code = spec.Code
+		}
+		tt, err := troopTypeFromCode(code)
 		if err != nil {
 			continue
 		}

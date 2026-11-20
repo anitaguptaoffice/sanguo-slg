@@ -7,6 +7,8 @@ type UnitSpec struct {
 	Speed       int // tiles/hour scale from stats.speed
 	RecruitCost Resources
 	SecPerUnit  int64 // train time per soldier
+	// CombatType maps the recruit unit onto one of the four battle roles.
+	CombatType string
 }
 
 // DefaultUnitCatalog matches cfg_unit IDs 1–4 from spec/data/generated/cfg_unit.sql.
@@ -39,7 +41,16 @@ func DefaultUnitCatalog() map[int32]UnitSpec {
 			Speed:       30,
 			RecruitCost: Resources{Food: 100, Wood: 80, Stone: 40, Iron: 30},
 			SecPerUnit:  60,
+			CombatType:  "siege",
 		},
+		5:  {UnitCfgID: 5, Code: "militia", Speed: 40, RecruitCost: Resources{Food: 30, Wood: 10}, SecPerUnit: 20, CombatType: "infantry"},
+		6:  {UnitCfgID: 6, Code: "levy", Speed: 45, RecruitCost: Resources{Food: 45, Wood: 20}, SecPerUnit: 25, CombatType: "infantry"},
+		7:  {UnitCfgID: 7, Code: "scout", Speed: 120, RecruitCost: Resources{Food: 60, Wood: 30, Iron: 10}, SecPerUnit: 30, CombatType: "cavalry"},
+		8:  {UnitCfgID: 8, Code: "spearman", Speed: 50, RecruitCost: Resources{Food: 70, Wood: 50, Iron: 20}, SecPerUnit: 40, CombatType: "infantry"},
+		9:  {UnitCfgID: 9, Code: "shield", Speed: 40, RecruitCost: Resources{Food: 80, Wood: 60, Iron: 40}, SecPerUnit: 45, CombatType: "infantry"},
+		10: {UnitCfgID: 10, Code: "longbow", Speed: 65, RecruitCost: Resources{Food: 80, Wood: 90, Iron: 20}, SecPerUnit: 45, CombatType: "archer"},
+		11: {UnitCfgID: 11, Code: "light_cavalry", Speed: 110, RecruitCost: Resources{Food: 100, Wood: 40, Iron: 40}, SecPerUnit: 50, CombatType: "cavalry"},
+		12: {UnitCfgID: 12, Code: "heavy_cavalry", Speed: 85, RecruitCost: Resources{Food: 140, Wood: 60, Iron: 90}, SecPerUnit: 70, CombatType: "cavalry"},
 	}
 }
 
