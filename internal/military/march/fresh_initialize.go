@@ -92,7 +92,7 @@ func (p *FreshCityParticipant) Initialize(ctx context.Context, a *recruittx.Acce
 	if tag.RowsAffected() != 1 {
 		return InitializedCity{}, ErrInitializedCityProof
 	}
-	for unit := int32(1); unit <= 4; unit++ {
+	for unit := int32(1); unit <= 12; unit++ {
 		tag, err = copyAccess.Exec(ctx, s.binding, "INSERT INTO "+q("city_troop")+"(server_id,city_id,unit_cfg_id,count,wounded) VALUES($1,$2,$3,0,0)", identity.ServerID, identity.CityID, unit)
 		if err != nil {
 			return InitializedCity{}, err
@@ -106,7 +106,7 @@ func (p *FreshCityParticipant) Initialize(ctx context.Context, a *recruittx.Acce
 	if err != nil {
 		return InitializedCity{}, err
 	}
-	err = copyAccess.Scan(ctx, s.binding, "SELECT count(*)=4 AND bool_and(unit_cfg_id BETWEEN 1 AND 4 AND count=0 AND wounded=0) FROM "+q("city_troop")+" WHERE server_id=$1 AND city_id=$2", []any{identity.ServerID, identity.CityID}, &stock)
+	err = copyAccess.Scan(ctx, s.binding, "SELECT count(*)=12 AND bool_and(unit_cfg_id BETWEEN 1 AND 12 AND count=0 AND wounded=0) FROM "+q("city_troop")+" WHERE server_id=$1 AND city_id=$2", []any{identity.ServerID, identity.CityID}, &stock)
 	if err != nil {
 		return InitializedCity{}, err
 	}

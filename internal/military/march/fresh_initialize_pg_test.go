@@ -93,7 +93,7 @@ func TestPGFreshMilitaryInitializeAtomic(t *testing.T) {
 			baseOK(t, pool.QueryRow(ctx, "SELECT (SELECT count(*) FROM player_city)+(SELECT count(*) FROM mil_city_origin)+(SELECT count(*) FROM city_troop)").Scan(&rows))
 			want := 0
 			if commit {
-				want = 6
+				want = 14
 			}
 			if rows != want {
 				t.Fatalf("partial outcome %d", rows)
