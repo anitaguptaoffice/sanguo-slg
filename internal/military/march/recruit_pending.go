@@ -28,7 +28,7 @@ type recruitPendingRow struct {
 }
 
 type recruitPendingSummary struct {
-	reserved                  [4]int64
+	reserved                  [12]int64
 	activeID, oldestWaitingID int64
 	valid                     bool // arithmetic validation only, not authority or SQL completeness
 }
@@ -42,7 +42,7 @@ func validateRecruitPending(scope recruitScope, stock []recruitStockRow, rows []
 	if scope.server <= 0 || scope.player <= 0 || scope.city <= 0 || len(stock) != 4 || catalog == nil || len(catalog.manifests) == 0 {
 		return out, errRecruitPending
 	}
-	var seen [4]bool
+	var seen [12]bool
 	for _, row := range stock {
 		if row.server != scope.server || row.city != scope.city || row.unit < 1 || row.unit > 4 ||
 			row.ready < 0 || row.ready > math.MaxInt32 || row.wounded < 0 || row.wounded > math.MaxInt32 {
@@ -86,7 +86,7 @@ func validateRecruitPending(scope recruitScope, stock []recruitStockRow, rows []
 // canAddCount preserves representable completion capacity, not a gameplay cap.
 // Passing this check does not authorize admission or mutate these copied totals.
 func (s recruitPendingSummary) canAddCount(unit, count int32) error {
-	if !s.valid || unit < 1 || unit > 4 || count <= 0 || int64(count) > math.MaxInt32-s.reserved[unit-1] {
+	if !s.valid || unit < 1 || unit > 12 || count <= 0 || int64(count) > math.MaxInt32-s.reserved[unit-1] {
 		return errRecruitPending
 	}
 	return nil

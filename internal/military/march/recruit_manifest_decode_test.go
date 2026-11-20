@@ -16,7 +16,7 @@ import (
 // Exact retained artifact bytes from DATA-RECRUIT-MANIFEST-001, not runtime IO.
 const recruitManifestJSON = `{
   "format": 1,
-  "version": "recruit-v1:eba0b17092787c8e796ce47af01d956e74885f8dd71d45b76a25d333447b728f",
+  "version": "recruit-v1:614ba218f42c9c37ad29eb6af0fecea199207b1f7c6c53a7cd8b480d184718b3",
   "rules": [
     {
       "unit_cfg_id": 1,
@@ -57,10 +57,89 @@ const recruitManifestJSON = `{
         "stone": 40
       },
       "seconds_per_unit": 60
+    },
+    {
+      "unit_cfg_id": 5,
+      "cost_per_unit": {
+        "food": 30,
+        "wood": 10,
+        "iron": 0,
+        "stone": 0
+      },
+      "seconds_per_unit": 20
+    },
+    {
+      "unit_cfg_id": 6,
+      "cost_per_unit": {
+        "food": 45,
+        "wood": 20,
+        "iron": 0,
+        "stone": 0
+      },
+      "seconds_per_unit": 25
+    },
+    {
+      "unit_cfg_id": 7,
+      "cost_per_unit": {
+        "food": 60,
+        "wood": 30,
+        "iron": 10,
+        "stone": 0
+      },
+      "seconds_per_unit": 30
+    },
+    {
+      "unit_cfg_id": 8,
+      "cost_per_unit": {
+        "food": 70,
+        "wood": 50,
+        "iron": 20,
+        "stone": 0
+      },
+      "seconds_per_unit": 40
+    },
+    {
+      "unit_cfg_id": 9,
+      "cost_per_unit": {
+        "food": 80,
+        "wood": 60,
+        "iron": 40,
+        "stone": 0
+      },
+      "seconds_per_unit": 45
+    },
+    {
+      "unit_cfg_id": 10,
+      "cost_per_unit": {
+        "food": 80,
+        "wood": 90,
+        "iron": 20,
+        "stone": 0
+      },
+      "seconds_per_unit": 45
+    },
+    {
+      "unit_cfg_id": 11,
+      "cost_per_unit": {
+        "food": 100,
+        "wood": 40,
+        "iron": 40,
+        "stone": 0
+      },
+      "seconds_per_unit": 50
+    },
+    {
+      "unit_cfg_id": 12,
+      "cost_per_unit": {
+        "food": 140,
+        "wood": 60,
+        "iron": 90,
+        "stone": 0
+      },
+      "seconds_per_unit": 70
     }
   ]
-}
-`
+}`
 
 func requireManifestReject(t *testing.T, raw []byte) {
 	t.Helper()
@@ -73,7 +152,7 @@ func requireManifestReject(t *testing.T, raw []byte) {
 func TestRecruitManifestDecodeGolden(t *testing.T) {
 	raw := []byte(recruitManifestJSON)
 	digest := sha256.Sum256(raw)
-	if hex.EncodeToString(digest[:]) != "90499740432ff308e3b7a6f2bd9f54ff5af127d98acc091a4c13af18fc561262" {
+	if hex.EncodeToString(digest[:]) != "a15279c1931e93eda4b0316b24d7860d637dd76d005f979e1f33d431fcc688a1" {
 		t.Fatal("fixture no longer matches published artifact")
 	}
 	got, err := DecodeRecruitManifest(raw)

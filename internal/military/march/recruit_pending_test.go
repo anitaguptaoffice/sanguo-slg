@@ -59,7 +59,7 @@ func TestRecruitPendingValid(t *testing.T) {
 	if many.reserved[0] != 4 {
 		t.Fatal("result retains input alias")
 	}
-	for _, pair := range [][2]int32{{0, 1}, {5, 1}, {1, 0}, {1, -1}} {
+	for _, pair := range [][2]int32{{0, 1}, {13, 1}, {1, 0}, {1, -1}} {
 		if many.canAddCount(pair[0], pair[1]) == nil {
 			t.Fatal("invalid proposed count")
 		}

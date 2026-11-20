@@ -129,7 +129,7 @@ func (p *RecruitParticipant) recruitCompletionLocked(ctx context.Context, a *rec
 // recruitCompletionApply writes credit, done and one promotion; a later failure poisons the caller.
 func (p *RecruitParticipant) recruitCompletionApply(ctx context.Context, a *recruittx.Access, c RecruitCandidate, st recruitCompletionState) error {
 	plan, s := st.plan, st.source
-	if s == nil || plan.disposition != recruitCompletionDue || plan.creditUnit < 1 || plan.creditUnit > 4 || plan.creditCount <= 0 || plan.readyAfter < plan.creditCount || plan.doneID != c.QueueID {
+	if s == nil || plan.disposition != recruitCompletionDue || plan.creditUnit < 1 || plan.creditUnit > 12 || plan.creditCount <= 0 || plan.readyAfter < plan.creditCount || plan.doneID != c.QueueID {
 		return ErrRecruitUnavailable
 	}
 	wrote := false

@@ -94,7 +94,7 @@ func TestPGMarchDeploymentAndCreate(t *testing.T) {
 	baseOK(t, f.lock(ctx, a))
 	ready, err := f.recruit.DebitMarchTroops(ctx, a, 1, 1, 100, in.Troops)
 	baseOK(t, err)
-	if ready != ([4]int32{2, 5, 0, 7}) || returnAtomicState(t, f.pool, false) != before || !prepareProbeLocked(t, f.pool, "SELECT city_id FROM player_city WHERE server_id=1 AND city_id=100") {
+	if ready != ([12]int32{2, 5, 0, 7}) || returnAtomicState(t, f.pool, false) != before || !prepareProbeLocked(t, f.pool, "SELECT city_id FROM player_city WHERE server_id=1 AND city_id=100") {
 		t.Fatal("incorrect provisional debit, visibility or WORLD barrier", ready)
 	}
 	_, err = f.store.Create(ctx, a, in)
@@ -122,7 +122,7 @@ func TestPGMarchDeploymentAndCreate(t *testing.T) {
 		AND (SELECT array_agg(count ORDER BY unit_cfg_id) FROM army_troop WHERE army_id=$2)=ARRAY[3,4]
 		AND (SELECT array_agg(status ORDER BY queue_id) FROM work_queue)=ARRAY[1,0]::smallint[]
 		AND (SELECT count(*) FROM mil_recruit_receipt)=2 AND (SELECT food FROM player_wallet)=8000`, ids.MarchID, ids.ArmyID).Scan(&exact))
-	if ready != ([4]int32{2, 5, 0, 7}) || !exact {
+	if ready != ([12]int32{2, 5, 0, 7}) || !exact {
 		t.Fatal("confirmed debit or immutable state changed", ready, ids)
 	}
 }
@@ -149,7 +149,7 @@ func TestPGMarchDeploymentRejects(t *testing.T) {
 			o, a, ctx := baseOwner(t, f.binding)
 			baseOK(t, f.lock(ctx, a))
 			got, err := f.recruit.DebitMarchTroops(ctx, a, 1, tc.player, 100, []TroopStack{{1, 3}, {4, 8}})
-			if !errors.Is(err, tc.want) || got != ([4]int32{}) {
+			if !errors.Is(err, tc.want) || got != ([12]int32{}) {
 				t.Fatal(got, err)
 			}
 			baseOK(t, o.Commit(ctx)) // These definite rejections occur before any write.

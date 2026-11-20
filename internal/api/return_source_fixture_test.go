@@ -142,7 +142,7 @@ WHERE d.datname=current_database() AND n.nspname=current_schema() AND r.rolname=
 
 func returnPGCatalog(t *testing.T) *march.RecruitCatalog {
 	t.Helper()
-	var rules [4]march.RecruitRule
+	var rules [12]march.RecruitRule
 	for i := range rules {
 		rules[i] = march.RecruitRule{UnitCfgID: int32(i + 1), SecondsPerUnit: int64(i + 1)}
 	}

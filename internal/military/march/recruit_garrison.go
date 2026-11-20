@@ -10,8 +10,8 @@ import (
 // ReadReadyGarrison returns copied ready counts for units 1 to 4 from one
 // statement snapshot. The caller must already have checked WORLD ownership
 // and installed the existing MIL pins in this transaction.
-func (p *RecruitParticipant) ReadReadyGarrison(ctx context.Context, a *recruittx.Access, serverID int32, playerID, cityID int64) ([4]int32, error) {
-	var out [4]int32
+func (p *RecruitParticipant) ReadReadyGarrison(ctx context.Context, a *recruittx.Access, serverID int32, playerID, cityID int64) ([12]int32, error) {
+	var out [12]int32
 	if playerID <= 0 || cityID <= 0 || a == nil {
 		return out, ErrRecruitUnavailable
 	}

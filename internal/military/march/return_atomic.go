@@ -99,8 +99,8 @@ func (p *ReturnParticipant) returnObserve(ctx context.Context, a *recruittx.Acce
 
 // returnCapacity validates complete copied pending payloads and all units before
 // any write. It returns expected R+S only, never authority or a public plan.
-func returnCapacity(scope recruitScope, pending recruitPendingSnapshot, units, counts []int32, catalog *RecruitCatalog) ([4]int64, error) {
-	var ready [4]int64
+func returnCapacity(scope recruitScope, pending recruitPendingSnapshot, units, counts []int32, catalog *RecruitCatalog) ([12]int64, error) {
+	var ready [12]int64
 	n := len(pending.ids)
 	if n != len(pending.players) || n != len(pending.statuses) || n != len(pending.starts) || n != len(pending.finishes) || n != len(pending.payloads) || len(units) == 0 || len(units) != len(counts) {
 		return ready, ErrReturnUnavailable
@@ -123,7 +123,7 @@ func returnCapacity(scope recruitScope, pending recruitPendingSnapshot, units, c
 	var previous int32
 	for i, unit := range units {
 		if unit <= previous || summary.canAddCount(unit, counts[i]) != nil {
-			return [4]int64{}, ErrReturnUnavailable
+			return [12]int64{}, ErrReturnUnavailable
 		}
 		ready[unit-1] += int64(counts[i])
 		previous = unit
@@ -133,7 +133,7 @@ func returnCapacity(scope recruitScope, pending recruitPendingSnapshot, units, c
 
 // returnApply consumes only the private validated snapshot in the captured Access.
 // No abort statement: the fixed APP caller must rollback even a zero-row error.
-func (p *ReturnParticipant) returnApply(ctx context.Context, a *recruittx.Access, c ReturnCandidate, origin ReturnOrigin, st returnLockedSnapshot, ready [4]int64) error {
+func (p *ReturnParticipant) returnApply(ctx context.Context, a *recruittx.Access, c ReturnCandidate, origin ReturnOrigin, st returnLockedSnapshot, ready [12]int64) error {
 	s := p.source
 	run := func(query string, args ...any) error {
 		if s.retired.Load() {
@@ -167,7 +167,7 @@ func (p *ReturnParticipant) returnApply(ctx context.Context, a *recruittx.Access
 
 // Actual nonlocking reads under retained locks verify effects and unchanged graph;
 // never invoke the full lock loader again after taking the later march/army locks.
-func (p *ReturnParticipant) returnVerify(ctx context.Context, a *recruittx.Access, c ReturnCandidate, origin ReturnOrigin, st returnLockedSnapshot, ready [4]int64) error {
+func (p *ReturnParticipant) returnVerify(ctx context.Context, a *recruittx.Access, c ReturnCandidate, origin ReturnOrigin, st returnLockedSnapshot, ready [12]int64) error {
 	s := p.source
 	read := func(query string, args []any, dest ...any) error {
 		return returnSourceFailure(s, a.Scan(ctx, s.binding, query, args, dest...))

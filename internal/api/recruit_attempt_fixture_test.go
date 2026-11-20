@@ -19,7 +19,7 @@ const recruitAttemptPGDigest = "69921906a221d82ed9d74fb220d2166b401cdb35c0a4b8ae
 
 func recruitAttemptPGCatalog(t *testing.T) *march.RecruitCatalog {
 	t.Helper()
-	var rules [4]march.RecruitRule
+	var rules [12]march.RecruitRule
 	for i := range rules {
 		n := int64(i + 1)
 		rules[i] = march.RecruitRule{UnitCfgID: int32(n),

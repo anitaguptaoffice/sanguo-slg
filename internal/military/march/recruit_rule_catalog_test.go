@@ -13,11 +13,19 @@ import (
 
 func evidenceFixture(t *testing.T) RecruitManifest {
 	t.Helper()
-	m := RecruitManifest{Rules: [4]RecruitRule{
+	m := RecruitManifest{Rules: [12]RecruitRule{
 		{1, Resources{40, 20, 0, 0}, 30},
 		{2, Resources{80, 40, 20, 0}, 45},
 		{3, Resources{50, 60, 0, 0}, 35},
 		{4, Resources{100, 80, 30, 40}, 60},
+		{5, Resources{30, 10, 0, 0}, 20},
+		{6, Resources{45, 20, 0, 0}, 25},
+		{7, Resources{60, 30, 10, 0}, 30},
+		{8, Resources{70, 50, 20, 0}, 40},
+		{9, Resources{80, 60, 40, 0}, 45},
+		{10, Resources{80, 90, 20, 0}, 45},
+		{11, Resources{100, 40, 40, 0}, 50},
+		{12, Resources{140, 60, 90, 0}, 70},
 	}}
 	var err error
 	m.Version, err = RecruitManifestVersion(m.Rules)
@@ -29,7 +37,7 @@ func evidenceFixture(t *testing.T) RecruitManifest {
 
 func TestRecruitRuleGolden(t *testing.T) {
 	m := evidenceFixture(t)
-	if m.Version != "recruit-v1:eba0b17092787c8e796ce47af01d956e74885f8dd71d45b76a25d333447b728f" {
+	if m.Version != "recruit-v1:614ba218f42c9c37ad29eb6af0fecea199207b1f7c6c53a7cd8b480d184718b3" {
 		t.Fatal(m.Version)
 	}
 	raw, err := recruitRuleBytes(m.Rules[0])
@@ -144,7 +152,7 @@ func TestRecruitCatalogSnapshotAndHistory(t *testing.T) {
 			t.Fatal("zero resolve")
 		}
 	}
-	for _, unit := range []int32{0, 5} {
+	for _, unit := range []int32{0, 13} {
 		if _, err := catalog.Current(unit); err == nil {
 			t.Fatal("unknown unit")
 		}

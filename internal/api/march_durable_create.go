@@ -25,7 +25,7 @@ type durableMarchCreator struct {
 
 type durableMarchCommit struct {
 	identity march.MarchIdentity
-	ready    [4]int32
+	ready    [12]int32
 	input    march.MarchCreate
 }
 

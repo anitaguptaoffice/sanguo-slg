@@ -28,7 +28,7 @@ func TestPGDurableHubReturnCommitAndRestore(t *testing.T) {
 	ids, err := f.store.Create(ctx, a, in)
 	baseOK(t, err)
 	baseOK(t, o.Commit(ctx))
-	if deployed != ([4]int32{2, 8, 0, 7}) {
+	if deployed != ([12]int32{2, 8, 0, 7}) {
 		t.Fatal("incorrect fixture deployment", deployed)
 	}
 

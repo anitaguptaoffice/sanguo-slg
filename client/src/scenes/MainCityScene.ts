@@ -566,6 +566,14 @@ export class MainCityScene implements Scene {
             <option value="2">骑兵</option>
             <option value="3">弓兵</option>
             <option value="4">器械</option>
+            <option value="5">民夫</option>
+            <option value="6">义兵</option>
+            <option value="7">斥候</option>
+            <option value="8">长枪兵</option>
+            <option value="9">刀盾兵</option>
+            <option value="10">长弓手</option>
+            <option value="11">轻骑</option>
+            <option value="12">铁骑</option>
           </select>
         </label>
         <label>数量 <input type="number" data-field="recruit-count" min="1" value="20" /></label>
@@ -601,6 +609,10 @@ export class MainCityScene implements Scene {
           <select data-field="march-unit" aria-label="出征兵种">
             <option value="1">步兵</option><option value="2">骑兵</option>
             <option value="3">弓兵</option><option value="4">器械</option>
+            <option value="5">民夫</option><option value="6">义兵</option>
+            <option value="7">斥候</option><option value="8">长枪兵</option>
+            <option value="9">刀盾兵</option><option value="10">长弓手</option>
+            <option value="11">轻骑</option><option value="12">铁骑</option>
           </select>
         </label>
         <label>出征数量 <input type="number" data-field="march-count" min="1" value="50" /></label>
@@ -3090,7 +3102,7 @@ export class MainCityScene implements Scene {
   private preparedRecruitIntent() {
     const city = this.session?.cityId ?? 0;
     const { unitCfgId, count } = readTroopRecruitForm(this.militaryPanel);
-    if (!Number.isSafeInteger(city) || city <= 0 || ![1, 2, 3, 4].includes(unitCfgId) ||
+    if (!Number.isSafeInteger(city) || city <= 0 || ![1,2,3,4,5,6,7,8,9,10,11,12].includes(unitCfgId) ||
         !Number.isInteger(count) || count <= 0 || count > 2147483647) return null;
     return { city_id: String(city), unit_cfg_id: unitCfgId, count };
   }

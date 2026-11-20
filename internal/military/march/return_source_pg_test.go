@@ -38,7 +38,7 @@ func TestPGReturnSourceProfiles(t *testing.T) {
 	_, b, p := returnSourceFixture(t)
 	c, first, _ := recruitSourceCatalog(t)
 	_, a, ctx := baseOwner(t, b)
-	for _, bad := range []*RecruitCatalog{nil, {}, {current: first.Version, manifests: map[string][4]RecruitRule{first.Version: {}}}, {current: "missing", manifests: c.manifests}} {
+	for _, bad := range []*RecruitCatalog{nil, {}, {current: first.Version, manifests: map[string][12]RecruitRule{first.Version: {}}}, {current: "missing", manifests: c.manifests}} {
 		if got, err := NewReturnParticipant(ctx, b, a, p, bad); got != nil || !errors.Is(err, ErrReturnSource) {
 			t.Fatal("invalid catalog", err)
 		}

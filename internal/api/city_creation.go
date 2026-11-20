@@ -109,7 +109,7 @@ func (s *Server) initializeDurableCity(ctx context.Context, tx pgx.Tx, playerID,
 		profile.ServerID, cityID, playerID, profile.Cohort[:]); err != nil {
 		return err
 	}
-	for unit := int32(1); unit <= 4; unit++ {
+	for unit := int32(1); unit <= 12; unit++ {
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO city_troop (server_id, city_id, unit_cfg_id, count, wounded)
 			VALUES ($1, $2, $3, 0, 0)

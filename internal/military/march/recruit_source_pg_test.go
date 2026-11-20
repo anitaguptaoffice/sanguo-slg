@@ -105,7 +105,7 @@ func TestPGRecruitSourceCatalogAndProfileValidation(t *testing.T) {
 	c, first, _ := recruitSourceCatalog(t)
 	o, a, ctx := baseOwner(t, b)
 	defer func() { _ = o.Rollback(ctx) }()
-	for _, bad := range []*RecruitCatalog{nil, {}, {current: first.Version, manifests: map[string][4]RecruitRule{first.Version: {}}}, {current: "missing", manifests: c.manifests}} {
+	for _, bad := range []*RecruitCatalog{nil, {}, {current: first.Version, manifests: map[string][12]RecruitRule{first.Version: {}}}, {current: "missing", manifests: c.manifests}} {
 		if got, err := NewRecruitParticipant(ctx, b, a, p, bad); got != nil || err == nil {
 			t.Fatal("invalid catalog")
 		}
