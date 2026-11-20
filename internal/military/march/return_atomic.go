@@ -182,12 +182,17 @@ func (p *ReturnParticipant) returnVerify(ctx context.Context, a *recruittx.Acces
 	if err := read(`SELECT pg_catalog.array_agg(unit_cfg_id ORDER BY unit_cfg_id),pg_catalog.array_agg(count ORDER BY unit_cfg_id),pg_catalog.array_agg(wounded ORDER BY unit_cfg_id) FROM `+s.table("city_troop")+` WHERE server_id OPERATOR(pg_catalog.=) $1 AND city_id OPERATOR(pg_catalog.=) $2`, []any{c.ServerID, c.CityID}, &units, &counts, &wounded); err != nil {
 		return err
 	}
-	if len(units) != 4 || len(counts) != 4 || len(wounded) != 4 {
+	if len(units) != len(counts) || len(units) != len(wounded) || len(units) > 12 {
 		return ErrReturnUnavailable
 	}
-	for i, row := range st.pending.stock {
-		if units[i] != row.unit || int64(counts[i]) != ready[row.unit-1] || int64(wounded[i]) != row.wounded {
+	for i, unit := range units {
+		if unit < 1 || unit > 12 || int64(counts[i]) != ready[unit-1] {
 			return ErrReturnUnavailable
+		}
+		for _, row := range st.pending.stock {
+			if row.unit == unit && int64(wounded[i]) != row.wounded {
+				return ErrReturnUnavailable
+			}
 		}
 	}
 	var actual returnLockedSnapshot
