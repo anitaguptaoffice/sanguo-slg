@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	domesticv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/domestic/v1"
@@ -67,21 +68,21 @@ func (g *recruitGeneration) readCityMilitary(ctx context.Context, pc PlayerConte
 	}
 	began = true
 	if owner, err = s.binding.Begin(ctx); err != nil {
-		return out, err
+		return out, fmt.Errorf("city stock begin: %w", err)
 	}
 	access := owner.Access()
 	if err = bundle.city.Pin(ctx, access); err != nil {
-		return out, err
+		return out, fmt.Errorf("city stock world pin: %w", err)
 	}
 	if err = bundle.military.Pin(ctx, access); err != nil {
-		return out, err
+		return out, fmt.Errorf("city stock military pin: %w", err)
 	}
 	if err = bundle.city.Lock(ctx, access, pc.PlayerID, cityID); err != nil {
-		return out, err
+		return out, fmt.Errorf("city stock world lock: %w", err)
 	}
 	ready, err := bundle.military.ReadReadyGarrison(ctx, access, pc.ServerID, pc.PlayerID, cityID)
 	if err != nil {
-		return out, err
+		return out, fmt.Errorf("city stock ready garrison: %w", err)
 	}
 	out.garrison = &domesticv1.CityGarrisonSnapshot{}
 	for i, count := range ready {
