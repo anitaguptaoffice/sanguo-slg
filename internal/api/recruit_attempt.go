@@ -76,8 +76,6 @@ func recruitAttemptCloses(err error) bool {
 // No SQL here; state -> admission lock order. Diagnostics never rewrite outcome.
 func (a *recruitAttempt) finish(lease freshLease, phase string, r *recruitAttemptResult, retire bool, fault, cleanupFault any) {
 	s := a.generation
-	if retire {
-	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if _, ok := s.attempts[a]; !ok {
