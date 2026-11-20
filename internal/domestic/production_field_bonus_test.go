@@ -21,7 +21,9 @@ func TestHubSettleUsesFieldBonusProvider(t *testing.T) {
 	start := time.Unix(1700000000, 0)
 	h := NewHub(func() time.Time { return start })
 	c := fractionCity(start)
-	h.RegisterCity(c)
+	if err := h.RegisterCity(c); err != nil {
+		t.Fatal(err)
+	}
 	h.UseFieldBonus(func(_ context.Context, sid int32, cityID int64) [4]int64 {
 		if cityID != 1 {
 			t.Fatalf("provider got server=%d city=%d", sid, cityID)
