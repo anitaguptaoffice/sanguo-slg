@@ -355,3 +355,49 @@ func (p *PGStore) DeleteMarchForceState(ctx context.Context, serverID int32, her
 	)
 	return err
 }
+
+func (p *PGStore) SaveCityOffice(ctx context.Context, serverID int32, cityID int64, office int16, heroID int64) error {
+	_, err := p.Pool.Exec(ctx, `INSERT INTO city_office(server_id,city_id,office,hero_id)
+		VALUES($1,$2,$3,$4) ON CONFLICT (server_id,city_id,office) DO UPDATE SET hero_id=EXCLUDED.hero_id, appointed_at=now()`,
+		serverID, cityID, office, heroID)
+	return err
+}
+
+func (p *PGStore) DeleteCityOffice(ctx context.Context, serverID int32, cityID int64, office int16) error {
+	_, err := p.Pool.Exec(ctx, `DELETE FROM city_office WHERE server_id=$1 AND city_id=$2 AND office=$3`,
+		serverID, cityID, office)
+	return err
+}
+
+func (p *PGStore) CityOffices(ctx context.Context, serverID int32, cityID int64) ([]CityOffice, error) {
+	rows, err := p.Pool.Query(ctx, `SELECT o.city_id,o.office,o.hero_id,h.player_id,h.level,COALESCE(h.display_name,''),h.loyalty,h.politics,h.intel,h.command,h.force
+		FROM city_office o JOIN player_hero h ON h.server_id=o.server_id AND h.hero_id=o.hero_id
+		WHERE o.server_id=$1 AND o.city_id=$2 ORDER BY o.office`, serverID, cityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []CityOffice
+	for rows.Next() {
+		var row CityOffice
+		if err := rows.Scan(&row.CityID, &row.Office, &row.HeroID, &row.PlayerID, &row.Level, &row.Name,
+			&row.Loyalty, &row.Politics, &row.Intel, &row.Command, &row.Force); err != nil {
+			return nil, err
+		}
+		out = append(out, row)
+	}
+	return out, rows.Err()
+}
+
+func (p *PGStore) FindCityOfficeByHero(ctx context.Context, serverID int32, heroID int64) (*CityOffice, error) {
+	var row CityOffice
+	err := p.Pool.QueryRow(ctx, `SELECT city_id,office,hero_id FROM city_office WHERE server_id=$1 AND hero_id=$2`,
+		serverID, heroID).Scan(&row.CityID, &row.Office, &row.HeroID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &row, nil
+}

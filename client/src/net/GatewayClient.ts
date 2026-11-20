@@ -56,6 +56,11 @@ export type GatewayPort = {
   applyCityDecree(cityId: number, decree: number, value: number, name?: string): Promise<unknown>;
   listTechnics(cityId: number): Promise<unknown>;
   startTechnicResearch(cityId: number, tid: number): Promise<unknown>;
+  listCityOffices(cityId: number): Promise<unknown>;
+  setCityOffice(cityId: number, office: number, heroId: number): Promise<unknown>;
+  clearCityOffice(cityId: number, office: number): Promise<unknown>;
+  payCityOfficeSalary(cityId: number): Promise<unknown>;
+  rewardCityOfficeHero(cityId: number, heroId: number): Promise<unknown>;
   recruitTroop(cityId: number, unitCfgId: number, count: number): Promise<unknown>;
   readonly preparedRecruit?: boolean;
   submitPreparedRecruit?(intent?: RecruitJournalIntent): Promise<PreparedRecruitResult>;
@@ -608,6 +613,31 @@ export class GatewayClient implements GatewayPort {
       StartTechnicResearchResponse,
       true,
     );
+  }
+
+  async listCityOffices(cityId: number) {
+    const { ListCityOfficesResponse } = getTypes();
+    return this.rpc(Routes.ListCityOffices, "ListCityOfficesRequest", { city_id: cityId }, ListCityOfficesResponse, true);
+  }
+
+  async setCityOffice(cityId: number, office: number, heroId: number) {
+    const { SetCityOfficeResponse } = getTypes();
+    return this.rpc(Routes.SetCityOffice, "SetCityOfficeRequest", { city_id: cityId, office, hero_id: heroId }, SetCityOfficeResponse, true);
+  }
+
+  async clearCityOffice(cityId: number, office: number) {
+    const { ClearCityOfficeResponse } = getTypes();
+    return this.rpc(Routes.ClearCityOffice, "ClearCityOfficeRequest", { city_id: cityId, office }, ClearCityOfficeResponse, true);
+  }
+
+  async payCityOfficeSalary(cityId: number) {
+    const { PayCityOfficeSalaryResponse } = getTypes();
+    return this.rpc(Routes.PayCityOfficeSalary, "PayCityOfficeSalaryRequest", { city_id: cityId }, PayCityOfficeSalaryResponse, true);
+  }
+
+  async rewardCityOfficeHero(cityId: number, heroId: number) {
+    const { RewardCityOfficeHeroResponse } = getTypes();
+    return this.rpc(Routes.RewardCityOfficeHero, "RewardCityOfficeHeroRequest", { city_id: cityId, hero_id: heroId }, RewardCityOfficeHeroResponse, true);
   }
 
   async startBuildingUpgrade(cityId: number, slotKey: string, buildingCfgId: number) {

@@ -349,3 +349,19 @@ func (h *Hub) ApplyCivicDecree(ctx context.Context, cityID int64, decree, value 
 	}
 	return view, nil
 }
+
+// AdjustGold applies a gold delta under the city lock (salary and rewards).
+func (h *Hub) AdjustGold(ctx context.Context, cityID int64, delta int64) (int64, error) {
+	var gold int64
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	err := h.updateCityLocked(ctx, cityID, func(c *CityState) error {
+		if delta < 0 && c.Gold < -delta {
+			return ErrInsufficientGold
+		}
+		c.Gold += delta
+		gold = c.Gold
+		return nil
+	})
+	return gold, err
+}

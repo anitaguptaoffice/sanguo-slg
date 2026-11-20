@@ -38,19 +38,20 @@ var (
 )
 
 const (
-	StatusIdle      int16 = 1 // 空闲（可任职城主）
-	StatusGarrison  int16 = 2 // 驻守
-	StatusMarch     int16 = 3 // 出征（与城主互斥，见 office_march.go）
-	StatusExpr      int16 = 4 // 历练
-	StatusCityChief int16 = 5 // 城主（一城一职；legacy state=1）
-	StatusCaptive   int16 = 6 // 俘虏（legacy state=5；招降前不计入招贤馆容量）
-	StatusComing    int16 = 7 // 来投待接受（legacy state=6；接受前不计入招贤馆容量）
-	RecruitScrollID int32 = 2004
-	LoyaltyMin            = 0
-	LoyaltyMax            = 100
-	LoyaltyDefault        = 100
-	MaxLevelM1            = 20
-	LargessCooldown       = 15 * 60 // seconds; legacy mem_hero_schedule.last_largess
+	StatusIdle       int16 = 1 // 空闲（可任职城主）
+	StatusGarrison   int16 = 2 // 驻守
+	StatusMarch      int16 = 3 // 出征（与城主互斥，见 office_march.go）
+	StatusExpr       int16 = 4 // 历练
+	StatusCityChief  int16 = 5 // 城主（一城一职；legacy state=1）
+	StatusCityOffice int16 = 8 // 招贤馆三职（城守/军师/主将）
+	StatusCaptive    int16 = 6 // 俘虏（legacy state=5；招降前不计入招贤馆容量）
+	StatusComing     int16 = 7 // 来投待接受（legacy state=6；接受前不计入招贤馆容量）
+	RecruitScrollID  int32 = 2004
+	LoyaltyMin             = 0
+	LoyaltyMax             = 100
+	LoyaltyDefault         = 100
+	MaxLevelM1             = 20
+	LargessCooldown        = 15 * 60 // seconds; legacy mem_hero_schedule.last_largess
 )
 
 type Resources struct {

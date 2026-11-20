@@ -107,22 +107,25 @@ type BuildJob struct {
 	FinishAt      time.Time
 }
 type CityState struct {
-	ID           int64
-	PlayerID     int64
-	Name         string
-	Gold         int64
-	goldBase     int64
-	goldSaved    bool
-	Civic        CivicState
-	Wallet       Resources
-	LastSettleAt time.Time
-	Buildings    map[string]*BuildingInstance
-	BuildJobs    []*BuildJob
-	Research     map[int32]int32
-	ResearchJob  *ResearchJob
-	walletBase   Resources
-	walletSaved  bool
-	nextJobID    int64
+	ID                int64
+	PlayerID          int64
+	Name              string
+	Gold              int64
+	OfficeProdPct     int64
+	OfficeBuildPct    int64
+	OfficeResearchPct int64
+	goldBase          int64
+	goldSaved         bool
+	Civic             CivicState
+	Wallet            Resources
+	LastSettleAt      time.Time
+	Buildings         map[string]*BuildingInstance
+	BuildJobs         []*BuildJob
+	Research          map[int32]int32
+	ResearchJob       *ResearchJob
+	walletBase        Resources
+	walletSaved       bool
+	nextJobID         int64
 	// Resource-nanoseconds modulo one hour; cloned with the transactional city.
 	// Persistence requires the separate production checkpoint contract.
 	productionRemainder [4]int64
@@ -351,7 +354,11 @@ func upCost(sp BuildingSpec, lvl int32) Resources {
 }
 func upDurFor(c *CityState, sp BuildingSpec, lvl int32) time.Duration {
 	d := upDur(sp, lvl)
-	if pct := TechnicBonus(c, "build_speed_pct"); pct > 0 {
+	pct := TechnicBonus(c, "build_speed_pct") + c.OfficeBuildPct
+	if pct > 0 {
+		if pct > 90 {
+			pct = 90
+		}
 		d = d * time.Duration(100-pct) / 100
 		if d < time.Second {
 			d = time.Second
@@ -501,17 +508,18 @@ func (s *scheduler) poll(now time.Time) int {
 }
 
 type Hub struct {
-	mu         sync.Mutex
-	sched      scheduler
-	cat        map[int32]BuildingSpec
-	cities     map[int64]*CityState
-	now        func() time.Time
-	store      *PGStore
-	serverID   int32
-	flushEvery time.Duration
-	lastFlush  time.Time
-	troops     func(cityID int64) int64
-	fieldBonus func(ctx context.Context, serverID int32, cityID int64) [4]int64
+	mu          sync.Mutex
+	sched       scheduler
+	cat         map[int32]BuildingSpec
+	cities      map[int64]*CityState
+	now         func() time.Time
+	store       *PGStore
+	serverID    int32
+	flushEvery  time.Duration
+	lastFlush   time.Time
+	troops      func(cityID int64) int64
+	officeBonus func(ctx context.Context, serverID int32, cityID int64) (prod, build, research int64)
+	fieldBonus  func(ctx context.Context, serverID int32, cityID int64) [4]int64
 }
 
 // UseFieldBonus installs the owned-field production bonus provider. Percent
@@ -529,6 +537,12 @@ func (h *Hub) settle(ctx context.Context, c *CityState) {
 	bonus[1] += TechnicBonus(c, "wood_pct")
 	bonus[2] += TechnicBonus(c, "stone_pct")
 	bonus[3] += TechnicBonus(c, "iron_pct")
+	prod := c.OfficeProdPct
+	if prod > 0 {
+		for i := range bonus {
+			bonus[i] += prod
+		}
+	}
 	troops := int64(0)
 	if h.troops != nil {
 		troops = h.troops(c.ID)
@@ -552,6 +566,18 @@ func NewHubWithCatalog(now func() time.Time, catalog map[int32]BuildingSpec) *Hu
 }
 
 // UseStore enables PostgreSQL snapshots (optional). flushEvery<=0 defaults to 30s.
+// UseOfficeBonus installs the招贤馆 office bonus provider.
+func (h *Hub) UseOfficeBonus(provider func(ctx context.Context, serverID int32, cityID int64) (prod, build, research int64)) {
+	h.officeBonus = provider
+}
+
+func (h *Hub) applyOffice(ctx context.Context, c *CityState) {
+	if h == nil || c == nil || h.officeBonus == nil {
+		return
+	}
+	c.OfficeProdPct, c.OfficeBuildPct, c.OfficeResearchPct = h.officeBonus(ctx, h.serverID, c.ID)
+}
+
 // UseTroopCount installs the ready-troop provider used for food upkeep.
 func (h *Hub) UseTroopCount(provider func(cityID int64) int64) {
 	h.troops = provider
@@ -816,6 +842,9 @@ func (h *Hub) StartBuildingUpgrade(cityID int64, slot string, cfgID int32) (Upgr
 	var res UpgradeResult
 	var job *BuildJob
 	var err error
+	if city := h.cities[cityID]; city != nil {
+		h.applyOffice(context.Background(), city)
+	}
 	if h.store != nil {
 		city := h.cities[cityID]
 		if city == nil {

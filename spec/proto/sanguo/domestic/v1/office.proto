@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package sanguo.domestic.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/domestic/v1;domesticv1";
+
+message CityOfficeView {
+  int32 office = 1;
+  int64 hero_id = 2;
+  string name = 3;
+  int32 level = 4;
+  int32 loyalty = 5;
+  int64 salary = 6;
+  int64 production_pct = 7;
+  int64 build_pct = 8;
+  int64 research_pct = 9;
+  int64 defense_pct = 10;
+  int64 attack_pct = 11;
+}
+
+// route: domestic.v1.ListCityOffices
+message ListCityOfficesRequest { int64 city_id = 1; }
+message ListCityOfficesResponse { repeated CityOfficeView offices = 1; }
+
+// route: domestic.v1.SetCityOffice
+message SetCityOfficeRequest {
+  int64 city_id = 1;
+  int32 office = 2;
+  int64 hero_id = 3;
+}
+message SetCityOfficeResponse { repeated CityOfficeView offices = 1; }
+
+// route: domestic.v1.ClearCityOffice
+message ClearCityOfficeRequest {
+  int64 city_id = 1;
+  int32 office = 2;
+}
+message ClearCityOfficeResponse { repeated CityOfficeView offices = 1; }
+
+// route: domestic.v1.PayCityOfficeSalary
+message PayCityOfficeSalaryRequest { int64 city_id = 1; }
+message PayCityOfficeSalaryResponse {
+  repeated CityOfficeView offices = 1;
+  sanguo.common.v1.ResourceWallet wallet = 2;
+  bool paid = 3;
+}
+
+// route: domestic.v1.RewardCityOfficeHero
+message RewardCityOfficeHeroRequest {
+  int64 city_id = 1;
+  int64 hero_id = 2;
+}
+message RewardCityOfficeHeroResponse {
+  int32 loyalty = 1;
+  sanguo.common.v1.ResourceWallet wallet = 2;
+}
