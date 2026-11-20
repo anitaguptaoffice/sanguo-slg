@@ -23,10 +23,10 @@ const fixture = (): ArtAssetMeta[] => expected.map((id) => ({
   variants: [1, 2].map((scale) => ({ scale: scale as 1 | 2, path: `textures/${scale}x/items/${id.split(".")[2]}.png` })),
 }));
 describe("original item production inventory", () => {
-  it("preserves 139 non-item entries and accepts only absent or complete item delivery", () => {
+  it("preserves 161 non-item entries and accepts only absent or complete item delivery", () => {
     const assets = manifest.assets;
     expect(new Set(assets.map((a) => a.id)).size).toBe(assets.length);
-    expect(assets.filter((a) => !a.id.startsWith("item.icon."))).toHaveLength(139);
+    expect(assets.filter((a) => !a.id.startsWith("item.icon."))).toHaveLength(161);
     const items = assets.filter((a) => a.id.startsWith("item.icon."));
     if (items.length) validate(items);
     for (const a of items) for (const v of a.variants ?? []) expect(existsSync(join(root, v.path))).toBe(true);

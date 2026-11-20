@@ -106,7 +106,7 @@ func worldTileSummary(tile world.TileView) *worldv1.WorldTileSummary {
 		Level: int32(tile.Level), MaxLevel: int32(tile.MaxLevel),
 		ProvinceId: int32(tile.ProvinceID), NpcKind: int32(tile.NpcKind),
 		OwnerPlayerId: tile.OwnerPlayerID, OwnerCityId: tile.OwnerCityID,
-		OwnerName: tile.OwnerName,
+		OwnerName: tile.OwnerName, CityLevel: tile.CityLevel,
 	}
 	if tile.ProvinceID >= 1 && int(tile.ProvinceID) <= len(world.ProvinceNames) {
 		summary.ProvinceName = world.ProvinceNames[tile.ProvinceID-1]

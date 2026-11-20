@@ -611,6 +611,7 @@ export class MainCityScene implements Scene {
       gateway: () => this.gateway,
       getSession: () => this.session,
       onMarchTarget: (x, y) => this.prefillMarchTargetFromWorld(x, y),
+      assets: this.assets,
     });
     this.worldMap.attach();
     this.chatUnreadTracker.onCounts = () => { if (currentScene()) this.applyChatUnreadCounts(); };
