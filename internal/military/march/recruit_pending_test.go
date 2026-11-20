@@ -12,7 +12,10 @@ func pendingFixture(t *testing.T) (recruitScope, []recruitStockRow, []recruitPen
 	t.Helper()
 	scope := recruitScope{1, 42, 9}
 	c := payloadCatalog(t)
-	stock := []recruitStockRow{{1, 9, 1, 0, 0}, {1, 9, 2, 0, 0}, {1, 9, 3, 0, 0}, {1, 9, 4, 0, 0}}
+	stock := make([]recruitStockRow, 12)
+	for i := range stock {
+		stock[i] = recruitStockRow{1, 9, int32(i + 1), 0, 0}
+	}
 	p, err := decodeRecruitPayload([]byte(payloadGolden), c)
 	if err != nil {
 		t.Fatal(err)
