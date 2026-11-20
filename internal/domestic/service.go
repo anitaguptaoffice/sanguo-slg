@@ -61,13 +61,21 @@ type BuildingSpec struct {
 
 func DefaultCatalog() map[int32]BuildingSpec {
 	return map[int32]BuildingSpec{
-		1:  {1, 60, Resources{200, 200, 100, 50}, 0, 0},
-		2:  {2, 45, Resources{50, 150, 30, 0}, 120, 0},
-		3:  {3, 45, Resources{50, 100, 50, 0}, 100, 1},
-		4:  {4, 50, Resources{80, 80, 100, 0}, 80, 2},
-		5:  {5, 55, Resources{100, 80, 80, 50}, 60, 3},
-		6:  {6, 90, Resources{150, 200, 150, 100}, 0, 0},
-		7:  {7, 120, Resources{100, 100, 300, 150}, 0, 0},
+		1: {1, 60, Resources{200, 200, 100, 50}, 0, 0},
+		2: {2, 45, Resources{50, 150, 30, 0}, 120, 0},
+		3: {3, 45, Resources{50, 100, 50, 0}, 100, 1},
+		4: {4, 50, Resources{80, 80, 100, 0}, 80, 2},
+		5: {5, 55, Resources{100, 80, 80, 50}, 60, 3},
+		6: {6, 90, Resources{150, 200, 150, 100}, 0, 0},
+		7: {7, 120, Resources{100, 100, 300, 150}, 0, 0},
+	}
+}
+
+// FullCatalog is the R2-S1 20-building runtime catalog. DefaultCatalog stays
+// the frozen seven-building fresh-template contract used by older fixtures.
+func FullCatalog() map[int32]BuildingSpec {
+	cat := DefaultCatalog()
+	for id, spec := range map[int32]BuildingSpec{
 		8:  {8, 100, Resources{120, 180, 80, 40}, 0, 0},
 		9:  {9, 95, Resources{160, 160, 120, 80}, 0, 0},
 		10: {10, 70, Resources{100, 120, 60, 20}, 0, 0},
@@ -81,7 +89,10 @@ func DefaultCatalog() map[int32]BuildingSpec {
 		18: {18, 100, Resources{120, 140, 90, 40}, 0, 0},
 		19: {19, 90, Resources{100, 120, 220, 60}, 0, 0},
 		20: {20, 40, Resources{60, 80, 40, 0}, 0, 0},
+	} {
+		cat[id] = spec
 	}
+	return cat
 }
 
 type BuildingInstance struct{ CfgID, Level int32 }
@@ -489,10 +500,16 @@ func (h *Hub) settle(ctx context.Context, c *CityState) {
 }
 
 func NewHub(now func() time.Time) *Hub {
+	return NewHubWithCatalog(now, DefaultCatalog())
+}
+
+// NewHubWithCatalog builds a hub with an explicit catalog; the production
+// runtime passes FullCatalog while frozen fixtures keep DefaultCatalog.
+func NewHubWithCatalog(now func() time.Time, catalog map[int32]BuildingSpec) *Hub {
 	if now == nil {
 		now = time.Now
 	}
-	return &Hub{cat: DefaultCatalog(), cities: make(map[int64]*CityState), now: now}
+	return &Hub{cat: catalog, cities: make(map[int64]*CityState), now: now}
 }
 
 // UseStore enables PostgreSQL snapshots (optional). flushEvery<=0 defaults to 30s.

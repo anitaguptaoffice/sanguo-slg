@@ -42,7 +42,7 @@ func TestBuildingTreeCoversTwentyBuildingsAnd320Levels(t *testing.T) {
 }
 
 func TestBuildingTreeCostsMatchTheLegacyFormula(t *testing.T) {
-	cat := DefaultCatalog()
+	cat := FullCatalog()
 	for id := int32(1); id <= 7; id++ {
 		sp := cat[id]
 		for level := int32(1); level <= 16; level++ {
@@ -71,7 +71,7 @@ func TestBuildingTreeCostsMatchTheLegacyFormula(t *testing.T) {
 }
 
 func TestBuildingTreePrerequisites(t *testing.T) {
-	cat := DefaultCatalog()
+	cat := FullCatalog()
 	city := &CityState{ID: 1, Buildings: map[string]*BuildingInstance{
 		"hall": {CfgID: 1, Level: 5},
 	}}
