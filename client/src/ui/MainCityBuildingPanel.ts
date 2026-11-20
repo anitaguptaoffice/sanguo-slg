@@ -314,15 +314,18 @@ export class MainCityBuildingPanel {
       button.textContent = `建造${row.name}`;
       build.appendChild(button);
     }
-    const troops = (this.getSession()?.cityTroops ?? []).filter((t) => (t.wounded ?? 0) > 0);
-    wounded.textContent = troops.length ? "点击兵种消耗黄金治疗全部伤兵" : "暂无伤兵";
+    const troops = this.getSession()?.cityTroops ?? [];
+    const woundedKnown = troops.filter((t) => (t.wounded ?? 0) > 0);
+    wounded.textContent = woundedKnown.length
+      ? "点击兵种消耗黄金治疗全部伤兵"
+      : "伤兵数据按兵种查询；点击兵种尝试治疗";
     woundBtns.innerHTML = "";
-    for (const troop of troops) {
+    for (let unitId = 1; unitId <= 12; unitId++) {
       const button = document.createElement("button");
       button.type = "button";
       button.dataset.action = "heal-wounded";
-      button.dataset.unitId = String(troop.unit_cfg_id ?? 0);
-      button.textContent = `治疗兵种#${troop.unit_cfg_id}（${troop.wounded}）`;
+      button.dataset.unitId = String(unitId);
+      button.textContent = `治疗兵种#${unitId}`;
       woundBtns.appendChild(button);
     }
   }

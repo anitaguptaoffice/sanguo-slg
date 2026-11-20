@@ -2265,12 +2265,9 @@ export class MainCityScene implements Scene {
         this.buildingPanel.setWallDefenses(res.defenses ?? [], res.wall_area ?? 0, res.area_used ?? 0);
         this.status = "城防已建造";
       } else if (action === "heal-wounded") {
-        const wounded = session.cityTroops.find((t) => t.unit_cfg_id === unitId)?.wounded ?? 0;
-        if (wounded > 0) {
-          await this.gateway.healWounded(session.cityId, unitId, wounded);
-          await this.refreshState();
-          this.status = "伤兵已治疗";
-        }
+        const res = (await this.gateway.healWounded(session.cityId, unitId, 9999)) as { healed?: number };
+        await this.refreshState();
+        this.status = `伤兵已治疗 ${res.healed ?? 0} 人`;
       }
       this.renderHud();
     } catch (error) {
