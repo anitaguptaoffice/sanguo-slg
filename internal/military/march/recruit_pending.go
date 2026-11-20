@@ -44,6 +44,9 @@ func validateRecruitPending(scope recruitScope, stock []recruitStockRow, rows []
 	}
 	var seen [12]bool
 	for _, row := range stock {
+		if row.unit == 0 && row.ready == 0 && row.wounded == 0 {
+			continue // sparse older city_troop snapshot
+		}
 		if row.server != scope.server || row.city != scope.city || row.unit < 1 || row.unit > 12 ||
 			row.ready < 0 || row.ready > math.MaxInt32 || row.wounded < 0 || row.wounded > math.MaxInt32 {
 			return recruitPendingSummary{}, errRecruitPending

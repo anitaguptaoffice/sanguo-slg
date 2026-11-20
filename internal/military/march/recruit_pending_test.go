@@ -76,7 +76,7 @@ func TestRecruitPendingRejectStock(t *testing.T) {
 	for name, change := range map[string]func([]recruitStockRow) []recruitStockRow{
 		"extra":         func(s []recruitStockRow) []recruitStockRow { return append(s, s[0]) },
 		"duplicate":     func(s []recruitStockRow) []recruitStockRow { s[3].unit = 1; return s },
-		"unitZero":      func(s []recruitStockRow) []recruitStockRow { s[3].unit = 0; return s },
+		"unitZero":      func(s []recruitStockRow) []recruitStockRow { s[3].unit = 0; s[3].ready = 1; return s },
 		"unitExtra":     func(s []recruitStockRow) []recruitStockRow { s[3].unit = 13; return s },
 		"wrongServer":   func(s []recruitStockRow) []recruitStockRow { s[3].server++; return s },
 		"wrongCity":     func(s []recruitStockRow) []recruitStockRow { s[3].city++; return s },
