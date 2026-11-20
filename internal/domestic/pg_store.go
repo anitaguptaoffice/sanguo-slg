@@ -183,8 +183,8 @@ func (p *PGStore) saveCityInTx(ctx context.Context, sid int32, c *CityState, cat
 	}
 
 	if _, err = tx.Exec(ctx, `DELETE FROM work_queue
-		WHERE server_id=$1 AND player_id=$2 AND queue_type=$3 AND status IN (0,1)`,
-		sid, c.PlayerID, queueTypeResearch); err != nil {
+		WHERE server_id=$1 AND player_id=$2 AND queue_type=$3 AND city_id=$4 AND status IN (0,1)`,
+		sid, c.PlayerID, queueTypeResearch, c.ID); err != nil {
 		return err
 	}
 	if c.ResearchJob != nil {
@@ -314,7 +314,7 @@ func (p *PGStore) LoadCity(ctx context.Context, sid int32, cityID, playerID int6
 	if err := rrows.Err(); err != nil {
 		return nil, err
 	}
-	jrows, err := tx.Query(ctx, `SELECT queue_id, payload, finish_at, status FROM work_queue
+	jrows, err := tx.Query(ctx, `SELECT queue_id, city_id, payload, finish_at, status FROM work_queue
 		WHERE server_id=$1 AND player_id=$2 AND queue_type=$3 AND status IN (0,1)
 		ORDER BY finish_at LIMIT 1`, sid, playerID, queueTypeResearch)
 	if err != nil {
@@ -322,18 +322,18 @@ func (p *PGStore) LoadCity(ctx context.Context, sid int32, cityID, playerID int6
 	}
 	defer jrows.Close()
 	for jrows.Next() {
-		var id int64
+		var id, cityID int64
 		var raw []byte
 		var finish time.Time
 		var st int16
-		if err := jrows.Scan(&id, &raw, &finish, &st); err != nil {
+		if err := jrows.Scan(&id, &cityID, &raw, &finish, &st); err != nil {
 			return nil, err
 		}
 		var pl researchPayload
 		if err := json.Unmarshal(raw, &pl); err != nil {
 			return nil, err
 		}
-		c.ResearchJob = &ResearchJob{ID: id, TID: pl.TID, Target: pl.Target, Status: QueueStatus(st), FinishAt: finish}
+		c.ResearchJob = &ResearchJob{ID: id, CityID: cityID, TID: pl.TID, Target: pl.Target, Status: QueueStatus(st), FinishAt: finish}
 		if id > maxID {
 			maxID = id
 		}

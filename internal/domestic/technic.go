@@ -42,6 +42,7 @@ type TechnicDef struct {
 // ResearchJob is one in-flight academy research (single queue).
 type ResearchJob struct {
 	ID       int64
+	CityID   int64
 	TID      int32
 	Target   int32
 	Status   QueueStatus
@@ -215,7 +216,7 @@ func (h *Hub) StartTechnicResearch(ctx context.Context, cityID int64, tid int32)
 			}
 		}
 		c.nextJobID++
-		job := &ResearchJob{ID: c.nextJobID, TID: tid, Target: target, Status: QueueActive, FinishAt: h.now().Add(dur)}
+		job := &ResearchJob{ID: c.nextJobID, CityID: cityID, TID: tid, Target: target, Status: QueueActive, FinishAt: h.now().Add(dur)}
 		c.ResearchJob = job
 		res = ResearchResult{TID: tid, Target: target, FinishAt: job.FinishAt, Wallet: c.Wallet}
 		return nil
@@ -266,6 +267,9 @@ func (h *Hub) onResearchDone(cityID int64, tid int32) {
 				other.Research = make(map[int32]int32)
 			}
 			other.Research[tid] = target
+			if other.ResearchJob != nil && other.ResearchJob.TID == tid {
+				other.ResearchJob = nil
+			}
 		}
 	}
 }
