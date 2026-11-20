@@ -32,6 +32,7 @@ export class MainCityBuildingPanel {
     private readonly getSubmitState: () => BuildSubmitState,
     private readonly reskin?: MainCityBuildingPanelReskin,
     private readonly defaultDismissTrigger?: () => HTMLElement | null,
+    private readonly onDemolish?: (slotKey: string) => void,
   ) {}
 
   attach(): void {
@@ -47,6 +48,9 @@ export class MainCityBuildingPanel {
         <p class="build-form-error hidden" data-role="build-form-error" role="alert"></p>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="confirm-upgrade" aria-describedby="build-prerequisite" disabled>
           确认升级
+        </button>
+        <button type="button" class="build-demolish hidden" data-action="demolish-building">
+          降级/拆除（返还 25%）
         </button>
       </div>
     `;
@@ -120,6 +124,7 @@ export class MainCityBuildingPanel {
     const previewEl = this.panel.querySelector('[data-role="build-preview"]');
     const prerequisiteEl = this.panel.querySelector('[data-role="build-prerequisite"]');
     const btn = this.panel.querySelector<HTMLButtonElement>('[data-action="confirm-upgrade"]');
+    const demolishBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="demolish-building"]');
     if (!slotKey || !titleEl || !levelEl || !previewEl || !prerequisiteEl || !btn) return;
     prerequisiteEl.textContent = "";
     prerequisiteEl.classList.add("hidden");
@@ -132,6 +137,11 @@ export class MainCityBuildingPanel {
     const upgrading = (building?.upgrade_finish_at_ms ?? 0) > now;
 
     levelEl.textContent = level > 0 ? `当前 Lv${level}` : "未建造";
+    if (demolishBtn) {
+      demolishBtn.classList.toggle("hidden", level <= 0);
+      demolishBtn.disabled = upgrading || (building?.building_cfg_id === 1 && level <= 1);
+      demolishBtn.textContent = level <= 1 ? "拆除（返还 25%）" : "降级（返还 25%）";
+    }
 
     if (upgrading) {
       previewEl.textContent = "升级进行中，见「队列」面板";
@@ -186,6 +196,12 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    if (btn?.getAttribute("data-action") === "demolish-building") {
+      const slotKey = this.selectedSlotKey;
+      if (!slotKey || btn.disabled || !this.buildingForSlot(slotKey)) return;
+      this.onDemolish?.(slotKey);
+      return;
+    }
     if (!btn || btn.getAttribute("data-action") !== "confirm-upgrade") return;
     // State may have hydrated/changed since the last paint; never submit an old preview.
     this.render();

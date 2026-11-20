@@ -1,4 +1,5 @@
 import type { CityBuilding } from "@/net/bootstrapSession";
+import { BUILDING_UNLOCK_HALL } from "@/net/buildingUpgradeCatalog";
 
 /** Read-only mirror of domestic.ValidateUpgrade's hall prerequisites, not server authority. */
 export function buildUpgradePrerequisiteHint(
@@ -15,9 +16,10 @@ export function buildUpgradePrerequisiteHint(
       : null;
   }
   const hallLevel = buildings.find((b) => b.building_cfg_id === 1)?.level ?? 0;
-  // First construction has the same additional thresholds as the existing server.
-  const requiredLevel = targetLevel === 1 && buildingCfgId === 6 ? 2
-    : targetLevel === 1 && buildingCfgId === 7 ? 3 : targetLevel;
+  // Placement uses the per-building unlock table; upgrades follow the level.
+  const requiredLevel = targetLevel === 1
+    ? Math.max(BUILDING_UNLOCK_HALL[buildingCfgId] ?? 1, 1)
+    : targetLevel;
   return hallLevel < requiredLevel
     ? `需城主府达到 Lv${requiredLevel}（当前 Lv${hallLevel}）；请先升级城主府`
     : null;

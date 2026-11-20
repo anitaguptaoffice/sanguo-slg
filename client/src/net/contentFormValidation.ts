@@ -111,7 +111,7 @@ export function validateBagUseConsumable(input: UseConsumableValidationInput): C
 }
 
 /** 招募/商城/背包/军事四类面板内联错误区（CLIENT-067）。 */
-export type PanelFormDomain = "recruit" | "shop" | "bag" | "march";
+export type PanelFormDomain = "recruit" | "shop" | "bag" | "march" | "build";
 
 /** 列表首屏拉取域（CLIENT-173）；与 PanelFormDomain 共用 `formatPanelGatewayError` code 映射。 */
 export type PanelListGatewayDomain = "rank" | "guild" | "buildQueue" | "world";
@@ -123,6 +123,7 @@ const PANEL_FORM_ERROR_ROLE: Record<PanelFormDomain, string> = {
   shop: "shop-form-error",
   bag: "bag-form-error",
   march: "march-form-error",
+  build: "build-form-error",
 };
 
 const COMMON_INVALID_PACKET = 10001;
@@ -140,6 +141,12 @@ const PANEL_GATEWAY_CODE_HINT: Record<PanelGatewayDomain, Partial<Record<number,
   bag: {
     [COMMON_INVALID_PACKET]: "请求无效",
     [DOMESTIC_INSUFFICIENT_RESOURCE]: "资源不足",
+  },
+  build: {
+    [COMMON_INVALID_PACKET]: "请求无效",
+    [DOMESTIC_INSUFFICIENT_RESOURCE]: "资源不足",
+    40002: "建筑前置或等级不满足",
+    40003: "建筑队列忙碌",
   },
   recruit: {
     [COMMON_INVALID_PACKET]: "道具不足",

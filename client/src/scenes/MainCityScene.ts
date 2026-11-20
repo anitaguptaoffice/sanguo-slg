@@ -39,10 +39,11 @@ import {
 } from "@/engine/layoutViewport";
 import { resolveMinimapExpandedLayoutRect } from "@/ui/worldMinimap";
 import {
+  citySlotsForMode,
   LAYOUT_FRAME,
-  MAIN_CITY_SLOTS,
   STAGE_HEIGHT,
   STAGE_TOP_Y,
+  type CitySceneMode,
   type MainCitySlotDef,
 } from "@/engine/mainCitySlots";
 import type { Scene, SceneContext } from "@/engine/SceneManager";
@@ -305,8 +306,21 @@ const SLOT_LABEL: Record<string, string> = {
   lumber: "伐木场",
   quarry: "采石场",
   iron: "铁矿",
-  barracks: "兵营",
+  barracks: "军营",
   wall: "城墙",
+  academy: "书院",
+  drill_ground: "校场",
+  inn: "客栈",
+  recruit_hall: "招贤馆",
+  market: "市场",
+  smithy: "铁匠铺",
+  workshop: "工匠作坊",
+  stable: "马厩",
+  warehouse: "仓库",
+  diplomacy: "鸿胪寺",
+  relay: "驿站",
+  beacon: "烽火台",
+  house: "民房",
 };
 
 const PURPOSE_ATTACK = 1;
@@ -362,6 +376,7 @@ export class MainCityScene implements Scene {
   private slotUpgradeOverlay!: MainCitySlotUpgradeOverlay;
   private domesticSlotStrip!: MainCityDomesticSlotStrip;
   private buildingPanel!: MainCityBuildingPanel;
+  private citySceneMode: CitySceneMode = "inner";
   private cityOfficePanel!: MainCityCityOfficePanel;
   private cityOfficeContext?: { current: () => boolean; version: number; busy: boolean; uncertain: boolean };
   private activeDomesticSlotKey: string | null = null;
@@ -509,6 +524,7 @@ export class MainCityScene implements Scene {
       <div class="toolbar-scroll" data-role="toolbar-scroll">
       <div class="toolbar-scroll-inner">
       <button type="button" data-action="return-server-select" title="断开当前连接并返回选服；已提交的操作不会撤销">返回选服</button>
+      <button type="button" data-action="toggle-city-scene" data-role="city-scene-btn" title="切换内城/外城">外城</button>
       <button type="button" data-action="upgrade-farm" title="升级农田">升级</button>
       <button type="button" data-action="refresh" title="刷新状态">刷新</button>
       <button type="button" data-action="toggle-military" data-role="military-toolbar-btn" title="军事"><span class="toolbar-btn-label">军事</span></button>
@@ -597,6 +613,7 @@ export class MainCityScene implements Scene {
     `;
     const parent = ctx.layoutFrame;
     this.slotUpgradeOverlay = new MainCitySlotUpgradeOverlay(parent);
+    this.slotUpgradeOverlay.setSlots(citySlotsForMode(this.citySceneMode));
     this.slotUpgradeOverlay.attach();
     this.domesticSlotStrip = new MainCityDomesticSlotStrip(
       parent,
@@ -1019,6 +1036,7 @@ export class MainCityScene implements Scene {
       () => this.buildSubmitState,
       (root) => skinDefaultPanel(root, this.assets, 380, 300),
       () => this.buildingDismissTrigger(),
+      (slotKey) => void this.demolishBuilding(slotKey),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -1310,6 +1328,17 @@ export class MainCityScene implements Scene {
       this.renderHud();
     }
     if (action === "refresh") void this.refreshState();
+    if (action === "toggle-city-scene") {
+      this.citySceneMode = this.citySceneMode === "inner" ? "outer" : "inner";
+      this.slotUpgradeOverlay?.setSlots(citySlotsForMode(this.citySceneMode));
+      this.slotUpgradeOverlay?.sync(this.session?.buildings, Date.now());
+      this.activeDomesticSlotKey = null;
+      this.buildingPanel.close();
+      this.domesticSlotStrip?.setSelectedSlotKey("");
+      this.status = this.citySceneMode === "outer" ? "外城：资源田随官府等级扩展" : "内城：官府与功能建筑";
+      this.renderHud();
+      return;
+    }
     if (action === "toggle-military") {
       toggleCenterPanel(this.militaryPanel);
       if (!this.militaryPanel.classList.contains("hidden")) {
@@ -2094,7 +2123,7 @@ export class MainCityScene implements Scene {
       return;
     }
 
-    const hits = [...MAIN_CITY_SLOTS]
+    const hits = [...citySlotsForMode(this.citySceneMode)]
       .sort((a, b) => b.z - a.z)
       .filter((slot) => this.pointInRect(layout, slot.hit));
     const top = hits[0];
@@ -2515,6 +2544,8 @@ export class MainCityScene implements Scene {
   }
 
   private renderHud(): void {
+    const sceneBtn = this.toolbar?.querySelector<HTMLElement>('[data-role="city-scene-btn"]');
+    if (sceneBtn) sceneBtn.textContent = this.citySceneMode === "inner" ? "外城" : "内城";
     if (!this.sceneActive) return;
     const s = this.session;
     const now = Date.now();
@@ -2891,6 +2922,43 @@ export class MainCityScene implements Scene {
     this.renderHud();
   }
 
+  private async demolishBuilding(slotKey: string): Promise<void> {
+    if (!this.session || this.buildSubmitOwner?.()) return;
+    const building = buildingBySlot(this.session.buildings, slotKey);
+    if (!building) return;
+    const label = SLOT_LABEL[slotKey] ?? slotKey;
+    const currentLevel = building.level ?? 1;
+    const action = currentLevel <= 1 ? "拆除" : `降级到 Lv${currentLevel - 1}`;
+    if (!window.confirm(`确定对 ${label}（Lv${currentLevel}）执行${action}？将返还该级 25% 资源。`)) return;
+    const session = this.session;
+    const actor = captureActor(this.gateway, () => this.session);
+    try {
+      const res = (await this.gateway.demolishBuilding(session.cityId, slotKey)) as {
+        wallet?: ResourceWallet;
+        building?: CityBuilding;
+        removed?: boolean;
+        refund?: ResourceWallet;
+      };
+      if (!actor()) return;
+      if (res.wallet) this.session.wallet = mergeCityResourceWallet(this.session.wallet, res.wallet);
+      if (res.removed) {
+        this.session.buildings = this.session.buildings.filter((b) => b.slot_key !== slotKey);
+      } else if (res.building) {
+        const idx = this.session.buildings.findIndex((b) => b.slot_key === slotKey);
+        if (idx >= 0) this.session.buildings[idx] = res.building;
+      }
+      await this.refreshState();
+      this.buildingPanel.sync();
+      this.status = `${label}${res.removed ? "已拆除" : `已降级到 Lv${res.building?.level ?? 0}`}`;
+      this.renderHud();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.buildingPanel.setFormError(this.status);
+      this.buildingPanel.sync();
+      this.renderHud();
+    }
+  }
+
   private preparedRecruitIntent() {
     const city = this.session?.cityId ?? 0;
     const { unitCfgId, count } = readTroopRecruitForm(this.militaryPanel);
@@ -3189,7 +3257,7 @@ export class MainCityScene implements Scene {
     const buildingLevels = new Map(
       (this.session?.buildings ?? []).map((b) => [b.slot_key ?? "", b] as const),
     );
-    const sorted = [...MAIN_CITY_SLOTS].sort((a, b) => a.z - b.z);
+    const sorted = [...citySlotsForMode(this.citySceneMode)].sort((a, b) => a.z - b.z);
     for (const slot of sorted) {
       this.drawSlot(c2d, slot, buildingLevels.get(slot.slot_key));
     }
@@ -3239,11 +3307,19 @@ export class MainCityScene implements Scene {
       const topY = display.y + ga.y - ay;
       c2d.drawImage(pack.img, topX, topY, display.w, display.h);
     } else {
-      c2d.fillStyle = "rgba(42, 61, 40, 0.75)";
-      c2d.fillRect(display.x, display.y, display.w, display.h);
-      c2d.fillStyle = "#e8dcc8";
-      c2d.font = "14px system-ui";
-      c2d.fillText(slot.label, display.x + 8, display.y + 24);
+      // R2-S1 unbuilt slots are hotspot plaques, not opaque placeholder boxes.
+      const w = Math.min(display.w, 150);
+      const x = display.x + (display.w - w) / 2;
+      const y = display.y + display.h / 2 - 14;
+      c2d.fillStyle = "rgba(26, 20, 16, 0.72)";
+      c2d.fillRect(x, y, w, 28);
+      c2d.strokeStyle = "rgba(210, 184, 138, 0.5)";
+      c2d.strokeRect(x, y, w, 28);
+      c2d.fillStyle = "#f5e6c8";
+      c2d.font = "13px system-ui";
+      c2d.textAlign = "center";
+      c2d.fillText(slot.label, x + w / 2, y + 19);
+      c2d.textAlign = "start";
     }
     const now = Date.now();
     const caption = formatSlotBuildingCaption(
@@ -3252,7 +3328,7 @@ export class MainCityScene implements Scene {
       building,
       now,
     );
-    if (KEY_BUILDING_SLOTS.has(slot.slot_key)) {
+    if (pack && KEY_BUILDING_SLOTS.has(slot.slot_key)) {
       c2d.fillStyle = "rgba(26, 20, 16, 0.72)";
       c2d.fillRect(display.x, display.y - 4, Math.min(display.w, 120), 22);
       c2d.fillStyle = "#f5e6c8";

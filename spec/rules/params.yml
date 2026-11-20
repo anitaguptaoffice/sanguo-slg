@@ -63,6 +63,45 @@ domestic:
       wall:
         base_time_sec: 120
         base_cost: { food: 100, wood: 100, stone: 300, iron: 150 }
+      academy:
+        base_time_sec: 100
+        base_cost: { food: 120, wood: 180, stone: 80, iron: 40 }
+      drill_ground:
+        base_time_sec: 95
+        base_cost: { food: 160, wood: 160, stone: 120, iron: 80 }
+      inn:
+        base_time_sec: 70
+        base_cost: { food: 100, wood: 120, stone: 60, iron: 20 }
+      recruit_hall:
+        base_time_sec: 85
+        base_cost: { food: 140, wood: 160, stone: 90, iron: 40 }
+      market:
+        base_time_sec: 80
+        base_cost: { food: 120, wood: 150, stone: 100, iron: 30 }
+      smithy:
+        base_time_sec: 110
+        base_cost: { food: 100, wood: 140, stone: 180, iron: 160 }
+      workshop:
+        base_time_sec: 105
+        base_cost: { food: 110, wood: 170, stone: 140, iron: 110 }
+      stable:
+        base_time_sec: 115
+        base_cost: { food: 150, wood: 180, stone: 100, iron: 90 }
+      warehouse:
+        base_time_sec: 75
+        base_cost: { food: 90, wood: 200, stone: 120, iron: 50 }
+      diplomacy:
+        base_time_sec: 130
+        base_cost: { food: 160, wood: 150, stone: 120, iron: 60 }
+      relay:
+        base_time_sec: 100
+        base_cost: { food: 120, wood: 140, stone: 90, iron: 40 }
+      beacon:
+        base_time_sec: 90
+        base_cost: { food: 100, wood: 120, stone: 220, iron: 60 }
+      house:
+        base_time_sec: 40
+        base_cost: { food: 60, wood: 80, stone: 40, iron: 0 }
   queue:
     slots_default: 1
     cancel_refund_ratio: 0.50

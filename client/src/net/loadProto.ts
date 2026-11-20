@@ -62,6 +62,7 @@ export const Routes = {
   ClaimFieldGather: "world.v1.ClaimFieldGather",
   GetCityState: "domestic.v1.GetCityState",
   StartBuildingUpgrade: "domestic.v1.StartBuildingUpgrade",
+  DemolishBuilding: "domestic.v1.DemolishBuilding",
   RecruitTroop: "military.v1.RecruitTroop",
   StartMarch: "military.v1.StartMarch",
   RecallMarch: "military.v1.RecallMarch",
@@ -161,6 +162,8 @@ export type ProtoTypes = {
   GetCityStateRequest: protobuf.Type;
   GetCityStateResponse: protobuf.Type;
   StartBuildingUpgradeRequest: protobuf.Type;
+  DemolishBuildingRequest: protobuf.Type;
+  DemolishBuildingResponse: protobuf.Type;
   StartBuildingUpgradeResponse: protobuf.Type;
   RecruitTroopRequest: protobuf.Type;
   RecruitTroopResponse: protobuf.Type;
@@ -306,6 +309,8 @@ export function getTypes(): ProtoTypes {
     GetCityStateRequest: r.lookupType("sanguo.domestic.v1.GetCityStateRequest"),
     GetCityStateResponse: r.lookupType("sanguo.domestic.v1.GetCityStateResponse"),
     StartBuildingUpgradeRequest: r.lookupType("sanguo.domestic.v1.StartBuildingUpgradeRequest"),
+    DemolishBuildingRequest: r.lookupType("sanguo.domestic.v1.DemolishBuildingRequest"),
+    DemolishBuildingResponse: r.lookupType("sanguo.domestic.v1.DemolishBuildingResponse"),
     StartBuildingUpgradeResponse: r.lookupType("sanguo.domestic.v1.StartBuildingUpgradeResponse"),
     RecruitTroopRequest: r.lookupType("sanguo.military.v1.RecruitTroopRequest"),
     RecruitTroopResponse: r.lookupType("sanguo.military.v1.RecruitTroopResponse"),

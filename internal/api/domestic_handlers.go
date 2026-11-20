@@ -35,7 +35,10 @@ func (s *Server) handleStartBuildingUpgrade(ctx context.Context, pkt *commonv1.C
 		if errors.Is(err, domestic.ErrInsufficientRes) {
 			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_DOMESTIC_INSUFFICIENT_RESOURCE, "insufficient resources"), nil
 		}
-		if errors.Is(err, domestic.ErrUnknownBuilding) || errors.Is(err, domestic.ErrInvalidUpgrade) {
+		if errors.Is(err, domestic.ErrUnknownBuilding) || errors.Is(err, domestic.ErrInvalidUpgrade) ||
+			errors.Is(err, domestic.ErrPrereqMainHall) || errors.Is(err, domestic.ErrPrereqBarracks) ||
+			errors.Is(err, domestic.ErrPrereqWall) || errors.Is(err, domestic.ErrPrereqMainHallLow) ||
+			errors.Is(err, domestic.ErrPrereqBuilding) || errors.Is(err, domestic.ErrBuildingMaxLevel) {
 			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_DOMESTIC_INVALID_BUILDING, err.Error()), nil
 		}
 		return nil, err
@@ -148,4 +151,46 @@ func walletProto(w domestic.Resources) *apicommon.ResourceWallet {
 	return &apicommon.ResourceWallet{
 		Food: w.Food, Wood: w.Wood, Iron: w.Iron, Stone: w.Stone,
 	}
+}
+
+func (s *Server) handleDemolishBuilding(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+	pc, errPkt := s.playerCtx(ctx, pkt)
+	if errPkt != nil {
+		return errPkt, nil
+	}
+	var req domesticv1.DemolishBuildingRequest
+	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
+	}
+	if !s.ownsCity(ctx, pc, req.GetCityId()) {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
+	}
+	city := s.citySnapshot(req.GetCityId())
+	if city == nil || city.PlayerID != pc.PlayerID {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
+	}
+	res, err := s.domestic.DemolishBuilding(ctx, req.GetCityId(), req.GetSlotKey())
+	if err != nil {
+		if errors.Is(err, domestic.ErrCityNotFound) {
+			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
+		}
+		if errors.Is(err, domestic.ErrUnknownBuilding) || errors.Is(err, domestic.ErrInvalidUpgrade) ||
+			errors.Is(err, domestic.ErrCannotDemolish) {
+			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_DOMESTIC_INVALID_BUILDING, err.Error()), nil
+		}
+		return nil, err
+	}
+	out := &domesticv1.DemolishBuildingResponse{
+		Wallet:  walletProto(res.Wallet),
+		Removed: res.Removed,
+		Refund:  walletProto(res.Refund),
+	}
+	if !res.Removed {
+		out.Building = &apicommon.CityBuilding{SlotKey: res.Slot, BuildingCfgId: res.CfgID, Level: res.Level}
+	}
+	data, err := marshal(out)
+	if err != nil {
+		return nil, err
+	}
+	return okResp(pkt.GetTraceId(), data), nil
 }

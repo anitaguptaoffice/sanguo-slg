@@ -21,6 +21,19 @@ export const BUILDING_CFG_TO_SLOT_KEY: Record<number, string> = {
   5: "iron",
   6: "barracks",
   7: "wall",
+  8: "academy",
+  9: "drill_ground",
+  10: "inn",
+  11: "recruit_hall",
+  12: "market",
+  13: "smithy",
+  14: "workshop",
+  15: "stable",
+  16: "warehouse",
+  17: "diplomacy",
+  18: "relay",
+  19: "beacon",
+  20: "house",
 };
 
 const SLOT_KEY_TO_BUILDING_CFG: Record<string, number> = Object.fromEntries(
