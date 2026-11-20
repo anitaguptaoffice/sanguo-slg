@@ -11,9 +11,25 @@ import {
   isHeroBlockedForCityChief,
 } from "@/net/cityChiefOffice";
 
+export type CityCivicView = {
+  name?: string;
+  population?: number;
+  population_cap?: number;
+  morale?: number;
+  tax_rate?: number;
+  work_rate?: number;
+  effective_work_rate?: number;
+  idle_population?: number;
+  troops?: number;
+  food_upkeep_per_hour?: number;
+  gold_per_hour?: number;
+  gold?: number;
+};
+
 export type MainCityCityOfficePanelHandlers = {
   onAppoint: (heroId: number) => void;
   onClear: () => void;
+  onCivicDecree?: (decree: number, value: number, name: string) => void;
 };
 
 export class MainCityCityOfficePanel {
@@ -21,6 +37,7 @@ export class MainCityCityOfficePanel {
   private selectionTouched = false;
   private phase: CityChiefSubmitPhase = "idle";
   private chief: CityChiefView | null = null;
+  private civic: CityCivicView | null = null;
   private heroes: HeroSummary[] = [];
   private marchingHeroIds = new Set<number>();
 
@@ -40,7 +57,28 @@ export class MainCityCityOfficePanel {
       '<div class="city-chief-actions">' +
       '<button type="button" class="art-btn-primary" data-action="appoint-chief">任命城主</button>' +
       '<button type="button" class="art-btn-secondary" data-action="clear-chief">卸任城主</button></div>' +
-      '<p class="march-form-error-sibling hidden" data-role="city-chief-form-error" role="alert"></p>';
+      '<p class="march-form-error-sibling hidden" data-role="city-chief-form-error" role="alert"></p>' +
+      '<div class="city-civic-section" data-role="city-civic-section">' +
+      '<h4 class="city-office-title">民政</h4>' +
+      '<p data-role="city-civic-line">人口与民心加载中…</p>' +
+      '<p data-role="city-civic-rates"></p>' +
+      '<div class="city-civic-actions">' +
+      '<label>税率 <input type="number" min="0" max="30" step="1" data-field="civic-tax" /></label>' +
+      '<button type="button" data-action="decree-tax">调整税率</button>' +
+      '<label>开工率 <input type="number" min="20" max="100" step="1" data-field="civic-work" /></label>' +
+      '<button type="button" data-action="decree-work">调整开工率</button>' +
+      '<button type="button" data-action="decree-pacify">安抚百姓</button>' +
+      '<button type="button" data-action="decree-levy">征收物资</button>' +
+      '<label>城名 <input type="text" maxlength="16" data-field="civic-name" /></label>' +
+      '<button type="button" data-action="decree-rename">城池改名</button>' +
+      '</div></div>';
+    const civicActions = this.section.querySelector<HTMLElement>(".city-civic-actions");
+    if (civicActions) {
+      civicActions.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px";
+      civicActions.querySelectorAll<HTMLInputElement>("input").forEach((input) => {
+        input.style.width = input.type === "number" ? "64px" : "96px";
+      });
+    }
     scroll.insertBefore(this.section, scroll.firstChild);
     this.section.addEventListener("click", (ev) => this.onClick(ev));
     this.section.addEventListener("change", (ev) => {
@@ -64,6 +102,11 @@ export class MainCityCityOfficePanel {
   setPhase(phase: CityChiefSubmitPhase): void {
     this.phase = phase;
     this.render();
+  }
+
+  setCivicView(view: CityCivicView | null): void {
+    this.civic = view;
+    this.renderCivic();
   }
 
   setChiefView(view: CityChiefView | null): void {
@@ -106,6 +149,43 @@ export class MainCityCityOfficePanel {
       return;
     }
     if (btn.getAttribute("data-action") === "clear-chief") this.handlers.onClear();
+    const decree = {
+      "decree-tax": 1,
+      "decree-work": 2,
+      "decree-pacify": 3,
+      "decree-levy": 4,
+      "decree-rename": 5,
+    }[btn.getAttribute("data-action") ?? ""];
+    if (decree && this.handlers.onCivicDecree) {
+      const tax = Number(this.section.querySelector<HTMLInputElement>('[data-field="civic-tax"]')?.value ?? 0);
+      const work = Number(this.section.querySelector<HTMLInputElement>('[data-field="civic-work"]')?.value ?? 0);
+      const name = this.section.querySelector<HTMLInputElement>('[data-field="civic-name"]')?.value ?? "";
+      this.handlers.onCivicDecree(decree, decree === 1 ? tax : decree === 2 ? work : 0, name);
+    }
+  }
+
+  private renderCivic(): void {
+    if (!this.section) return;
+    const line = this.section.querySelector('[data-role="city-civic-line"]');
+    const rates = this.section.querySelector('[data-role="city-civic-rates"]');
+    if (!line || !rates) return;
+    const v = this.civic;
+    if (!v) {
+      line.textContent = "人口与民心加载中…";
+      rates.textContent = "";
+      return;
+    }
+    line.textContent = `${v.name || "主城"} · 人口 ${formatNumber(v.population)}/${formatNumber(v.population_cap)}` +
+      ` · 民心 ${v.morale ?? 0} · 空闲人口 ${formatNumber(v.idle_population)}`;
+    rates.textContent = `税率 ${v.tax_rate ?? 0}% · 开工率 ${v.work_rate ?? 0}%（实际 ${v.effective_work_rate ?? 0}%）` +
+      ` · 驻军 ${formatNumber(v.troops)} · 耗粮 ${formatNumber(v.food_upkeep_per_hour)}/h` +
+      ` · 税金 ${formatNumber(v.gold_per_hour)}/h · 黄金 ${formatNumber(v.gold)}`;
+    const tax = this.section.querySelector<HTMLInputElement>('[data-field="civic-tax"]');
+    const work = this.section.querySelector<HTMLInputElement>('[data-field="civic-work"]');
+    const name = this.section.querySelector<HTMLInputElement>('[data-field="civic-name"]');
+    if (tax && document.activeElement !== tax) tax.value = String(v.tax_rate ?? 0);
+    if (work && document.activeElement !== work) work.value = String(v.work_rate ?? 0);
+    if (name && document.activeElement !== name && !name.value) name.value = v.name ?? "";
   }
 
   private render(): void {
@@ -158,4 +238,8 @@ export class MainCityCityOfficePanel {
     appointBtn.textContent = this.phase === "appointing" ? "任命中…" : "任命城主";
     clearBtn.textContent = this.phase === "clearing" ? "卸任中…" : "卸任城主";
   }
+}
+
+function formatNumber(value: number | undefined): string {
+  return Number(value ?? 0).toLocaleString("zh-CN");
 }

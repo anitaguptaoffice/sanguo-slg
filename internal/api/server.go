@@ -34,6 +34,8 @@ const (
 	RouteListPlayerCities     = "world.v1.ListPlayerCities"
 	RouteStartBuildingUpgrade = "domestic.v1.StartBuildingUpgrade"
 	RouteDemolishBuilding     = "domestic.v1.DemolishBuilding"
+	RouteGetCityCivic         = "domestic.v1.GetCityCivic"
+	RouteApplyCityDecree      = "domestic.v1.ApplyCityDecree"
 	RouteGetCityState         = "domestic.v1.GetCityState"
 	defaultServerID           = 1
 )
@@ -260,6 +262,8 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteClaimFieldGather] = s.handleClaimFieldGather
 	handlers[RouteStartBuildingUpgrade] = s.handleStartBuildingUpgrade
 	handlers[RouteDemolishBuilding] = s.handleDemolishBuilding
+	handlers[RouteGetCityCivic] = s.handleGetCityCivic
+	handlers[RouteApplyCityDecree] = s.handleApplyCityDecree
 	handlers[RouteGetCityState] = s.handleGetCityState
 	handlers[RouteListMarches] = s.handleListMarches
 	handlers[RouteGetBattleReport] = s.wrapGameplayOnSuccess(obs.EventBattleReportReady, s.handleGetBattleReport)

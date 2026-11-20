@@ -54,7 +54,7 @@ async function main() {
     for (const bad of ["启动失败", "进服失败", "连接失败"]) {
       if (hudText.includes(bad)) throw new Error(`HUD reports failure: ${bad}`);
     }
-    if (!/主城|城府/.test(hudText)) throw new Error("HUD does not show the city identity");
+    if (!/主城|城主府|城府/.test(hudText)) throw new Error("HUD does not show the city identity");
     await page.waitForSelector('[data-role="hud-resources"]', { timeout: 15000 });
     const resourceAmounts = await page.locator('[data-role="hud-resources"] .hud-resource-amount').count();
     if (resourceAmounts < 4) throw new Error("resource HUD is missing entries");

@@ -93,6 +93,17 @@ func (a *App) newAPIServer(ctx context.Context) (*api.Server, error) {
 		return bonus
 	})
 	militaryHub := march.NewHub(time.Now)
+	hub.UseTroopCount(func(cityID int64) int64 {
+		city := militaryHub.SnapshotCity(cityID)
+		if city == nil {
+			return 0
+		}
+		var total int64
+		for _, count := range city.Troops {
+			total += int64(count)
+		}
+		return total
+	})
 	reportSvc := api.WireM2Combat(defaultShardID, a.DB, militaryHub, api.NewWorldGarrisons(worldSvc, defaultShardID))
 	srv := api.NewServer(a.Log, a.DB, worldSvc, hub, militaryHub)
 	srv.AttachBattleReports(reportSvc)

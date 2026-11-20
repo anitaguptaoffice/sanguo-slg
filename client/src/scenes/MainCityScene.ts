@@ -275,7 +275,7 @@ import {
 import { MainCityDomesticSlotStrip } from "@/ui/MainCityDomesticSlotStrip";
 import { MainCitySlotUpgradeOverlay } from "@/ui/MainCitySlotUpgradeOverlay";
 import { MainCityBuildingPanel } from "@/ui/MainCityBuildingPanel";
-import { MainCityCityOfficePanel } from "@/ui/MainCityCityOfficePanel";
+import { MainCityCityOfficePanel, type CityCivicView } from "@/ui/MainCityCityOfficePanel";
 import {
   CITY_CHIEF_HALL_SLOT_KEY,
   formatCityChiefGatewayError,
@@ -1042,6 +1042,7 @@ export class MainCityScene implements Scene {
     this.cityOfficePanel = new MainCityCityOfficePanel({
       onAppoint: (heroId) => void this.appointCityChief(heroId),
       onClear: () => void this.clearCityChief(),
+      onCivicDecree: (decree, value, name) => void this.applyCityDecree(decree, value, name),
     });
     this.cityOfficePanel.mountInto(this.buildingPanel.getRoot());
     skinToolbarBar(this.toolbar, this.assets);
@@ -2160,7 +2161,10 @@ export class MainCityScene implements Scene {
   private syncCityOfficePanelForSlot(slotKey: string): void {
     const showHall = slotKey === CITY_CHIEF_HALL_SLOT_KEY;
     this.cityOfficePanel?.setVisibleForHallSlot(showHall ? slotKey : null);
-    if (showHall) void this.refreshCityOfficePanel();
+    if (showHall) {
+      void this.refreshCityOfficePanel();
+      void this.refreshCityCivic();
+    }
   }
 
   private getCityOfficeContext() {
@@ -2198,6 +2202,41 @@ export class MainCityScene implements Scene {
       this.cityOfficePanel.setFormError(`${formatCityChiefGatewayError(e)}；状态待核实，请重新打开官府刷新`);
     } finally {
       if (current()) this.cityOfficePanel.setPhase(context.uncertain ? "uncertain" : "idle");
+    }
+  }
+
+  private async refreshCityCivic(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId || !this.cityOfficePanel) return;
+    try {
+      const res = (await this.gateway.getCityCivic(session.cityId)) as {
+        civic?: CityCivicView;
+      };
+      if (this.session !== session) return;
+      this.cityOfficePanel.setCivicView(res.civic ?? null);
+    } catch (error) {
+      if (this.session !== session) return;
+      this.cityOfficePanel.setFormError(formatPanelGatewayErrorFromUnknown("build", error));
+    }
+  }
+
+  private async applyCityDecree(decree: number, value: number, name: string): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId || !this.cityOfficePanel) return;
+    try {
+      const res = (await this.gateway.applyCityDecree(session.cityId, decree, value, name)) as {
+        civic?: CityCivicView;
+        wallet?: ResourceWallet;
+      };
+      if (this.session !== session) return;
+      if (res.wallet) this.session.wallet = mergeCityResourceWallet(this.session.wallet, res.wallet);
+      if (typeof res.civic?.gold === "number") this.session.wallet.gold = res.civic.gold;
+      if (decree === 5 && res.civic?.name) this.session.cityName = res.civic.name;
+      this.cityOfficePanel.setCivicView(res.civic ?? null);
+      this.status = "官府政令已执行";
+      this.renderHud();
+    } catch (error) {
+      this.cityOfficePanel.setFormError(formatPanelGatewayErrorFromUnknown("build", error));
     }
   }
 
