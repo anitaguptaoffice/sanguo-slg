@@ -198,7 +198,11 @@ func settleCivic(c *CityState, now time.Time, troops int64) {
 	}
 
 	if c.Civic.TaxRate > 0 {
-		numerator := c.Civic.Population * int64(c.Civic.TaxRate) * secs
+		taxRate := int64(c.Civic.TaxRate)
+		if pct := TechnicBonus(c, "tax_pct"); pct > 0 {
+			taxRate = taxRate * (100 + pct) / 100
+		}
+		numerator := c.Civic.Population * taxRate * secs
 		numerator += c.Civic.taxRemainder
 		const denominator = int64(1000 * 3600)
 		gold := numerator / denominator
@@ -268,7 +272,7 @@ func civicView(c *CityState, troops int64) CivicView {
 		IdlePopulation: idle,
 		Troops:         troops,
 		FoodUpkeepHour: upkeep,
-		GoldPerHour:    c.Civic.Population * int64(c.Civic.TaxRate) / 1000,
+		GoldPerHour:    c.Civic.Population * int64(c.Civic.TaxRate) * (100 + TechnicBonus(c, "tax_pct")) / 100000,
 		Gold:           c.Gold,
 	}
 	return view

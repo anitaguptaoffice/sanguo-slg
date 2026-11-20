@@ -9,6 +9,16 @@ func cloneCity(c *CityState) *CityState {
 		b := *v
 		out.Buildings[k] = &b
 	}
+	if c.Research != nil {
+		out.Research = make(map[int32]int32, len(c.Research))
+		for k, v := range c.Research {
+			out.Research[k] = v
+		}
+	}
+	if c.ResearchJob != nil {
+		job := *c.ResearchJob
+		out.ResearchJob = &job
+	}
 	out.BuildJobs = make([]*BuildJob, len(c.BuildJobs))
 	for i, v := range c.BuildJobs {
 		j := *v

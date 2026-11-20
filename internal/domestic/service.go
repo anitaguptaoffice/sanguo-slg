@@ -23,6 +23,9 @@ var (
 	ErrPrereqBuilding    = errors.New("domestic: required building level missing")
 	ErrBuildingMaxLevel  = errors.New("domestic: building already at max level")
 	ErrCannotDemolish    = errors.New("domestic: cannot demolish this building")
+	ErrUnknownTechnic    = errors.New("domestic: unknown technic")
+	ErrResearchBusy      = errors.New("domestic: academy research already active")
+	ErrTechnicPrereq     = errors.New("domestic: technic prerequisite missing")
 )
 
 const (
@@ -115,6 +118,8 @@ type CityState struct {
 	LastSettleAt time.Time
 	Buildings    map[string]*BuildingInstance
 	BuildJobs    []*BuildJob
+	Research     map[int32]int32
+	ResearchJob  *ResearchJob
 	walletBase   Resources
 	walletSaved  bool
 	nextJobID    int64
@@ -341,6 +346,17 @@ func upCost(sp BuildingSpec, lvl int32) Resources {
 	c := sp.BaseCost
 	return Resources{s(c.Food), s(c.Wood), s(c.Stone), s(c.Iron)}
 }
+func upDurFor(c *CityState, sp BuildingSpec, lvl int32) time.Duration {
+	d := upDur(sp, lvl)
+	if pct := TechnicBonus(c, "build_speed_pct"); pct > 0 {
+		d = d * time.Duration(100-pct) / 100
+		if d < time.Second {
+			d = time.Second
+		}
+	}
+	return d
+}
+
 func upDur(sp BuildingSpec, lvl int32) time.Duration {
 	if def, ok := DefaultBuildingTree()[sp.ID]; ok {
 		if row := def.Level(lvl); row != nil {
@@ -384,7 +400,7 @@ func startUpgradeWithAllocator(c *CityState, cat map[int32]BuildingSpec, now tim
 	}
 	c.Wallet = w
 	job := &BuildJob{ID: id, Slot: slot, CfgID: cfgID, Target: tgt, Status: QueueWaiting}
-	dur := upDur(sp, tgt)
+	dur := upDurFor(c, sp, tgt)
 	active, last := 0, time.Time{}
 	for _, j := range c.BuildJobs {
 		if j.Status == QueueActive {
@@ -446,7 +462,7 @@ func completeBuild(c *CityState, cat map[int32]BuildingSpec, jobID int64, now ti
 			continue
 		}
 		j.Status = QueueActive
-		j.FinishAt = now.Add(upDur(sp, j.Target))
+		j.FinishAt = now.Add(upDurFor(c, sp, j.Target))
 		return j, nil
 	}
 	return nil, nil
@@ -506,6 +522,10 @@ func (h *Hub) settle(ctx context.Context, c *CityState) {
 	if h.fieldBonus != nil {
 		bonus = h.fieldBonus(ctx, h.serverID, c.ID)
 	}
+	bonus[0] += TechnicBonus(c, "food_pct")
+	bonus[1] += TechnicBonus(c, "wood_pct")
+	bonus[2] += TechnicBonus(c, "stone_pct")
+	bonus[3] += TechnicBonus(c, "iron_pct")
 	troops := int64(0)
 	if h.troops != nil {
 		troops = h.troops(c.ID)

@@ -14,6 +14,7 @@ import (
 )
 
 const queueTypeBuild int16 = 1
+const queueTypeResearch int16 = 2
 
 // PGStore persists domestic state (spec/db/003_domestic.sql).
 type PGStore struct {
@@ -31,6 +32,11 @@ type buildPayload struct {
 	Slot   string `json:"slot"`
 	CfgID  int32  `json:"cfg_id"`
 	Target int32  `json:"target"`
+}
+
+type researchPayload struct {
+	TID    int32 `json:"tid"`
+	Target int32 `json:"target"`
 }
 
 // SaveCity writes wallet snapshot, buildings, and pending build queue rows.
@@ -176,6 +182,31 @@ func (p *PGStore) saveCityInTx(ctx context.Context, sid int32, c *CityState, cat
 		}
 	}
 
+	if _, err = tx.Exec(ctx, `DELETE FROM work_queue
+		WHERE server_id=$1 AND player_id=$2 AND queue_type=$3 AND status IN (0,1)`,
+		sid, c.PlayerID, queueTypeResearch); err != nil {
+		return err
+	}
+	if c.ResearchJob != nil {
+		pl, err := json.Marshal(researchPayload{TID: c.ResearchJob.TID, Target: c.ResearchJob.Target})
+		if err != nil {
+			return err
+		}
+		_, err = tx.Exec(ctx, `INSERT INTO work_queue (
+			server_id, queue_id, player_id, city_id, queue_type, payload, start_at, finish_at, status
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+			sid, c.ResearchJob.ID, c.PlayerID, c.ID, queueTypeResearch, pl, now, c.ResearchJob.FinishAt, int16(c.ResearchJob.Status))
+		if err != nil {
+			return err
+		}
+	}
+	for tid, level := range c.Research {
+		if _, err = tx.Exec(ctx, `INSERT INTO player_research(server_id,player_id,tech_cfg_id,level)
+			VALUES($1,$2,$3,$4) ON CONFLICT (server_id,player_id,tech_cfg_id) DO UPDATE SET level=EXCLUDED.level`,
+			sid, c.PlayerID, tid, level); err != nil {
+			return err
+		}
+	}
 	if err = tx.Commit(ctx); err != nil {
 		return err
 	}
@@ -262,6 +293,52 @@ func (p *PGStore) LoadCity(ctx context.Context, sid int32, cityID, playerID int6
 		}
 	}
 	if err := qrows.Err(); err != nil {
+		return nil, err
+	}
+	rrows, err := tx.Query(ctx, `SELECT tech_cfg_id, level FROM player_research
+		WHERE server_id=$1 AND player_id=$2`, sid, playerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rrows.Close()
+	for rrows.Next() {
+		var tid, level int32
+		if err := rrows.Scan(&tid, &level); err != nil {
+			return nil, err
+		}
+		if c.Research == nil {
+			c.Research = make(map[int32]int32)
+		}
+		c.Research[tid] = level
+	}
+	if err := rrows.Err(); err != nil {
+		return nil, err
+	}
+	jrows, err := tx.Query(ctx, `SELECT queue_id, payload, finish_at, status FROM work_queue
+		WHERE server_id=$1 AND player_id=$2 AND queue_type=$3 AND status IN (0,1)
+		ORDER BY finish_at LIMIT 1`, sid, playerID, queueTypeResearch)
+	if err != nil {
+		return nil, err
+	}
+	defer jrows.Close()
+	for jrows.Next() {
+		var id int64
+		var raw []byte
+		var finish time.Time
+		var st int16
+		if err := jrows.Scan(&id, &raw, &finish, &st); err != nil {
+			return nil, err
+		}
+		var pl researchPayload
+		if err := json.Unmarshal(raw, &pl); err != nil {
+			return nil, err
+		}
+		c.ResearchJob = &ResearchJob{ID: id, TID: pl.TID, Target: pl.Target, Status: QueueStatus(st), FinishAt: finish}
+		if id > maxID {
+			maxID = id
+		}
+	}
+	if err := jrows.Err(); err != nil {
 		return nil, err
 	}
 	if err := tx.Commit(ctx); err != nil {
