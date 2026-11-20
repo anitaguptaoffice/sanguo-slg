@@ -107,7 +107,7 @@ func TestPGReturnAttemptDueAndPendingCapacity(t *testing.T) {
 			var marchStatus, armyStatus, x, y int32
 			returnPGOK(t, f.observer.QueryRow(f.ctx, "SELECT array_agg(count ORDER BY unit_cfg_id),array_agg(wounded ORDER BY unit_cfg_id) FROM city_troop").Scan(&ready, &wounded))
 			returnPGOK(t, f.observer.QueryRow(f.ctx, "SELECT m.status,a.status,a.x,a.y FROM march_order m,field_army a").Scan(&marchStatus, &armyStatus, &x, &y))
-			if !reflect.DeepEqual(ready, []int32{tc.want, 20, 19, 23}) || !reflect.DeepEqual(wounded, []int32{2147483647, 2147483647, 2147483647, 2147483647}) ||
+			if !reflect.DeepEqual(ready, []int32{tc.want, 20, 19, 23, 15, 16, 17, 18, 19, 20, 21, 22}) || !reflect.DeepEqual(wounded, []int32{2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647}) ||
 				marchStatus != 4 || armyStatus != 1 || x != 0 || y != 0 || !reflect.DeepEqual(stable, snapshotReturnAttemptPG(t, f, true)) {
 				t.Fatal("committed credit/terminal or retained graph", ready, wounded, marchStatus, armyStatus, x, y)
 			}

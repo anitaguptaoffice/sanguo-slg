@@ -22,7 +22,7 @@ INSERT INTO city_troop SELECT 1,101,u,0,1 FROM generate_series(1,12) u`)
 		}
 	}
 	before := completionState(t, pool)
-	read(1, 100, [12]int32{5, 0, 0, 0})
+	read(1, 100, [12]int32{5})
 	read(2, 101, [12]int32{})
 	if completionState(t, pool) != before {
 		t.Fatal("garrison read changed committed state")
@@ -32,13 +32,13 @@ INSERT INTO city_troop SELECT 1,101,u,0,1 FROM generate_series(1,12) u`)
 	defer func() { _ = writer.Rollback(ctx) }()
 	tag, err := writer.Exec(ctx, "UPDATE city_troop SET count=10*unit_cfg_id WHERE server_id=1 AND city_id=100")
 	baseOK(t, err)
-	if tag.RowsAffected() != 4 {
-		t.Fatal("fixture did not stage all four stock rows")
+	if tag.RowsAffected() != 12 {
+		t.Fatal("fixture did not stage all twelve stock rows")
 	}
-	read(1, 100, [12]int32{5, 0, 0, 0}) // The separate transaction has not committed.
+	read(1, 100, [12]int32{5}) // The separate transaction has not committed.
 	baseOK(t, writer.Commit(ctx))
 	committed := completionState(t, pool)
-	read(1, 100, [12]int32{10, 20, 30, 40})
+	read(1, 100, [12]int32{10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120})
 	read(2, 101, [12]int32{})
 	baseOK(t, owner.Commit(ctx))
 	if completionState(t, pool) != committed {
@@ -54,7 +54,7 @@ func TestPGRecruitReadyGarrisonBadEvidence(t *testing.T) {
 		{"no stock", "DELETE FROM city_troop WHERE city_id=100"},
 		{"partial stock", "DELETE FROM city_troop WHERE city_id=100 AND unit_cfg_id=4"},
 		{"extra unit", "INSERT INTO city_troop VALUES(1,100,13,0,0)"},
-		{"replacement unit", "UPDATE city_troop SET unit_cfg_id=5 WHERE city_id=100 AND unit_cfg_id=4"},
+		{"replacement unit", "UPDATE city_troop SET unit_cfg_id=13 WHERE city_id=100 AND unit_cfg_id=4"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			catalog, _, _, _ := completionRows(t)

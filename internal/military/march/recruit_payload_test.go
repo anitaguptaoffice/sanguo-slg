@@ -23,7 +23,7 @@ func payloadCatalog(t *testing.T) *RecruitCatalog {
 
 func TestRecruitPayloadRoundTrip(t *testing.T) {
 	c := payloadCatalog(t)
-	for unit := int32(1); unit <= 4; unit++ {
+	for unit := int32(1); unit <= 12; unit++ {
 		e, err := c.Current(unit)
 		if err != nil {
 			t.Fatal(err)

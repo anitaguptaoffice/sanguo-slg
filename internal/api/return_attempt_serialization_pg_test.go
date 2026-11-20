@@ -167,14 +167,14 @@ func returnSerialRows(t *testing.T, f *returnAttemptPG, id int64, credited bool,
 	var marchStatus, armyStatus, gotX, gotY int32
 	returnPGOK(t, f.observer.QueryRow(f.ctx, "SELECT array_agg(count ORDER BY unit_cfg_id),array_agg(wounded ORDER BY unit_cfg_id) FROM city_troop WHERE city_id=$1", id).Scan(&ready, &wounded))
 	returnPGOK(t, f.observer.QueryRow(f.ctx, `SELECT m.status,a.status,a.x,a.y FROM march_order m JOIN field_army a USING(server_id,army_id) WHERE m.march_id=$1`, id).Scan(&marchStatus, &armyStatus, &gotX, &gotY))
-	wantReady, wantArmy := []int32{11, 12, 13, 14}, int32(2)
+	wantReady, wantArmy := []int32{11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22}, int32(2)
 	if credited {
-		wantReady = []int32{18, 20, 19, 23}
+		wantReady = []int32{18, 20, 19, 23, 15, 16, 17, 18, 19, 20, 21, 22}
 	}
 	if status == 4 {
 		wantArmy = 1
 	}
-	if !reflect.DeepEqual(ready, wantReady) || !reflect.DeepEqual(wounded, []int32{2147483647, 2147483647, 2147483647, 2147483647}) ||
+	if !reflect.DeepEqual(ready, wantReady) || !reflect.DeepEqual(wounded, []int32{2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647, 2147483647}) ||
 		marchStatus != status || armyStatus != wantArmy || gotX != x || gotY != y {
 		t.Fatal("independent committed row mismatch", id, ready, wounded, marchStatus, armyStatus, gotX, gotY)
 	}

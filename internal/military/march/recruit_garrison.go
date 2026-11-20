@@ -31,7 +31,7 @@ FROM ` + s.table("mil_city_origin") + ` m CROSS JOIN LATERAL (
         pg_catalog.array_agg(wounded ORDER BY unit_cfg_id) AS wounded
  FROM (SELECT unit_cfg_id,count,wounded FROM ` + s.table("city_troop") + `
        WHERE server_id OPERATOR(pg_catalog.=) m.server_id AND city_id OPERATOR(pg_catalog.=) m.city_id
-       ORDER BY unit_cfg_id LIMIT 12) stock_rows
+       ORDER BY unit_cfg_id LIMIT 13) stock_rows
 ) stock WHERE m.server_id OPERATOR(pg_catalog.=) $1 AND m.city_id OPERATOR(pg_catalog.=) $2`
 	if err = recruitHistoryRead(ctx, &access, s, query, []any{serverID, cityID},
 		&owner, &cohort, &format, &units, &ready, &wounded); err != nil {

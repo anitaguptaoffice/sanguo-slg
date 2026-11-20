@@ -107,7 +107,7 @@ func TestPGDurableHubReturnCommitAndRestore(t *testing.T) {
 	var ready []int32
 	baseOK(t, f.pool.QueryRow(ctx, "SELECT array_agg(count ORDER BY unit_cfg_id) FROM city_troop").Scan(&ready))
 	if len(state.Marches) != 0 || fresh.March(ids.MarchID) != nil || len(fresh.restoreEv) != 0 ||
-		!reflect.DeepEqual(ready, []int32{5, 9, 0, 7}) || marchStoreRows(t, f.pool) != "1,1,2,0" {
+		!reflect.DeepEqual(ready, []int32{5, 9, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0}) || marchStoreRows(t, f.pool) != "1,1,2,0" {
 		t.Fatal("restart repeated a terminal order or lost stock", state, ready)
 	}
 }

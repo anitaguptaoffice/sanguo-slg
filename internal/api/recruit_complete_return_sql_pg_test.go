@@ -32,7 +32,7 @@ AND (SELECT count(*) FROM mil_recruit_origin)=2 AND (SELECT count(*) FROM mil_re
 AND (SELECT array_agg(queue_id ORDER BY queue_id)=ARRAY[100,101]::bigint[] AND array_agg(status ORDER BY queue_id)=ARRAY[1,0]::smallint[]
 AND sum((payload->>'count')::bigint)=4 FROM work_queue WHERE queue_type=3)
 AND (SELECT last_value=101 AND is_called FROM work_queue_id_seq)
-AND (SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[11,12,13,14] FROM city_troop)`).Scan(&exact))
+AND (SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[11,12,13,14,15,16,17,18,19,20,21,22] FROM city_troop)`).Scan(&exact))
 	if !exact {
 		t.Fatal("real paid pending/cardinality/wallet/allocator mismatch")
 	}
@@ -48,7 +48,7 @@ AND (SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[11,12,13,14] FROM city_t
 		t.Fatal("Return changed retained graph, wallet, paid ledger, schedules or allocator")
 	}
 	returnPGOK(t, f.observer.QueryRow(f.ctx, `SELECT
-(SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[18,20,19,23] AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[2147483647,2147483647,2147483647,2147483647] FROM city_troop)
+(SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[18,20,19,23,15,16,17,18,19,20,21,22] AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647] FROM city_troop)
 AND (SELECT count(*)=1 AND bool_and(status=4) FROM march_order)
 AND (SELECT count(*)=1 AND bool_and(status=1 AND x=0 AND y=0) FROM field_army)
 AND (SELECT array_agg(unit_cfg_id ORDER BY unit_cfg_id)=ARRAY[1,2,3,4] AND array_agg(count ORDER BY unit_cfg_id)=ARRAY[7,8,6,9] FROM army_troop)

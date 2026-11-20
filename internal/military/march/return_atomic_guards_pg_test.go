@@ -39,8 +39,8 @@ func TestPGReturnAtomicPublicRejectedBranches(t *testing.T) {
 	type fault struct{ name, sql string }
 	common := []fault{
 		{"missing_stock", "DELETE FROM city_troop WHERE unit_cfg_id=4"},
-		{"extra_stock", "INSERT INTO city_troop VALUES(1,100,5,0,0)"},
-		{"unknown_stock_unit", "UPDATE city_troop SET unit_cfg_id=5 WHERE unit_cfg_id=4"},
+		{"extra_stock", "INSERT INTO city_troop VALUES(1,100,13,0,0)"},
+		{"unknown_stock_unit", "UPDATE city_troop SET unit_cfg_id=13 WHERE unit_cfg_id=4"},
 		{"army_status", "UPDATE field_army SET status=3"},
 		{"army_position", "UPDATE field_army SET x=99"},
 		{"empty_heroes", "UPDATE field_army SET hero_ids='{}'"},
@@ -75,7 +75,7 @@ func TestPGReturnAtomicPublicRejectedBranches(t *testing.T) {
 					fault{"missing_survivors", "DELETE FROM army_troop"},
 					fault{"missing_deadline", "UPDATE march_order SET return_finish_at=NULL"},
 					fault{"invalid_deadline", "UPDATE march_order SET return_finish_at=arrive_at"},
-					fault{"unknown_survivor", "UPDATE army_troop SET unit_cfg_id=5 WHERE unit_cfg_id=4"},
+					fault{"unknown_survivor", "UPDATE army_troop SET unit_cfg_id=13 WHERE unit_cfg_id=4"},
 					fault{"zero_survivor", "UPDATE army_troop SET count=0 WHERE unit_cfg_id=1"})
 			}
 			for _, bad := range faults {
@@ -144,7 +144,7 @@ func TestPGReturnAtomicDeferredCommitFailure(t *testing.T) {
 	baseOK(t, a.Scan(run, b, "SELECT array_agg(count ORDER BY unit_cfg_id) FROM city_troop", nil, &counts))
 	baseOK(t, a.Scan(run, b, "SELECT m.status,a.status,a.x,a.y FROM march_order m,field_army a", nil, &march, &army, &x, &y))
 	baseOK(t, a.Scan(run, b, "SELECT count(*) FROM "+table, nil, &conflicts))
-	if !reflect.DeepEqual(counts, []int32{12, 8, 6, 9}) || march != 4 || army != 1 || x != 0 || y != 0 || conflicts != 2 {
+	if !reflect.DeepEqual(counts, []int32{12, 8, 6, 9, 0, 0, 0, 0, 0, 0, 0, 0}) || march != 4 || army != 1 || x != 0 || y != 0 || conflicts != 2 {
 		t.Fatal("missing provisional credit, terminal graph or deferred conflict", counts, march, army, x, y, conflicts)
 	}
 	if returnAtomicState(t, observer, false) != before || auxState() != auxBefore {

@@ -137,9 +137,9 @@ func TestPGRecruitReturnInteroperability(t *testing.T) {
 
 func recruitReturnEffects(t *testing.T, f *recruitReturnPG, ready int32, applied, admitted bool, a march.RecruitAcceptance) {
 	t.Helper()
-	wantReady, marchStatus, armyStatus, x, y := []int32{ready, 12, 13, 14}, 3, 2, 1, 1
+	wantReady, marchStatus, armyStatus, x, y := []int32{ready, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22}, 3, 2, 1, 1
 	if applied {
-		wantReady, marchStatus, armyStatus, x, y = []int32{ready + 7, 20, 19, 23}, 4, 1, 0, 0
+		wantReady, marchStatus, armyStatus, x, y = []int32{ready + 7, 20, 19, 23, 15, 16, 17, 18, 19, 20, 21, 22}, 4, 1, 0, 0
 	}
 	var stock []int32
 	var exact bool

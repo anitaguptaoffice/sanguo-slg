@@ -152,7 +152,7 @@ AND pg_catalog.pg_blocking_pids(pid)=ARRAY[$2::int]`, lagTrace.walletSQL, leader
 	}
 	var exact bool
 	returnPGOK(t, f.observer.QueryRow(f.ctx, `SELECT
-(SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[2147483645,20,19,23] AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[2147483647,2147483647,2147483647,2147483647] FROM city_troop)
+(SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[2147483645,20,19,23,15,16,17,18,19,20,21,22] AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647] FROM city_troop)
 AND (SELECT count(*)=1 AND bool_and(status=4) FROM march_order)
 AND (SELECT count(*)=1 AND bool_and(status=1 AND x=0 AND y=0) FROM field_army)
 AND (SELECT array_agg(unit_cfg_id ORDER BY unit_cfg_id)=ARRAY[1,2,3,4] AND array_agg(count ORDER BY unit_cfg_id)=ARRAY[7,8,6,9] FROM army_troop)

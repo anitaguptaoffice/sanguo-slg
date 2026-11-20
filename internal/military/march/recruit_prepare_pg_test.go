@@ -125,7 +125,7 @@ func TestPGRecruitPreparePendingAndRejects(t *testing.T) {
 		{"marker owner", `UPDATE mil_city_origin SET owner_player_id=2`, nil, false},
 		{"marker cohort", `UPDATE mil_city_origin SET cohort_id=decode(repeat('04',16),'hex')`, nil, false},
 		{"stock missing", `DELETE FROM city_troop WHERE unit_cfg_id=4`, nil, false},
-		{"stock extra", `INSERT INTO city_troop VALUES(1,100,5,0,0)`, nil, false},
+		{"stock extra", `INSERT INTO city_troop VALUES(1,100,13,0,0)`, nil, false},
 		{"capacity", `UPDATE work_queue SET status=2 WHERE queue_id IN (40,41);UPDATE city_troop SET count=2147483647 WHERE unit_cfg_id=1`, []historyRow{active, waiting}, false},
 		{"version over capacity", `UPDATE work_queue SET status=2 WHERE queue_id IN (40,41);UPDATE city_troop SET count=2147483647 WHERE unit_cfg_id=1`, []historyRow{active, waiting}, true},
 		{"origin owner", `UPDATE mil_recruit_origin SET player_id=2 WHERE queue_id=40`, []historyRow{active}, false},
@@ -207,7 +207,7 @@ func TestPGRecruitPrepareRequestRejections(t *testing.T) {
 		want        error
 	}{
 		{"zero count", 1, 0, ErrRecruitAdmissionCount},
-		{"unknown unit", 5, 1, ErrRecruitAdmissionUnit},
+		{"unknown unit", 13, 1, ErrRecruitAdmissionUnit},
 		{"proposed capacity", 1, math.MaxInt32, ErrRecruitAdmissionCount},
 		{"proposed cost overflow", 1, 2, ErrRecruitAdmissionCount},
 	} {

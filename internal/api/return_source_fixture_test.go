@@ -111,7 +111,7 @@ INSERT INTO player_wallet(server_id,player_id,food,wood,iron,stone,gold) VALUES(
 INSERT INTO map_cell(server_id,x,y,terrain) VALUES(1,0,0,1);
 INSERT INTO player_city(server_id,city_id,player_id,name,x,y) VALUES(1,1,1,'fixture',0,0);
 INSERT INTO mil_city_origin VALUES(1,1,1,decode('03000000000000000000000000000000','hex'),1,'2026-01-01');
-INSERT INTO city_troop SELECT 1,1,u,10+u,u FROM generate_series(1,4) u;
+INSERT INTO city_troop SELECT 1,1,u,10+u,u FROM generate_series(1,12) u;
 INSERT INTO work_queue(server_id,queue_id,player_id,city_id,queue_type,start_at,finish_at) VALUES(1,1,1,1,1,'2026-01-01','2026-01-02');
 INSERT INTO field_army(server_id,army_id,owner_player_id,x,y) VALUES(1,1,1,0,0);
 INSERT INTO army_troop VALUES(1,1,1,7);

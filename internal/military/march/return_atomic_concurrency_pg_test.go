@@ -87,9 +87,9 @@ func TestPGReturnAtomicSerialization(t *testing.T) {
 			}
 			var counts []int32
 			baseOK(t, pool.QueryRow(ctx, "SELECT array_agg(count ORDER BY unit_cfg_id) FROM city_troop").Scan(&counts))
-			expected := []int32{12, 8, 6, 9}
+			expected := []int32{12, 8, 6, 9, 0, 0, 0, 0, 0, 0, 0, 0}
 			if mode == "readback rollback" {
-				expected = []int32{5, 0, 0, 0}
+				expected = []int32{5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 			}
 			if !reflect.DeepEqual(counts, expected) {
 				t.Fatal("credit count", counts)
@@ -141,7 +141,7 @@ func TestPGReturnAtomicHelperZeroRows(t *testing.T) {
 	}
 	var counts []int32
 	baseOK(t, a.Scan(ctx, b, "SELECT array_agg(count ORDER BY unit_cfg_id) FROM city_troop", nil, &counts))
-	if !reflect.DeepEqual(counts, []int32{12, 8, 6, 0}) {
+	if !reflect.DeepEqual(counts, []int32{12, 8, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0}) {
 		t.Fatal("did not reach real fourth UPDATE 0 rows", counts)
 	}
 	baseOK(t, o.Rollback(ctx)) // Mandatory caller cleanup, not a claim that helper errors poison SQL.

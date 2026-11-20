@@ -61,7 +61,7 @@ INSERT INTO player_wallet(server_id,player_id,food,wood,iron,stone,gold) VALUES(
 INSERT INTO map_cell(server_id,x,y,terrain) VALUES(1,%[2]d,0,1);
 INSERT INTO player_city(server_id,city_id,player_id,name,x,y) VALUES(1,%[1]d,%[1]d,'fixture',%[2]d,0);
 INSERT INTO mil_city_origin SELECT 1,%[1]d,%[1]d,cohort_id,format_version,created_at FROM mil_city_origin WHERE city_id=1;
-INSERT INTO city_troop SELECT 1,%[1]d,u,10+u,u FROM generate_series(1,4) u;
+INSERT INTO city_troop SELECT 1,%[1]d,u,10+u,u FROM generate_series(1,12) u;
 INSERT INTO field_army(server_id,army_id,owner_player_id,x,y) VALUES(1,%[1]d,%[1]d,%[2]d,0);
 INSERT INTO march_order(server_id,march_id,army_id,from_x,from_y,to_x,to_y,purpose,depart_at,arrive_at) VALUES(1,%[1]d,%[1]d,%[2]d,0,%[3]d,1,1,'2026-01-01','2026-01-02')`, id, (id-1)*2, (id-1)*2+1))
 	}

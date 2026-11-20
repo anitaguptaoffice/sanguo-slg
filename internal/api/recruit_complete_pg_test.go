@@ -63,9 +63,9 @@ FROM work_queue q JOIN mil_recruit_receipt r USING(server_id,queue_id) WHERE q.s
 AND (SELECT count(*) FROM work_queue)=2 AND (SELECT count(*) FROM work_queue WHERE queue_type=3)=1
 AND (SELECT count(*) FROM mil_recruit_origin)=1 AND (SELECT count(*) FROM mil_recruit_receipt)=1
 AND (SELECT last_value=100 AND is_called FROM work_queue_id_seq)
-AND (SELECT array_agg(unit_cfg_id ORDER BY unit_cfg_id)=ARRAY[1,2,3,4]
-AND array_agg(count ORDER BY unit_cfg_id)=ARRAY[2147483646,12,13,14]
-AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[1,2,3,4] FROM city_troop WHERE server_id=1 AND city_id=1)
+AND (SELECT array_agg(unit_cfg_id ORDER BY unit_cfg_id)=ARRAY[1,2,3,4,5,6,7,8,9,10,11,12]
+AND array_agg(count ORDER BY unit_cfg_id)=ARRAY[2147483646,12,13,14,15,16,17,18,19,20,21,22]
+AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[1,2,3,4,5,6,7,8,9,10,11,12] FROM city_troop WHERE server_id=1 AND city_id=1)
 AND EXISTS (SELECT FROM work_queue q JOIN mil_recruit_origin o USING(server_id,queue_id)
 JOIN mil_recruit_receipt r USING(server_id,queue_id) WHERE q.server_id=1 AND q.queue_id=100
 AND q.player_id=1 AND q.city_id=1 AND q.queue_type=3 AND q.status=1
@@ -139,9 +139,9 @@ AND cohort_id=decode('03000000000000000000000000000000','hex') AND format_versio
 	returnPGOK(t, observer.QueryRow(ctx, `SELECT
 (SELECT status=2 FROM work_queue WHERE server_id=1 AND queue_id=100)
 AND NOT EXISTS (SELECT FROM work_queue WHERE queue_type=3 AND status IN (0,1))
-AND (SELECT array_agg(unit_cfg_id ORDER BY unit_cfg_id)=ARRAY[1,2,3,4]
-AND array_agg(count ORDER BY unit_cfg_id)=ARRAY[2147483647,12,13,14]
-AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[1,2,3,4] FROM city_troop WHERE server_id=1 AND city_id=1)`).Scan(&exact))
+AND (SELECT array_agg(unit_cfg_id ORDER BY unit_cfg_id)=ARRAY[1,2,3,4,5,6,7,8,9,10,11,12]
+AND array_agg(count ORDER BY unit_cfg_id)=ARRAY[2147483647,12,13,14,15,16,17,18,19,20,21,22]
+AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[1,2,3,4,5,6,7,8,9,10,11,12] FROM city_troop WHERE server_id=1 AND city_id=1)`).Scan(&exact))
 	if !exact {
 		t.Fatal("terminal/ready/wounded mismatch; ready+pending was not conserved")
 	}
