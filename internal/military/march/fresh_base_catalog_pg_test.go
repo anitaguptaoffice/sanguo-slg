@@ -25,6 +25,9 @@ func baseSQL(t *testing.T, p *pgxpool.Pool, q string) {
 	t.Helper()
 	_, err := p.Exec(context.Background(), q)
 	baseOK(t, err)
+	_, err = p.Exec(context.Background(), `INSERT INTO city_troop(server_id,city_id,unit_cfg_id,count,wounded)
+		SELECT 1,100,g,0,0 FROM pg_catalog.generate_series(1,12) g ON CONFLICT DO NOTHING`)
+	baseOK(t, err)
 }
 
 // Fixtures are newly owned, not production source approval. Use reviewed DDL,

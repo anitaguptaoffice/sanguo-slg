@@ -136,7 +136,7 @@ func TestPGMarchDeploymentRejects(t *testing.T) {
 		{"insufficient despite wounded", "", 1, ErrInsufficientTroops},
 		{"wrong owner", "", 2, ErrMarchDeploymentUnavailable},
 		{"stock missing", "DELETE FROM city_troop WHERE unit_cfg_id=3", 1, ErrMarchDeploymentUnavailable},
-		{"stock extra", "INSERT INTO city_troop VALUES(1,100,5,0,0)", 1, ErrMarchDeploymentUnavailable},
+		{"stock extra", "INSERT INTO city_troop VALUES(1,100,13,0,0)", 1, ErrMarchDeploymentUnavailable},
 		{"wrong cohort", "UPDATE mil_city_origin SET cohort_id=decode(repeat('08',16),'hex')", 1, ErrMarchDeploymentUnavailable},
 		{"bad pending receipt", "DELETE FROM mil_recruit_receipt WHERE queue_id=41", 1, ErrMarchDeploymentUnavailable},
 	} {

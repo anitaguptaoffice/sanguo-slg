@@ -46,9 +46,6 @@ func (p *RecruitParticipant) DebitMarchTroops(ctx context.Context, a *recruittx.
 	}
 	var ready [12]int32
 	for _, row := range pending.stock {
-		if row.unit == 0 {
-			continue
-		}
 		i := row.unit - 1
 		if int64(request[i]) > row.ready {
 			return [12]int32{}, ErrInsufficientTroops
@@ -60,9 +57,6 @@ func (p *RecruitParticipant) DebitMarchTroops(ctx context.Context, a *recruittx.
 		AND unit_cfg_id OPERATOR(pg_catalog.=) $3 AND count OPERATOR(pg_catalog.=) $5
 		AND wounded OPERATOR(pg_catalog.=) $6 RETURNING count,wounded`
 	for _, row := range pending.stock {
-		if row.unit == 0 {
-			continue
-		}
 		i := row.unit - 1
 		if request[i] == 0 {
 			continue
