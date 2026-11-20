@@ -274,7 +274,7 @@ import {
 } from "@/net/hudFormat";
 import { MainCityDomesticSlotStrip } from "@/ui/MainCityDomesticSlotStrip";
 import { MainCitySlotUpgradeOverlay } from "@/ui/MainCitySlotUpgradeOverlay";
-import { MainCityBuildingPanel, type CityOfficeRow, type TechnicRow } from "@/ui/MainCityBuildingPanel";
+import { MainCityBuildingPanel, type CityOfficeRow, type TechnicRow, type WallDefenseRow } from "@/ui/MainCityBuildingPanel";
 import { MainCityCityOfficePanel, type CityCivicView } from "@/ui/MainCityCityOfficePanel";
 import {
   CITY_CHIEF_HALL_SLOT_KEY,
@@ -1051,6 +1051,7 @@ export class MainCityScene implements Scene {
       (slotKey) => void this.demolishBuilding(slotKey),
       (tid) => void this.startTechnicResearch(tid),
       (action, office, heroId) => void this.cityOfficeAction(action, office, heroId),
+      (action, defenseType, unitId) => void this.wallAction(action, defenseType, unitId),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -2181,6 +2182,7 @@ export class MainCityScene implements Scene {
     }
     if (slotKey === "academy") void this.refreshTechnics();
     if (slotKey === "recruit_hall") void this.refreshCityOffices();
+    if (slotKey === "wall") void this.refreshWallDefenses();
   }
 
   private getCityOfficeContext() {
@@ -2233,6 +2235,47 @@ export class MainCityScene implements Scene {
     } catch (error) {
       if (this.session !== session) return;
       this.cityOfficePanel.setFormError(formatPanelGatewayErrorFromUnknown("build", error));
+    }
+  }
+
+  private async refreshWallDefenses(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const res = (await this.gateway.listWallDefenses(session.cityId)) as {
+        defenses?: WallDefenseRow[]; wall_area?: number; area_used?: number;
+      };
+      if (this.session !== session) return;
+      this.buildingPanel.setWallDefenses(res.defenses ?? [], res.wall_area ?? 0, res.area_used ?? 0);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async wallAction(action: string, defenseType: number, unitId: number): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      if (action === "build-defense") {
+        const res = (await this.gateway.buildWallDefense(session.cityId, defenseType)) as {
+          defenses?: WallDefenseRow[]; wall_area?: number; area_used?: number; wallet?: ResourceWallet;
+        };
+        if (res.wallet) session.wallet = mergeCityResourceWallet(session.wallet, res.wallet);
+        this.buildingPanel.setWallDefenses(res.defenses ?? [], res.wall_area ?? 0, res.area_used ?? 0);
+        this.status = "城防已建造";
+      } else if (action === "heal-wounded") {
+        const wounded = session.cityTroops.find((t) => t.unit_cfg_id === unitId)?.wounded ?? 0;
+        if (wounded > 0) {
+          await this.gateway.healWounded(session.cityId, unitId, wounded);
+          await this.refreshState();
+          this.status = "伤兵已治疗";
+        }
+      }
+      this.renderHud();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
     }
   }
 

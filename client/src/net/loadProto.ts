@@ -72,6 +72,9 @@ export const Routes = {
   ClearCityOffice: "domestic.v1.ClearCityOffice",
   PayCityOfficeSalary: "domestic.v1.PayCityOfficeSalary",
   RewardCityOfficeHero: "domestic.v1.RewardCityOfficeHero",
+  ListWallDefenses: "domestic.v1.ListWallDefenses",
+  BuildWallDefense: "domestic.v1.BuildWallDefense",
+  HealWounded: "domestic.v1.HealWounded",
   RecruitTroop: "military.v1.RecruitTroop",
   StartMarch: "military.v1.StartMarch",
   RecallMarch: "military.v1.RecallMarch",
@@ -191,6 +194,12 @@ export type ProtoTypes = {
   PayCityOfficeSalaryResponse: protobuf.Type;
   RewardCityOfficeHeroRequest: protobuf.Type;
   RewardCityOfficeHeroResponse: protobuf.Type;
+  ListWallDefensesRequest: protobuf.Type;
+  ListWallDefensesResponse: protobuf.Type;
+  BuildWallDefenseRequest: protobuf.Type;
+  BuildWallDefenseResponse: protobuf.Type;
+  HealWoundedRequest: protobuf.Type;
+  HealWoundedResponse: protobuf.Type;
   StartBuildingUpgradeResponse: protobuf.Type;
   RecruitTroopRequest: protobuf.Type;
   RecruitTroopResponse: protobuf.Type;
@@ -356,6 +365,12 @@ export function getTypes(): ProtoTypes {
     PayCityOfficeSalaryResponse: r.lookupType("sanguo.domestic.v1.PayCityOfficeSalaryResponse"),
     RewardCityOfficeHeroRequest: r.lookupType("sanguo.domestic.v1.RewardCityOfficeHeroRequest"),
     RewardCityOfficeHeroResponse: r.lookupType("sanguo.domestic.v1.RewardCityOfficeHeroResponse"),
+    ListWallDefensesRequest: r.lookupType("sanguo.domestic.v1.ListWallDefensesRequest"),
+    ListWallDefensesResponse: r.lookupType("sanguo.domestic.v1.ListWallDefensesResponse"),
+    BuildWallDefenseRequest: r.lookupType("sanguo.domestic.v1.BuildWallDefenseRequest"),
+    BuildWallDefenseResponse: r.lookupType("sanguo.domestic.v1.BuildWallDefenseResponse"),
+    HealWoundedRequest: r.lookupType("sanguo.domestic.v1.HealWoundedRequest"),
+    HealWoundedResponse: r.lookupType("sanguo.domestic.v1.HealWoundedResponse"),
     StartBuildingUpgradeResponse: r.lookupType("sanguo.domestic.v1.StartBuildingUpgradeResponse"),
     RecruitTroopRequest: r.lookupType("sanguo.military.v1.RecruitTroopRequest"),
     RecruitTroopResponse: r.lookupType("sanguo.military.v1.RecruitTroopResponse"),

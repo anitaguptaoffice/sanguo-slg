@@ -114,6 +114,7 @@ type CityState struct {
 	OfficeProdPct     int64
 	OfficeBuildPct    int64
 	OfficeResearchPct int64
+	Wall              [5]int32
 	goldBase          int64
 	goldSaved         bool
 	Civic             CivicState

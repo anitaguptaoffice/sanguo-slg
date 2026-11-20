@@ -46,6 +46,7 @@ export type CityOfficeRow = {
 };
 
 export type OfficeHeroOption = { hero_id?: number; name?: string; level?: number; status?: number };
+export type WallDefenseRow = { defense_type?: number; name?: string; count?: number; space?: number };
 
 export class MainCityBuildingPanel {
   private panel!: HTMLElement;
@@ -54,6 +55,9 @@ export class MainCityBuildingPanel {
   private researchJob: { tid?: number; target?: number; finish_at_ms?: number } | null = null;
   private offices: CityOfficeRow[] = [];
   private officeHeroes: OfficeHeroOption[] = [];
+  private wallDefenses: WallDefenseRow[] = [];
+  private wallArea = 0;
+  private wallUsed = 0;
   private focusTrap: CenterPanelFocusTrap | null = null;
 
   constructor(
@@ -67,6 +71,7 @@ export class MainCityBuildingPanel {
     private readonly onDemolish?: (slotKey: string) => void,
     private readonly onResearchTechnic?: (tid: number) => void,
     private readonly onOfficeAction?: (action: string, office: number, heroId: number) => void,
+    private readonly onWallAction?: (action: string, defenseType: number, unitId: number) => void,
   ) {}
 
   attach(): void {
@@ -86,6 +91,14 @@ export class MainCityBuildingPanel {
         <button type="button" class="build-demolish hidden" data-action="demolish-building">
           降级/拆除（返还 25%）
         </button>
+        <div class="wall-defenses hidden" data-role="wall-defenses">
+          <h4>城墙城防</h4>
+          <p data-role="wall-status"></p>
+          <div class="city-civic-actions" data-role="wall-build-buttons"></div>
+          <h4>伤兵治疗</h4>
+          <p data-role="wounded-status"></p>
+          <div class="city-civic-actions" data-role="wounded-buttons"></div>
+        </div>
         <div class="city-offices hidden" data-role="city-offices">
           <h4>招贤馆三职</h4>
           <p data-role="office-status"></p>
@@ -215,6 +228,9 @@ export class MainCityBuildingPanel {
     const officesEl = this.panel.querySelector<HTMLElement>('[data-role="city-offices"]');
     officesEl?.classList.toggle("hidden", slotKey !== "recruit_hall");
     if (slotKey === "recruit_hall") this.renderOffices();
+    const wallEl = this.panel.querySelector<HTMLElement>('[data-role="wall-defenses"]');
+    wallEl?.classList.toggle("hidden", slotKey !== "wall");
+    if (slotKey === "wall") this.renderWall();
     if (demolishBtn) {
       demolishBtn.classList.toggle("hidden", level <= 0);
       demolishBtn.disabled = upgrading || (building?.building_cfg_id === 1 && level <= 1);
@@ -269,6 +285,45 @@ export class MainCityBuildingPanel {
     btn.textContent = buildSubmitButtonLabel(submitState);
     if (submitState !== "error") {
       this.setFormError(preview.insufficientHint);
+    }
+  }
+
+  setWallDefenses(rows: WallDefenseRow[], area: number, used: number): void {
+    this.wallDefenses = rows;
+    this.wallArea = area;
+    this.wallUsed = used;
+    this.renderWall();
+  }
+
+  private renderWall(): void {
+    const section = this.panel?.querySelector<HTMLElement>('[data-role="wall-defenses"]');
+    if (!section || section.classList.contains("hidden")) return;
+    const status = section.querySelector<HTMLElement>('[data-role="wall-status"]');
+    const build = section.querySelector<HTMLElement>('[data-role="wall-build-buttons"]');
+    const wounded = section.querySelector<HTMLElement>('[data-role="wounded-status"]');
+    const woundBtns = section.querySelector<HTMLElement>('[data-role="wounded-buttons"]');
+    if (!status || !build || !wounded || !woundBtns) return;
+    status.textContent = `墙区 ${this.wallUsed}/${this.wallArea} · ` +
+      this.wallDefenses.map((d) => `${d.name}×${d.count ?? 0}`).join(" ");
+    build.innerHTML = "";
+    for (const row of this.wallDefenses) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.action = "build-defense";
+      button.dataset.defenseType = String(row.defense_type ?? 0);
+      button.textContent = `建造${row.name}`;
+      build.appendChild(button);
+    }
+    const troops = (this.getSession()?.cityTroops ?? []).filter((t) => (t.wounded ?? 0) > 0);
+    wounded.textContent = troops.length ? "点击兵种消耗黄金治疗全部伤兵" : "暂无伤兵";
+    woundBtns.innerHTML = "";
+    for (const troop of troops) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.action = "heal-wounded";
+      button.dataset.unitId = String(troop.unit_cfg_id ?? 0);
+      button.textContent = `治疗兵种#${troop.unit_cfg_id}（${troop.wounded}）`;
+      woundBtns.appendChild(button);
     }
   }
 
@@ -337,6 +392,13 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    const wallAction = btn?.getAttribute("data-action");
+    if (wallAction === "build-defense" || wallAction === "heal-wounded") {
+      const defenseType = Number(btn?.dataset.defenseType ?? 0);
+      const unitId = Number(btn?.dataset.unitId ?? 0);
+      this.onWallAction?.(wallAction, defenseType, unitId);
+      return;
+    }
     const officeAction = btn?.getAttribute("data-action");
     if (officeAction && officeAction.endsWith("-office")) {
       const section = this.panel.querySelector<HTMLElement>('[data-role="city-offices"]');

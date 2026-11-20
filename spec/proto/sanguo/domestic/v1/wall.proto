@@ -1,0 +1,46 @@
+syntax = "proto3";
+package sanguo.domestic.v1;
+import "sanguo/common/v1/types.proto";
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/domestic/v1;domesticv1";
+
+message WallDefenseView {
+  int32 defense_type = 1;
+  string code = 2;
+  string name = 3;
+  int32 count = 4;
+  int32 space = 5;
+  sanguo.common.v1.ResourceWallet cost = 6;
+}
+
+// route: domestic.v1.ListWallDefenses
+message ListWallDefensesRequest { int64 city_id = 1; }
+message ListWallDefensesResponse {
+  repeated WallDefenseView defenses = 1;
+  int32 wall_area = 2;
+  int32 area_used = 3;
+}
+
+// route: domestic.v1.BuildWallDefense
+message BuildWallDefenseRequest {
+  int64 city_id = 1;
+  int32 defense_type = 2;
+}
+message BuildWallDefenseResponse {
+  repeated WallDefenseView defenses = 1;
+  int32 wall_area = 2;
+  int32 area_used = 3;
+  sanguo.common.v1.ResourceWallet wallet = 4;
+}
+
+// route: domestic.v1.HealWounded
+message HealWoundedRequest {
+  int64 city_id = 1;
+  int32 unit_cfg_id = 2;
+  int32 count = 3;
+}
+message HealWoundedResponse {
+  int32 healed = 1;
+  int32 wounded = 2;
+  int32 ready = 3;
+  int64 gold = 4;
+}
