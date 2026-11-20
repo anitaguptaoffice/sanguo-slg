@@ -118,6 +118,9 @@ func returnCapacity(scope recruitScope, pending recruitPendingSnapshot, units, c
 		return ready, errors.Join(ErrReturnUnavailable, err)
 	}
 	for _, row := range pending.stock {
+		if row.unit == 0 {
+			continue
+		}
 		ready[row.unit-1] = row.ready
 	}
 	var previous int32
