@@ -64,7 +64,7 @@ func TestRecruitV2Descriptors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := fmt.Sprintf("%x", sha256.Sum256(wire)); got != "4121ec6af661c3fc37087bc44f8b0ac81c80a3039bfc36cfa2272338714cb4dd" {
+	if got := fmt.Sprintf("%x", sha256.Sum256(wire)); got != "78541baf6c86262cc5ae14cbedb634fe5abbadbacbf972363a9eb978b4a5f0c3" {
 		t.Fatalf("legacy descriptor changed: %s", got)
 	}
 }

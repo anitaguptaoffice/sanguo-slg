@@ -101,3 +101,62 @@ message AbandonFieldRequest {
 message AbandonFieldResponse {
   bool abandoned = 1;
 }
+
+// 采集奖励。
+message FieldGatherReward {
+  int64 food = 1;
+  int64 wood = 2;
+  int64 stone = 3;
+  int64 iron = 4;
+  int64 gold = 5;
+  repeated FieldGatherItem items = 6;
+}
+
+message FieldGatherItem {
+  int32 item_cfg_id = 1;
+  int64 count = 2;
+}
+
+// 附属野地采集状态。
+message FieldGatherView {
+  int64 gather_id = 1;
+  int32 x = 2;
+  int32 y = 3;
+  string name = 4;
+  int64 finish_at_ms = 5;
+  // 1=采集中，2=已领取。
+  int32 status = 6;
+  FieldGatherReward reward = 7;
+}
+
+// route: world.v1.StartFieldGather
+message StartFieldGatherRequest {
+  int64 city_id = 1;
+  int32 x = 2;
+  int32 y = 3;
+  // 0 表示由服务端挑选一名空闲将领。
+  int64 hero_id = 4;
+}
+
+message StartFieldGatherResponse {
+  FieldGatherView gather = 1;
+  int64 food_cost = 2;
+}
+
+// route: world.v1.ListFieldGathers
+message ListFieldGathersRequest {
+  int64 city_id = 1;
+}
+
+message ListFieldGathersResponse {
+  repeated FieldGatherView gathers = 1;
+}
+
+// route: world.v1.ClaimFieldGather
+message ClaimFieldGatherRequest {
+  int64 gather_id = 1;
+}
+
+message ClaimFieldGatherResponse {
+  FieldGatherReward reward = 1;
+}

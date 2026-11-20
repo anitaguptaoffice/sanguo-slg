@@ -89,6 +89,7 @@ export class WorldPanels {
   private citiesOwner: (() => boolean) | null = null;
   private ownedFields: { x: number; y: number; name: string; bonus_percent: number }[] = [];
   private ownedFieldsOwner: (() => boolean) | null = null;
+  private fieldGathers: FieldGatherRow[] = [];
 
   constructor(
     private readonly mount: HTMLElement,
@@ -227,15 +228,30 @@ export class WorldPanels {
     const owner = () => actor() && this.currentCityId() === cityId;
     this.ownedFieldsOwner = owner;
     try {
-      const response = (await this.gateway.listOwnedFields(cityId)) as {
-        fields?: { x?: number; y?: number; name?: string; bonus_percent?: number }[];
-      };
+      const [fieldsResponse, gathersResponse] = (await Promise.all([
+        this.gateway.listOwnedFields(cityId),
+        typeof this.gateway.listFieldGathers === "function"
+          ? this.gateway.listFieldGathers(cityId)
+          : Promise.resolve({ gathers: [] }),
+      ])) as [
+        { fields?: { x?: number; y?: number; name?: string; bonus_percent?: number }[] },
+        { gathers?: FieldGatherWire[] },
+      ];
       if (!owner()) return;
-      this.ownedFields = (response.fields ?? []).map((field) => ({
+      this.ownedFields = (fieldsResponse.fields ?? []).map((field) => ({
         x: field.x ?? 0,
         y: field.y ?? 0,
         name: field.name ?? "野地",
         bonus_percent: field.bonus_percent ?? 0,
+      }));
+      this.fieldGathers = (gathersResponse.gathers ?? []).map((gather) => ({
+        gather_id: gather.gather_id ?? 0,
+        x: gather.x ?? 0,
+        y: gather.y ?? 0,
+        name: gather.name ?? "野地",
+        status: gather.status ?? 0,
+        finish_at_ms: gather.finish_at_ms ?? 0,
+        reward: gather.reward,
       }));
       this.renderOwnedFields();
     } catch (error) {
@@ -255,11 +271,35 @@ export class WorldPanels {
       summary.textContent = "尚未占领野地。";
       return;
     }
-    summary.textContent = `附属野地 ${this.ownedFields.length} 块（产量加成按地形叠加）。`;
+    summary.textContent = `附属野地 ${this.ownedFields.length} 块（产量加成按地形叠加；采集耗粮 500，需空闲将领，历时 1 小时）。`;
     for (const field of this.ownedFields) {
       const li = document.createElement("li");
       li.className = "world-owned-field-row";
       li.textContent = `${field.name} (${field.x},${field.y}) · 产量 +${field.bonus_percent}% `;
+      const gather = this.fieldGathers.find(
+        (row) => row.x === field.x && row.y === field.y && row.status === 1,
+      );
+      if (gather) {
+        const when = gather.finish_at_ms ? new Date(gather.finish_at_ms).toLocaleTimeString() : "—";
+        const label = document.createElement("span");
+        label.className = "world-field-gather-status";
+        label.textContent = Date.now() >= gather.finish_at_ms ? "采集完成，可领取 " : `采集中，预计 ${when} 完成 `;
+        li.appendChild(label);
+        const claim = document.createElement("button");
+        claim.type = "button";
+        claim.dataset.action = "claim-gather";
+        claim.dataset.gatherId = String(gather.gather_id);
+        claim.textContent = "领取";
+        li.appendChild(claim);
+      } else {
+        const gatherButton = document.createElement("button");
+        gatherButton.type = "button";
+        gatherButton.dataset.action = "start-gather";
+        gatherButton.dataset.x = String(field.x);
+        gatherButton.dataset.y = String(field.y);
+        gatherButton.textContent = "采集";
+        li.appendChild(gatherButton);
+      }
       const button = document.createElement("button");
       button.type = "button";
       button.dataset.action = "abandon-field";
@@ -269,6 +309,32 @@ export class WorldPanels {
       li.appendChild(button);
       ul.appendChild(li);
     }
+  }
+
+  private async startGather(x: number, y: number): Promise<void> {
+    const cityId = this.currentCityId();
+    if (!cityId || typeof this.gateway.startFieldGather !== "function") return;
+    try {
+      await this.gateway.startFieldGather(cityId, x, y);
+      this.onStatus(`已在 (${x},${y}) 开始采集，1 小时后可领取`);
+    } catch (error) {
+      this.onStatus(formatPanelGatewayErrorFromUnknown("world", error));
+    }
+    await this.refreshOwnedFields();
+  }
+
+  private async claimGather(gatherId: number): Promise<void> {
+    if (typeof this.gateway.claimFieldGather !== "function") return;
+    try {
+      const response = (await this.gateway.claimFieldGather(gatherId)) as {
+        reward?: { food?: number; wood?: number; stone?: number; iron?: number; gold?: number;
+          items?: { item_cfg_id?: number; count?: number }[] };
+      };
+      this.onStatus(`采集领取成功：${formatGatherReward(response.reward)}`);
+    } catch (error) {
+      this.onStatus(formatPanelGatewayErrorFromUnknown("world", error));
+    }
+    await this.refreshOwnedFields();
   }
 
   private async abandonField(x: number, y: number): Promise<void> {
@@ -561,6 +627,19 @@ export class WorldPanels {
 
   private onClick(ev: Event): void {
     const target = ev.target as HTMLElement;
+    const startGatherBtn = target.closest("button[data-action='start-gather']") as HTMLButtonElement | null;
+    if (startGatherBtn) {
+      const x = Number(startGatherBtn.dataset.x);
+      const y = Number(startGatherBtn.dataset.y);
+      if (Number.isFinite(x) && Number.isFinite(y)) void this.startGather(x, y);
+      return;
+    }
+    const claimGatherBtn = target.closest("button[data-action='claim-gather']") as HTMLButtonElement | null;
+    if (claimGatherBtn) {
+      const gatherId = Number(claimGatherBtn.dataset.gatherId);
+      if (Number.isFinite(gatherId)) void this.claimGather(gatherId);
+      return;
+    }
     const abandonBtn = target.closest("button[data-action='abandon-field']") as HTMLButtonElement | null;
     if (abandonBtn) {
       const x = Number(abandonBtn.dataset.x);
@@ -632,4 +711,40 @@ export class WorldPanels {
       this.onStatus(`坐标 (${x},${y})（出征表单未就绪，仅展示）`);
     }
   }
+}
+
+type FieldGatherWire = {
+  gather_id?: number;
+  x?: number;
+  y?: number;
+  name?: string;
+  status?: number;
+  finish_at_ms?: number;
+  reward?: { food?: number; wood?: number; stone?: number; iron?: number; gold?: number;
+    items?: { item_cfg_id?: number; count?: number }[] };
+};
+
+type FieldGatherRow = {
+  gather_id: number;
+  x: number;
+  y: number;
+  name: string;
+  status: number;
+  finish_at_ms: number;
+  reward?: FieldGatherWire["reward"];
+};
+
+function formatGatherReward(reward: FieldGatherWire["reward"]): string {
+  if (!reward) return "无奖励";
+  const parts: string[] = [];
+  const resources: [string, number | undefined][] = [
+    ["粮", reward.food], ["木", reward.wood], ["石", reward.stone], ["铁", reward.iron], ["金", reward.gold],
+  ];
+  for (const [label, value] of resources) {
+    if ((value ?? 0) > 0) parts.push(`${label}${value}`);
+  }
+  for (const item of reward.items ?? []) {
+    if ((item.count ?? 0) > 0) parts.push(`道具#${item.item_cfg_id}×${item.count}`);
+  }
+  return parts.length ? parts.join(" ") : "无奖励";
 }

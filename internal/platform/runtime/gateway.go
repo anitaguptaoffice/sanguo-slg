@@ -71,6 +71,7 @@ func (a *App) newAPIServer(ctx context.Context) (*api.Server, error) {
 		return nil, err
 	}
 	worldSvc.Wild = wild
+	worldSvc.Gathers = world.NewGatherService(a.DB, wild)
 	hub := domestic.NewHub(time.Now)
 	hub.UseStore(domestic.NewPGStore(a.DB), defaultShardID, 30*time.Second)
 	hub.UseFieldBonus(func(ctx context.Context, sid int32, cityID int64) [4]int64 {

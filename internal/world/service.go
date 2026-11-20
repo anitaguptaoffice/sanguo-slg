@@ -19,6 +19,8 @@ type Service struct {
 	Loader *Loader
 	// Wild is the immutable world_wild profile loaded at startup.
 	Wild *WildConfig
+	// Gathers owns the field_gather table (R1-S5).
+	Gathers *GatherService
 }
 
 func NewService(s Store) *Service { return &Service{Store: s, Loader: NewLoader(s, 4)} }

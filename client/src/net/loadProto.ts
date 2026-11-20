@@ -57,6 +57,9 @@ export const Routes = {
   GetWorldTileDetail: "world.v1.GetWorldTileDetail",
   ListOwnedFields: "world.v1.ListOwnedFields",
   AbandonField: "world.v1.AbandonField",
+  StartFieldGather: "world.v1.StartFieldGather",
+  ListFieldGathers: "world.v1.ListFieldGathers",
+  ClaimFieldGather: "world.v1.ClaimFieldGather",
   GetCityState: "domestic.v1.GetCityState",
   StartBuildingUpgrade: "domestic.v1.StartBuildingUpgrade",
   RecruitTroop: "military.v1.RecruitTroop",
@@ -149,6 +152,12 @@ export type ProtoTypes = {
   ListOwnedFieldsResponse: protobuf.Type;
   AbandonFieldRequest: protobuf.Type;
   AbandonFieldResponse: protobuf.Type;
+  StartFieldGatherRequest: protobuf.Type;
+  StartFieldGatherResponse: protobuf.Type;
+  ListFieldGathersRequest: protobuf.Type;
+  ListFieldGathersResponse: protobuf.Type;
+  ClaimFieldGatherRequest: protobuf.Type;
+  ClaimFieldGatherResponse: protobuf.Type;
   GetCityStateRequest: protobuf.Type;
   GetCityStateResponse: protobuf.Type;
   StartBuildingUpgradeRequest: protobuf.Type;
@@ -288,6 +297,12 @@ export function getTypes(): ProtoTypes {
     ListOwnedFieldsResponse: r.lookupType("sanguo.world.v1.ListOwnedFieldsResponse"),
     AbandonFieldRequest: r.lookupType("sanguo.world.v1.AbandonFieldRequest"),
     AbandonFieldResponse: r.lookupType("sanguo.world.v1.AbandonFieldResponse"),
+    StartFieldGatherRequest: r.lookupType("sanguo.world.v1.StartFieldGatherRequest"),
+    StartFieldGatherResponse: r.lookupType("sanguo.world.v1.StartFieldGatherResponse"),
+    ListFieldGathersRequest: r.lookupType("sanguo.world.v1.ListFieldGathersRequest"),
+    ListFieldGathersResponse: r.lookupType("sanguo.world.v1.ListFieldGathersResponse"),
+    ClaimFieldGatherRequest: r.lookupType("sanguo.world.v1.ClaimFieldGatherRequest"),
+    ClaimFieldGatherResponse: r.lookupType("sanguo.world.v1.ClaimFieldGatherResponse"),
     GetCityStateRequest: r.lookupType("sanguo.domestic.v1.GetCityStateRequest"),
     GetCityStateResponse: r.lookupType("sanguo.domestic.v1.GetCityStateResponse"),
     StartBuildingUpgradeRequest: r.lookupType("sanguo.domestic.v1.StartBuildingUpgradeRequest"),

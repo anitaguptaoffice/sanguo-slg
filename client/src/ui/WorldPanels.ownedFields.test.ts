@@ -15,6 +15,9 @@ function setup() {
       fields: [{ x: 30, y: 40, name: "森林 Lv3", bonus_percent: 10 }],
     }),
     abandonField: vi.fn().mockResolvedValue({ abandoned: true }),
+    startFieldGather: vi.fn().mockResolvedValue({ gather: { gather_id: 9 }, food_cost: 500 }),
+    listFieldGathers: vi.fn().mockResolvedValue({ gathers: [] }),
+    claimFieldGather: vi.fn().mockResolvedValue({ reward: { food: 320, gold: 12 } }),
   };
   const panels = new WorldPanels(mount, gateway as unknown as GatewayPort, () => session, { marchFormRoot: form }, status);
   panels.attach();
@@ -43,6 +46,29 @@ describe("owned wild fields", () => {
     expect(gateway.abandonField).toHaveBeenCalledWith(1, 30, 40);
     expect(summary()).toContain("尚未占领野地");
     expect(mount.querySelectorAll(".world-owned-field-row").length).toBe(0);
+    panels.detach();
+  });
+
+  it("starts a gather on an owned field", async () => {
+    const { panels, mount, gateway } = setup();
+    panels.toggle(); await flush();
+    mount.querySelector<HTMLButtonElement>('[data-action="start-gather"]')!.click();
+    await flush(); await flush();
+    expect(gateway.startFieldGather).toHaveBeenCalledWith(1, 30, 40);
+    panels.detach();
+  });
+
+  it("shows an active gather and claims its reward", async () => {
+    const { panels, mount, gateway, summary } = setup();
+    gateway.listFieldGathers.mockResolvedValue({
+      gathers: [{ gather_id: 9, x: 30, y: 40, name: "森林 Lv3", status: 1, finish_at_ms: Date.now() + 60_000 }],
+    });
+    panels.toggle(); await flush();
+    expect(mount.textContent).toContain("采集中");
+    expect(mount.querySelector('[data-action="start-gather"]')).toBeNull();
+    mount.querySelector<HTMLButtonElement>('[data-action="claim-gather"]')!.click();
+    await flush(); await flush();
+    expect(gateway.claimFieldGather).toHaveBeenCalledWith(9);
     panels.detach();
   });
 

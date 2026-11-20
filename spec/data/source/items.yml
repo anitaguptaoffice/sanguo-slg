@@ -50,3 +50,10 @@ items:
   - {code: shield_blank, name: 盾胚料, item_type: 1, max_stack: 99, meta: {description: 盾胚料：城务与军备常用物资，开箱即用。, grants: {iron: 200, wood: 150}}}
   - {code: catapult_rope, name: 弩车缆绳, item_type: 1, max_stack: 99, meta: {description: 弩车缆绳：城务与军备常用物资，开箱即用。, grants: {wood: 400}}}
   - {id: 2100, code: speedup_march, name: 急行军令, item_type: 2, max_stack: 99, meta: {description: 缩短在途行军或返程 5 分钟。, speedup_sec: 300, applies_to: [march]}}
+  - {id: 2101, code: pearl, name: 南海珍珠, item_type: 1, max_stack: 999, meta: {description: 采集所得的圆润珠贝，可供名将招降与爵位晋升。, grants: {silver: 120}}}
+  - {id: 2102, code: amber, name: 松脂琥珀, item_type: 1, max_stack: 999, meta: {description: 山野老松凝结的暖色琥珀，后续招降与晋升会用到的珍材。, grants: {silver: 110}}}
+  - {id: 2103, code: emerald, name: 林间翡翠, item_type: 1, max_stack: 999, meta: {description: 森林深处采出的翠色石料，可供名将招降与爵位晋升。, grants: {silver: 130}}}
+  - {id: 2104, code: glaze, name: 琉璃珠, item_type: 1, max_stack: 999, meta: {description: 湖泥烧制的透明琉璃珠，后续招降与晋升会用到的珍材。, grants: {silver: 100}}}
+  - {id: 2105, code: jade, name: 青玉璧, item_type: 1, max_stack: 999, meta: {description: 草原古墓旁拾得的青玉残璧，可供名将招降与爵位晋升。, grants: {silver: 140}}}
+  - {id: 2106, code: coral, name: 深湖珊瑚, item_type: 1, max_stack: 999, meta: {description: 深水珊瑚枝，后续招降与晋升会用到的珍材。, grants: {silver: 115}}}
+  - {id: 2107, code: night_pearl, name: 夜明珠, item_type: 1, max_stack: 999, meta: {description: 沼泽深处偶得的夜明珠，可供名将招降与爵位晋升。, grants: {silver: 150}}}

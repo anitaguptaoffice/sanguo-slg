@@ -165,7 +165,10 @@ func (s *Server) preparedReturn(r *preparedMarchRuntime, generation *returnGener
 		c := march.ReturnCandidate{ServerID: generation.s.profile.ServerID, PlayerID: ev.PlayerID,
 			CityID: ev.CityID, MarchID: ev.MarchID, ArmyID: ev.ArmyID}
 		result := generation.complete(ctx, c)
-		if result.outcome != returnConfirmed || !result.confirmed.ReturnAt.Equal(ev.ReturnAt) {
+		// PostgreSQL stores the deadline at microsecond precision; the in-memory
+		// hub keeps the nanosecond value it scheduled, so compare truncated.
+		if result.outcome != returnConfirmed ||
+			!result.confirmed.ReturnAt.Truncate(time.Microsecond).Equal(ev.ReturnAt.Truncate(time.Microsecond)) {
 			return out, errors.Join(march.ErrReturnUnavailable, result.cause, result.cleanup, result.diagnostic)
 		}
 		if result.diagnostic != nil {

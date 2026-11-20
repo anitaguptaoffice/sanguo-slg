@@ -30,7 +30,7 @@ SUBSET_LIMITS = {
     "heroes": 90,
     "shops": 18,
     "offers": 120,
-    "reward_rows": 90,
+    "reward_rows": 120,
 }
 
 

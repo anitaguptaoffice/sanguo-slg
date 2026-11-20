@@ -19,7 +19,7 @@ INTG-005 已在首批子集下跑通「任务→背包→商城扣费→GM 发�
 | 将领模板（`cfg_npc_hero` + `cfg_recruit_hero` 抽样） | `spec/data/source/heroes.yml` → `cfg_hero_template` | **90** | 模板行，不含玩家实例 |
 | `cfg_shop`（商城入口） | `spec/data/source/shop.yml` → `cfg_shop` | **18** | 商城类型/入口数 |
 | 可购条目（`cfg_shop` 内 offer 或 legacy `cfg_shop_add` 行） | `shop.yml` → `cfg_shop_offer` | **120** | 货架上可购买行 |
-| 奖励包/宝箱明细（`cfg_task_reward` + `cfg_box_details` 抽样） | `quests.yml` / `items.yml` 的 `rewards`、`meta` | **90** | 独立奖励行（非道具本体） |
+| 奖励包/宝箱明细（`cfg_task_reward` + `cfg_box_details` 抽样） | `quests.yml` / `items.yml` 的 `rewards`、`meta` | **120** | 独立奖励行（非道具本体）；R1-S5 采集宝物新增 7 条 `grants`，按本表规则同步上调 |
 
 上限可在 PR 中调整，但 **必须在同一 PR 修改本表并写明理由**。
 
