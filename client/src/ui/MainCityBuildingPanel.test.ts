@@ -44,3 +44,70 @@ describe("MainCityBuildingPanel", () => {
     panel.detach();
   });
 });
+
+describe("MainCityBuildingPanel market and storehouse", () => {
+  const session: MainCitySession = {
+    cityId: 1,
+    cityName: "测试",
+    buildings: [{ slot_key: "market", building_cfg_id: 12, level: 3 }],
+    wallet: { food: 10_000, wood: 10_000, stone: 10_000, iron: 10_000 },
+    cityTroops: [],
+    player: { display_name: "君主", level: 1 },
+  };
+
+  it("renders offers and dispatches merchant, offer and buy actions", () => {
+    const mount = document.createElement("div");
+    const calls: unknown[][] = [];
+    const panel = new MainCityBuildingPanel(
+      mount,
+      { market: "市场", warehouse: "仓库" },
+      () => session,
+      () => {},
+      () => "idle",
+      undefined, undefined, undefined, undefined, undefined, undefined,
+      (...args: unknown[]) => calls.push(args),
+    );
+    panel.attach();
+    panel.selectSlot("market");
+    panel.setMarket({
+      market_level: 3,
+      listing_capacity: 3,
+      caravan_capacity: 3,
+      max_listing_amount: 300000,
+      gold: 500,
+      offers: [{ offer_id: 9, seller_name: "邻居", resource_type: 1, amount: 200,
+        price_milli: 100, gold_total: 20, distance: 4, deliver_seconds: 67 }],
+      own_offers: [{ offer_id: 10, resource_type: 0, amount: 50, gold_total: 5 }],
+      deliveries: [{ offer_id: 11, resource_type: 2, amount: 10, gold_total: 2,
+        deliver_at_ms: Date.now() + 60_000 }],
+    });
+    const root = mount.querySelector<HTMLElement>('[data-role="market"]')!;
+    expect(root.querySelector('[data-role="market-status"]')?.textContent).toContain("Lv3");
+    expect(root.textContent).toContain("邻居");
+    expect(root.textContent).toContain("商队运输");
+    (root.querySelector('[data-action="buy-merchant"]') as HTMLButtonElement).click();
+    (root.querySelector('[data-action="buy-offer"]') as HTMLButtonElement).click();
+    (root.querySelector('[data-action="cancel-offer"]') as HTMLButtonElement).click();
+    expect(calls.map((c) => c[0])).toEqual(["buy-merchant", "buy-offer", "cancel-offer"]);
+    expect(calls[1][5]).toBe(9);
+    expect(calls[2][5]).toBe(10);
+    panel.detach();
+  });
+
+  it("shows warehouse level, capacity and protected resources", () => {
+    const mount = document.createElement("div");
+    const panel = new MainCityBuildingPanel(mount, { warehouse: "仓库" }, () => session, () => {}, () => "idle");
+    panel.attach();
+    panel.selectSlot("warehouse");
+    panel.setStorehouse({
+      level: 4, capacity_bonus: 100000, protection_percent: 16,
+      protected_amount: { food: 1600, wood: 800, stone: 400, iron: 200 },
+    });
+    const status = mount.querySelector('[data-role="storehouse-status"]')?.textContent ?? "";
+    expect(status).toContain("Lv4");
+    expect(status).toContain("100000");
+    expect(status).toContain("16%");
+    expect(status).toContain("粮1600");
+    panel.detach();
+  });
+});

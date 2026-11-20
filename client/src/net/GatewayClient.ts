@@ -64,6 +64,13 @@ export type GatewayPort = {
   listWallDefenses(cityId: number): Promise<unknown>;
   buildWallDefense(cityId: number, defenseType: number): Promise<unknown>;
   healWounded(cityId: number, unitCfgId: number, count: number): Promise<unknown>;
+  getStorehouse(cityId: number): Promise<unknown>;
+  getMarket(cityId: number): Promise<unknown>;
+  buyFromMerchant(cityId: number, resourceType: number, amount: number): Promise<unknown>;
+  sellToMerchant(cityId: number, resourceType: number, amount: number): Promise<unknown>;
+  createMarketOffer(cityId: number, resourceType: number, amount: number, priceMilli: number, hours: number): Promise<unknown>;
+  cancelMarketOffer(cityId: number, offerId: number): Promise<unknown>;
+  buyMarketOffer(cityId: number, offerId: number): Promise<unknown>;
   recruitTroop(cityId: number, unitCfgId: number, count: number): Promise<unknown>;
   readonly preparedRecruit?: boolean;
   submitPreparedRecruit?(intent?: RecruitJournalIntent): Promise<PreparedRecruitResult>;
@@ -656,6 +663,43 @@ export class GatewayClient implements GatewayPort {
   async healWounded(cityId: number, unitCfgId: number, count: number) {
     const { HealWoundedResponse } = getTypes();
     return this.rpc(Routes.HealWounded, "HealWoundedRequest", { city_id: cityId, unit_cfg_id: unitCfgId, count }, HealWoundedResponse, true);
+  }
+
+  async getStorehouse(cityId: number) {
+    const { GetStorehouseResponse } = getTypes();
+    return this.rpc(Routes.GetStorehouse, "GetStorehouseRequest", { city_id: cityId }, GetStorehouseResponse, true);
+  }
+
+  async getMarket(cityId: number) {
+    const { GetMarketResponse } = getTypes();
+    return this.rpc(Routes.GetMarket, "GetMarketRequest", { city_id: cityId }, GetMarketResponse, true);
+  }
+
+  async buyFromMerchant(cityId: number, resourceType: number, amount: number) {
+    const { BuyFromMerchantResponse } = getTypes();
+    return this.rpc(Routes.BuyFromMerchant, "BuyFromMerchantRequest", { city_id: cityId, resource_type: resourceType, amount }, BuyFromMerchantResponse, true);
+  }
+
+  async sellToMerchant(cityId: number, resourceType: number, amount: number) {
+    const { SellToMerchantResponse } = getTypes();
+    return this.rpc(Routes.SellToMerchant, "SellToMerchantRequest", { city_id: cityId, resource_type: resourceType, amount }, SellToMerchantResponse, true);
+  }
+
+  async createMarketOffer(cityId: number, resourceType: number, amount: number, priceMilli: number, hours: number) {
+    const { CreateMarketOfferResponse } = getTypes();
+    return this.rpc(Routes.CreateMarketOffer, "CreateMarketOfferRequest", {
+      city_id: cityId, resource_type: resourceType, amount, price_milli: priceMilli, hours,
+    }, CreateMarketOfferResponse, true);
+  }
+
+  async cancelMarketOffer(cityId: number, offerId: number) {
+    const { CancelMarketOfferResponse } = getTypes();
+    return this.rpc(Routes.CancelMarketOffer, "CancelMarketOfferRequest", { city_id: cityId, offer_id: offerId }, CancelMarketOfferResponse, true);
+  }
+
+  async buyMarketOffer(cityId: number, offerId: number) {
+    const { BuyMarketOfferResponse } = getTypes();
+    return this.rpc(Routes.BuyMarketOffer, "BuyMarketOfferRequest", { city_id: cityId, offer_id: offerId }, BuyMarketOfferResponse, true);
   }
 
   async startBuildingUpgrade(cityId: number, slotKey: string, buildingCfgId: number) {

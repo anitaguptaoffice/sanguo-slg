@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package sanguo.domestic.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/domestic/v1;domesticv1";
+
+// 仓库等级带来的容量加成与四资源保护额度（R2-S6）。
+message StorehouseView {
+  int32 level = 1;
+  int64 capacity_bonus = 2;
+  int32 protection_percent = 3;
+  sanguo.common.v1.ResourceWallet protected_amount = 4;
+  sanguo.common.v1.ResourceWallet wallet = 5;
+}
+
+// route: domestic.v1.GetStorehouse
+message GetStorehouseRequest { int64 city_id = 1; }
+message GetStorehouseResponse { StorehouseView storehouse = 1; }
+
+// 同服玩家挂单。price_milli 表示每单位资源的千金币价格（1000 = 1 金币）。
+message MarketOfferView {
+  int64 offer_id = 1;
+  int64 seller_city_id = 2;
+  string seller_name = 3;
+  int32 resource_type = 4;
+  int64 amount = 5;
+  int64 price_milli = 6;
+  int64 gold_total = 7;
+  int32 distance = 8;
+  int64 deliver_seconds = 9;
+  bool own = 10;
+}
+
+message MarketDeliveryView {
+  int64 offer_id = 1;
+  int64 seller_city_id = 2;
+  int32 resource_type = 3;
+  int64 amount = 4;
+  int64 gold_total = 5;
+  int64 deliver_at_ms = 6;
+}
+
+// route: domestic.v1.GetMarket
+message GetMarketRequest { int64 city_id = 1; }
+message GetMarketResponse {
+  int32 market_level = 1;
+  int32 listing_capacity = 2;
+  int32 caravan_capacity = 3;
+  repeated MarketOfferView offers = 4;
+  repeated MarketOfferView own_offers = 5;
+  repeated MarketDeliveryView deliveries = 6;
+  int64 gold = 7;
+  sanguo.common.v1.ResourceWallet wallet = 8;
+  int64 max_listing_amount = 9;
+  repeated int64 resource_prices_milli = 10;
+}
+
+// route: domestic.v1.BuyFromMerchant
+message BuyFromMerchantRequest {
+  int64 city_id = 1;
+  int32 resource_type = 2;
+  int64 amount = 3;
+}
+message BuyFromMerchantResponse {
+  int64 gold = 1;
+  int64 gold_paid = 2;
+  sanguo.common.v1.ResourceWallet wallet = 3;
+}
+
+// route: domestic.v1.SellToMerchant
+message SellToMerchantRequest {
+  int64 city_id = 1;
+  int32 resource_type = 2;
+  int64 amount = 3;
+}
+message SellToMerchantResponse {
+  int64 gold = 1;
+  int64 gold_gained = 2;
+  sanguo.common.v1.ResourceWallet wallet = 3;
+}
+
+// route: domestic.v1.CreateMarketOffer
+message CreateMarketOfferRequest {
+  int64 city_id = 1;
+  int32 resource_type = 2;
+  int64 amount = 3;
+  int64 price_milli = 4;
+  // 挂单可见范围，按商队可覆盖的小时数换算；1..24。
+  int32 hours = 5;
+}
+message CreateMarketOfferResponse {
+  MarketOfferView offer = 1;
+  int64 gold = 2;
+  sanguo.common.v1.ResourceWallet wallet = 3;
+}
+
+// route: domestic.v1.CancelMarketOffer
+message CancelMarketOfferRequest {
+  int64 city_id = 1;
+  int64 offer_id = 2;
+}
+message CancelMarketOfferResponse {
+  int64 gold = 1;
+  sanguo.common.v1.ResourceWallet wallet = 2;
+}
+
+// route: domestic.v1.BuyMarketOffer
+message BuyMarketOfferRequest {
+  int64 city_id = 1;
+  int64 offer_id = 2;
+}
+message BuyMarketOfferResponse {
+  int64 offer_id = 1;
+  int64 deliver_at_ms = 2;
+  int64 gold = 3;
+  sanguo.common.v1.ResourceWallet wallet = 4;
+}

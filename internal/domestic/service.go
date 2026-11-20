@@ -241,7 +241,7 @@ func settleProductionWithBonus(c *CityState, cat map[int32]BuildingSpec, now tim
 	if mh > 1 {
 		bonus += prodBonus * float64(mh-1)
 	}
-	cap := int64(whCapBase) + whCapPerLvl*int64(mh)
+	cap := int64(whCapBase) + whCapPerLvl*int64(mh) + StorehouseCapacityBonus(StorehouseLevel(c))
 	if pct := TechnicBonus(c, "storage_pct"); pct > 0 {
 		cap = cap * (100 + pct) / 100
 	}

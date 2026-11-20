@@ -46,6 +46,13 @@ const (
 	RouteListWallDefenses     = "domestic.v1.ListWallDefenses"
 	RouteBuildWallDefense     = "domestic.v1.BuildWallDefense"
 	RouteHealWounded          = "domestic.v1.HealWounded"
+	RouteGetStorehouse        = "domestic.v1.GetStorehouse"
+	RouteGetMarket            = "domestic.v1.GetMarket"
+	RouteBuyFromMerchant      = "domestic.v1.BuyFromMerchant"
+	RouteSellToMerchant       = "domestic.v1.SellToMerchant"
+	RouteCreateMarketOffer    = "domestic.v1.CreateMarketOffer"
+	RouteCancelMarketOffer    = "domestic.v1.CancelMarketOffer"
+	RouteBuyMarketOffer       = "domestic.v1.BuyMarketOffer"
 	RouteGetCityState         = "domestic.v1.GetCityState"
 	defaultServerID           = 1
 )
@@ -284,6 +291,13 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteListWallDefenses] = s.handleListWallDefenses
 	handlers[RouteBuildWallDefense] = s.handleBuildWallDefense
 	handlers[RouteHealWounded] = s.handleHealWounded
+	handlers[RouteGetStorehouse] = s.handleGetStorehouse
+	handlers[RouteGetMarket] = s.handleGetMarket
+	handlers[RouteBuyFromMerchant] = s.handleBuyFromMerchant
+	handlers[RouteSellToMerchant] = s.handleSellToMerchant
+	handlers[RouteCreateMarketOffer] = s.handleCreateMarketOffer
+	handlers[RouteCancelMarketOffer] = s.handleCancelMarketOffer
+	handlers[RouteBuyMarketOffer] = s.handleBuyMarketOffer
 	handlers[RouteGetCityState] = s.handleGetCityState
 	handlers[RouteListMarches] = s.handleListMarches
 	handlers[RouteGetBattleReport] = s.wrapGameplayOnSuccess(obs.EventBattleReportReady, s.handleGetBattleReport)
