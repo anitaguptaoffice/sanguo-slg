@@ -84,7 +84,7 @@ func decodeRecruitPayload(raw []byte, catalog *RecruitCatalog) (recruitPayload, 
 	d.UseNumber()
 	err := recruitManifestObject(d, map[string]func() error{
 		"v":           func() error { n, e := recruitManifestInteger(d, 1, 1); out.Version = int(n); return e },
-		"unit_cfg_id": func() error { n, e := recruitManifestInteger(d, 1, 4); out.Unit = int32(n); return e },
+		"unit_cfg_id": func() error { n, e := recruitManifestInteger(d, 1, 12); out.Unit = int32(n); return e },
 		"count":       func() error { n, e := recruitManifestInteger(d, 1, math.MaxInt32); out.Count = int32(n); return e },
 		"duration_sec": func() error {
 			n, e := recruitManifestInteger(d, 1, math.MaxInt64/int64(time.Second))
