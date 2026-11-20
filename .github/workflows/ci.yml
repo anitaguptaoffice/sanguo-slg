@@ -151,7 +151,22 @@ jobs:
         with:
           go-version: "1.23.x"
           cache: true
-      - name: PostgreSQL domain integration tests
+      - name: PostgreSQL PR smoke (full suite runs on main)
+        if: github.event_name == 'pull_request'
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          # Pull requests use a fast PG smoke; the full suite below runs on main.
+          # Contributors must run the full suite locally before opening a PR.
+          go test -count=1 -p 1 -timeout=12m \
+            ./internal/domestic \
+            ./internal/world \
+            ./internal/military/... \
+            ./internal/platform/runtime \
+            ./internal/quest
+          go test -count=1 -p 1 -timeout=12m ./internal/api -run 'TestPGWorldViewportGateway|TestPGOwnedFieldsGateway|TestPGFieldGatherLifecycle|TestPGArrivalOccupiesFieldWithinLimit|TestDemolishBuildingGateway|TestPGMarchRecallAndSpeedupGateway|TestPGPreparedMarchRuntimeLifecycle'
+      - name: PostgreSQL full domain integration tests
+        if: github.event_name != 'pull_request'
         timeout-minutes: 40
         run: |
           set -euo pipefail

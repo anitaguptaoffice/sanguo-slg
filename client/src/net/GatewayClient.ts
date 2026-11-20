@@ -54,6 +54,8 @@ export type GatewayPort = {
   demolishBuilding(cityId: number, slotKey: string): Promise<unknown>;
   getCityCivic(cityId: number): Promise<unknown>;
   applyCityDecree(cityId: number, decree: number, value: number, name?: string): Promise<unknown>;
+  listTechnics(cityId: number): Promise<unknown>;
+  startTechnicResearch(cityId: number, tid: number): Promise<unknown>;
   recruitTroop(cityId: number, unitCfgId: number, count: number): Promise<unknown>;
   readonly preparedRecruit?: boolean;
   submitPreparedRecruit?(intent?: RecruitJournalIntent): Promise<PreparedRecruitResult>;
@@ -588,6 +590,22 @@ export class GatewayClient implements GatewayPort {
       "ApplyCityDecreeRequest",
       { city_id: cityId, decree, value, name },
       ApplyCityDecreeResponse,
+      true,
+    );
+  }
+
+  async listTechnics(cityId: number) {
+    const { ListTechnicsResponse } = getTypes();
+    return this.rpc(Routes.ListTechnics, "ListTechnicsRequest", { city_id: cityId }, ListTechnicsResponse, true);
+  }
+
+  async startTechnicResearch(cityId: number, tid: number) {
+    const { StartTechnicResearchResponse } = getTypes();
+    return this.rpc(
+      Routes.StartTechnicResearch,
+      "StartTechnicResearchRequest",
+      { city_id: cityId, tid },
+      StartTechnicResearchResponse,
       true,
     );
   }

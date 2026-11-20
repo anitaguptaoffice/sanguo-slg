@@ -19,9 +19,23 @@ import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 
 export type MainCityBuildingPanelReskin = (root: HTMLElement) => void;
 
+export type TechnicRow = {
+  tid?: number;
+  name?: string;
+  level?: number;
+  max_level?: number;
+  academy_level?: number;
+  can_research?: boolean;
+  reason?: string;
+  next_cost?: { food?: number; wood?: number; stone?: number; iron?: number };
+  next_time_sec?: number;
+};
+
 export class MainCityBuildingPanel {
   private panel!: HTMLElement;
   private selectedSlotKey: string | null = null;
+  private technics: TechnicRow[] = [];
+  private researchJob: { tid?: number; target?: number; finish_at_ms?: number } | null = null;
   private focusTrap: CenterPanelFocusTrap | null = null;
 
   constructor(
@@ -33,6 +47,7 @@ export class MainCityBuildingPanel {
     private readonly reskin?: MainCityBuildingPanelReskin,
     private readonly defaultDismissTrigger?: () => HTMLElement | null,
     private readonly onDemolish?: (slotKey: string) => void,
+    private readonly onResearchTechnic?: (tid: number) => void,
   ) {}
 
   attach(): void {
@@ -52,6 +67,13 @@ export class MainCityBuildingPanel {
         <button type="button" class="build-demolish hidden" data-action="demolish-building">
           降级/拆除（返还 25%）
         </button>
+        <div class="academy-technic-section hidden" data-role="academy-technics">
+          <h4>书院科技</h4>
+          <p data-role="technic-status"></p>
+          <label>科技 <select data-role="technic-select"></select></label>
+          <p data-role="technic-detail"></p>
+          <button type="button" data-action="research-technic">开始研究</button>
+        </div>
       </div>
     `;
     this.mount.appendChild(this.panel);
@@ -89,6 +111,12 @@ export class MainCityBuildingPanel {
     const trigger =
       opts?.dismissTrigger ?? this.defaultDismissTrigger?.() ?? null;
     this.focusTrap?.setOpen(true, trigger);
+  }
+
+  setTechnics(techs: TechnicRow[], job: { tid?: number; target?: number; finish_at_ms?: number } | null): void {
+    this.technics = techs;
+    this.researchJob = job;
+    this.renderTechnics();
   }
 
   sync(): void {
@@ -137,6 +165,9 @@ export class MainCityBuildingPanel {
     const upgrading = (building?.upgrade_finish_at_ms ?? 0) > now;
 
     levelEl.textContent = level > 0 ? `当前 Lv${level}` : "未建造";
+    const academy = this.panel.querySelector<HTMLElement>('[data-role="academy-technics"]');
+    academy?.classList.toggle("hidden", slotKey !== "academy");
+    if (slotKey === "academy") this.renderTechnics();
     if (demolishBtn) {
       demolishBtn.classList.toggle("hidden", level <= 0);
       demolishBtn.disabled = upgrading || (building?.building_cfg_id === 1 && level <= 1);
@@ -194,8 +225,49 @@ export class MainCityBuildingPanel {
     }
   }
 
+  private renderTechnics(): void {
+    const section = this.panel?.querySelector<HTMLElement>('[data-role="academy-technics"]');
+    if (!section || section.classList.contains("hidden")) return;
+    const select = section.querySelector<HTMLSelectElement>('[data-role="technic-select"]');
+    const detail = section.querySelector<HTMLElement>('[data-role="technic-detail"]');
+    const status = section.querySelector<HTMLElement>('[data-role="technic-status"]');
+    const button = section.querySelector<HTMLButtonElement>('[data-action="research-technic"]');
+    if (!select || !detail || !status || !button) return;
+    if (this.researchJob?.finish_at_ms) {
+      status.textContent = `研究中：科技 #${this.researchJob.tid} → Lv${this.researchJob.target}，${new Date(this.researchJob.finish_at_ms).toLocaleTimeString()} 完成`;
+      button.disabled = true;
+    } else {
+      status.textContent = "书院空闲";
+      button.disabled = false;
+    }
+    const prev = Number(select.value);
+    select.innerHTML = "";
+    for (const t of this.technics) {
+      const option = document.createElement("option");
+      option.value = String(t.tid ?? 0);
+      option.textContent = `${t.name ?? "科技"} Lv${t.level ?? 0}/${t.max_level ?? 0}`;
+      option.disabled = !t.can_research;
+      select.appendChild(option);
+    }
+    if (prev && this.technics.some((t) => t.tid === prev)) select.value = String(prev);
+    const sel = this.technics.find((t) => t.tid === Number(select.value)) ?? this.technics[0];
+    if (sel) {
+      const c = sel.next_cost ?? {};
+      detail.textContent = sel.can_research
+        ? `下一级：粮${c.food ?? 0} 木${c.wood ?? 0} 石${c.stone ?? 0} 铁${c.iron ?? 0} · ${sel.next_time_sec ?? 0}s · 需书院 Lv${sel.academy_level ?? 0}`
+        : sel.reason ?? "不可研究";
+      button.disabled = button.disabled || !sel.can_research;
+    }
+  }
+
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    if (btn?.getAttribute("data-action") === "research-technic") {
+      const select = this.panel.querySelector<HTMLSelectElement>('[data-role="technic-select"]');
+      const tid = Number(select?.value ?? 0);
+      if (tid > 0 && !btn.disabled) this.onResearchTechnic?.(tid);
+      return;
+    }
     if (btn?.getAttribute("data-action") === "demolish-building") {
       const slotKey = this.selectedSlotKey;
       if (!slotKey || btn.disabled || !this.buildingForSlot(slotKey)) return;

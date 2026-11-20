@@ -6,6 +6,7 @@ import (
 
 	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
@@ -159,7 +160,9 @@ func (s *Server) marchLimitViolation(ctx context.Context, pc PlayerContext, city
 		return "hero unavailable for march"
 	}
 	hall := int32(1)
-	if city, snapErr := s.domestic.SnapshotCity(cityID); snapErr == nil && city != nil {
+	var city *domestic.CityState
+	if snapshot, snapErr := s.domestic.SnapshotCity(cityID); snapErr == nil && snapshot != nil {
+		city = snapshot
 		if building := city.Buildings["hall"]; building != nil && building.Level > 0 {
 			hall = building.Level
 		}
@@ -176,6 +179,9 @@ func (s *Server) marchLimitViolation(ctx context.Context, pc PlayerContext, city
 		if template, ok := s.heroSvc.Catalog[detail.Hero.TemplateCfgID]; ok {
 			command = template.Base.Command
 		}
+	}
+	if city != nil {
+		command += int32(domestic.TechnicBonus(city, "command_add"))
 	}
 	if cap := march.CommandCap(hall, command); total > cap {
 		return "troop count exceeds the hero command cap"

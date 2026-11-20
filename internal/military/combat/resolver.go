@@ -18,7 +18,9 @@ type Resolver struct {
 	Garrisons   GarrisonSource
 	UnitCatalog map[int32]march.UnitSpec
 	// HeroStats loads the attacker hero's level/force/intel; nil keeps level 0.
-	HeroStats     func(ctx context.Context, serverID, playerID, heroID int64) (HeroCombatStats, error)
+	HeroStats func(ctx context.Context, serverID, playerID, heroID int64) (HeroCombatStats, error)
+	// TechBonus returns attacker attack/defense percentages from academy research.
+	TechBonus     func(order march.MarchOrder) (attackPct, defensePct int32)
 	nextReport    int64
 	beginArrival  func(context.Context, pgx.TxOptions) (pgx.Tx, error)
 	commitArrival func(context.Context, pgx.Tx, march.ArrivalCommit) (march.ArrivalCommitted, error)
@@ -109,11 +111,15 @@ func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArri
 			hero = stats
 		}
 	}
+	attacker := ArmyFromStacksWithHero(r.UnitCatalog, ev.Troops, int(hero.Level), hero.Force, hero.Intel, 1)
+	if r.TechBonus != nil {
+		attacker.TechAttackPct, attacker.TechDefensePct = r.TechBonus(ev.Order)
+	}
 	bin := battle.BattleInput{
 		BattleID:   battleID,
 		AttackerID: attackerID,
 		DefenderID: defenderID,
-		Attacker:   ArmyFromStacksWithHero(r.UnitCatalog, ev.Troops, int(hero.Level), hero.Force, hero.Intel, 1),
+		Attacker:   attacker,
 		Defender:   ArmyFromStacksWithHero(r.UnitCatalog, g.Troops, g.HeroLevel, g.HeroForce, g.HeroIntel, g.Morale),
 	}
 	rep := battle.Simulate(bin)

@@ -274,7 +274,7 @@ import {
 } from "@/net/hudFormat";
 import { MainCityDomesticSlotStrip } from "@/ui/MainCityDomesticSlotStrip";
 import { MainCitySlotUpgradeOverlay } from "@/ui/MainCitySlotUpgradeOverlay";
-import { MainCityBuildingPanel } from "@/ui/MainCityBuildingPanel";
+import { MainCityBuildingPanel, type TechnicRow } from "@/ui/MainCityBuildingPanel";
 import { MainCityCityOfficePanel, type CityCivicView } from "@/ui/MainCityCityOfficePanel";
 import {
   CITY_CHIEF_HALL_SLOT_KEY,
@@ -1037,6 +1037,7 @@ export class MainCityScene implements Scene {
       (root) => skinDefaultPanel(root, this.assets, 380, 300),
       () => this.buildingDismissTrigger(),
       (slotKey) => void this.demolishBuilding(slotKey),
+      (tid) => void this.startTechnicResearch(tid),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -2165,6 +2166,7 @@ export class MainCityScene implements Scene {
       void this.refreshCityOfficePanel();
       void this.refreshCityCivic();
     }
+    if (slotKey === "academy") void this.refreshTechnics();
   }
 
   private getCityOfficeContext() {
@@ -2217,6 +2219,41 @@ export class MainCityScene implements Scene {
     } catch (error) {
       if (this.session !== session) return;
       this.cityOfficePanel.setFormError(formatPanelGatewayErrorFromUnknown("build", error));
+    }
+  }
+
+  private async refreshTechnics(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const res = (await this.gateway.listTechnics(session.cityId)) as {
+        technics?: TechnicRow[];
+        job?: { tid?: number; target?: number; finish_at_ms?: number } | null;
+      };
+      if (this.session !== session) return;
+      this.buildingPanel.setTechnics(res.technics ?? [], res.job ?? null);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async startTechnicResearch(tid: number): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const res = (await this.gateway.startTechnicResearch(session.cityId, tid)) as {
+        wallet?: ResourceWallet;
+        finish_at_ms?: number;
+      };
+      if (this.session !== session) return;
+      if (res.wallet) this.session.wallet = mergeCityResourceWallet(this.session.wallet, res.wallet);
+      this.status = `书院开始研究科技 #${tid}`;
+      this.renderHud();
+      await this.refreshTechnics();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
     }
   }
 

@@ -81,6 +81,12 @@ func heroStatsMults(a Army) (atk, def float64) {
 	if a.HeroIntel > 0 {
 		def *= 1 + float64(a.HeroIntel)/200
 	}
+	if a.TechAttackPct > 0 {
+		atk *= 1 + float64(a.TechAttackPct)/100
+	}
+	if a.TechDefensePct > 0 {
+		def *= 1 + float64(a.TechDefensePct)/100
+	}
 	return atk, def
 }
 

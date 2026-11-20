@@ -22,7 +22,10 @@ type Army struct {
 	// HeroForce and HeroIntel feed the R1-S4 attack/defense multipliers.
 	HeroForce int32
 	HeroIntel int32
-	Morale    float64
+	// R2-S3 academy bonuses in percent.
+	TechAttackPct  int32
+	TechDefensePct int32
+	Morale         float64
 }
 
 // BattleInput is the pure-function input; IDs break speed ties (§6).

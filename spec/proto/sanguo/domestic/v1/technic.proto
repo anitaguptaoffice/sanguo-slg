@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package sanguo.domestic.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/domestic/v1;domesticv1";
+
+message TechnicView {
+  int32 tid = 1;
+  string code = 2;
+  string name = 3;
+  string category = 4;
+  int32 level = 5;
+  int32 max_level = 6;
+  int32 academy_level = 7;
+  sanguo.common.v1.ResourceWallet next_cost = 8;
+  int64 next_time_sec = 9;
+  bool can_research = 10;
+  string reason = 11;
+}
+
+message ResearchJobView {
+  int32 tid = 1;
+  int32 target = 2;
+  int64 finish_at_ms = 3;
+}
+
+// route: domestic.v1.ListTechnics
+message ListTechnicsRequest {
+  int64 city_id = 1;
+}
+
+message ListTechnicsResponse {
+  repeated TechnicView technics = 1;
+  ResearchJobView job = 2;
+}
+
+// route: domestic.v1.StartTechnicResearch
+message StartTechnicResearchRequest {
+  int64 city_id = 1;
+  int32 tid = 2;
+}
+
+message StartTechnicResearchResponse {
+  TechnicView technic = 1;
+  sanguo.common.v1.ResourceWallet wallet = 2;
+  int64 finish_at_ms = 3;
+}

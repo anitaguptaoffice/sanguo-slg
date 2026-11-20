@@ -8,6 +8,7 @@ import (
 	"time"
 
 	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
@@ -227,8 +228,13 @@ func (c durableMarchCreator) transaction(ctx context.Context, pc PlayerContext, 
 		return out, err
 	}
 	in.DepartAt = in.DepartAt.UTC()
+	speedPct := int32(0)
+	if city, cityErr := c.server.domestic.SnapshotCity(in.OriginCityID); cityErr == nil && city != nil {
+		speedPct = int32(domestic.TechnicBonus(city, "march_speed_pct"))
+	}
 	planned, err := march.BeginMarch(march.DefaultUnitCatalog(), in.DepartAt, march.StartMarchRequest{
 		FromX: int(in.FromX), FromY: int(in.FromY), ToX: int(in.ToX), ToY: int(in.ToY), Troops: in.Troops,
+		SpeedPct: speedPct,
 	})
 	if err != nil {
 		return out, err
