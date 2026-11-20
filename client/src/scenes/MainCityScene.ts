@@ -1052,6 +1052,8 @@ export class MainCityScene implements Scene {
       (tid) => void this.startTechnicResearch(tid),
       (action, office, heroId) => void this.cityOfficeAction(action, office, heroId),
       (action, defenseType, unitId) => void this.wallAction(action, defenseType, unitId),
+      (action, resourceType, amount, priceMilli, hours, offerId) =>
+        void this.marketAction(action, resourceType, amount, priceMilli, hours, offerId),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -2183,6 +2185,8 @@ export class MainCityScene implements Scene {
     if (slotKey === "academy") void this.refreshTechnics();
     if (slotKey === "recruit_hall") void this.refreshCityOffices();
     if (slotKey === "wall") void this.refreshWallDefenses();
+    if (slotKey === "market") void this.refreshMarket();
+    if (slotKey === "warehouse") void this.refreshStorehouse();
   }
 
   private getCityOfficeContext() {
@@ -2269,6 +2273,75 @@ export class MainCityScene implements Scene {
         await this.refreshState();
         this.status = `伤兵已治疗 ${res.healed ?? 0} 人`;
       }
+      this.renderHud();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async refreshMarket(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const res = (await this.gateway.getMarket(session.cityId)) as Record<string, unknown>;
+      if (this.session !== session) return;
+      this.buildingPanel.setMarket(res);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async refreshStorehouse(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const res = (await this.gateway.getStorehouse(session.cityId)) as { storehouse?: Record<string, unknown> };
+      if (this.session !== session) return;
+      this.buildingPanel.setStorehouse(res.storehouse ?? null);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async marketAction(action: string, resourceType: number, amount: number, priceMilli: number, hours: number, offerId: number): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      if (action === "buy-merchant") {
+        const res = (await this.gateway.buyFromMerchant(session.cityId, resourceType, amount)) as {
+          gold?: number; gold_paid?: number; wallet?: ResourceWallet;
+        };
+        if (res.wallet) session.wallet = mergeCityResourceWallet(session.wallet, res.wallet);
+        this.status = `买入 ${amount} 资源，支付 ${res.gold_paid ?? 0} 金`;
+      } else if (action === "sell-merchant") {
+        const res = (await this.gateway.sellToMerchant(session.cityId, resourceType, amount)) as {
+          gold?: number; gold_gained?: number; wallet?: ResourceWallet;
+        };
+        if (res.wallet) session.wallet = mergeCityResourceWallet(session.wallet, res.wallet);
+        this.status = `卖出 ${amount} 资源，获得 ${res.gold_gained ?? 0} 金`;
+      } else if (action === "create-offer") {
+        const res = (await this.gateway.createMarketOffer(session.cityId, resourceType, amount, priceMilli, hours)) as {
+          wallet?: ResourceWallet;
+        };
+        if (res.wallet) session.wallet = mergeCityResourceWallet(session.wallet, res.wallet);
+        this.status = `已发布 ${amount} 资源挂单`;
+      } else if (action === "cancel-offer") {
+        const res = (await this.gateway.cancelMarketOffer(session.cityId, offerId)) as { wallet?: ResourceWallet };
+        if (res.wallet) session.wallet = mergeCityResourceWallet(session.wallet, res.wallet);
+        this.status = "挂单已取消，资源已返还";
+      } else if (action === "buy-offer") {
+        const res = (await this.gateway.buyMarketOffer(session.cityId, offerId)) as {
+          wallet?: ResourceWallet; deliver_at_ms?: number;
+        };
+        if (res.wallet) session.wallet = mergeCityResourceWallet(session.wallet, res.wallet);
+        const eta = res.deliver_at_ms ? new Date(res.deliver_at_ms).toLocaleTimeString() : "稍后";
+        this.status = `商队已出发，预计 ${eta} 到达`;
+      }
+      await this.refreshState();
+      await this.refreshMarket();
       this.renderHud();
     } catch (error) {
       this.status = formatPanelGatewayErrorFromUnknown("build", error);

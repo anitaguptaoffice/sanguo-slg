@@ -47,6 +47,24 @@ export type CityOfficeRow = {
 
 export type OfficeHeroOption = { hero_id?: number; name?: string; level?: number; status?: number };
 export type WallDefenseRow = { defense_type?: number; name?: string; count?: number; space?: number };
+export type MarketOfferRow = {
+  offer_id?: number; seller_city_id?: number; seller_name?: string; resource_type?: number;
+  amount?: number; price_milli?: number; gold_total?: number; distance?: number;
+  deliver_seconds?: number; own?: boolean;
+};
+export type MarketDeliveryRow = {
+  offer_id?: number; seller_city_id?: number; resource_type?: number;
+  amount?: number; gold_total?: number; deliver_at_ms?: number;
+};
+export type MarketView = {
+  market_level?: number; listing_capacity?: number; caravan_capacity?: number;
+  max_listing_amount?: number; gold?: number; offers?: MarketOfferRow[];
+  own_offers?: MarketOfferRow[]; deliveries?: MarketDeliveryRow[];
+};
+export type StorehouseView = {
+  level?: number; capacity_bonus?: number; protection_percent?: number;
+  protected_amount?: { food?: number; wood?: number; stone?: number; iron?: number };
+};
 
 export class MainCityBuildingPanel {
   private panel!: HTMLElement;
@@ -58,6 +76,8 @@ export class MainCityBuildingPanel {
   private wallDefenses: WallDefenseRow[] = [];
   private wallArea = 0;
   private wallUsed = 0;
+  private market: MarketView | null = null;
+  private storehouse: StorehouseView | null = null;
   private focusTrap: CenterPanelFocusTrap | null = null;
 
   constructor(
@@ -72,6 +92,7 @@ export class MainCityBuildingPanel {
     private readonly onResearchTechnic?: (tid: number) => void,
     private readonly onOfficeAction?: (action: string, office: number, heroId: number) => void,
     private readonly onWallAction?: (action: string, defenseType: number, unitId: number) => void,
+    private readonly onMarketAction?: (action: string, resourceType: number, amount: number, priceMilli: number, hours: number, offerId: number) => void,
   ) {}
 
   attach(): void {
@@ -98,6 +119,38 @@ export class MainCityBuildingPanel {
           <h4>伤兵治疗</h4>
           <p data-role="wounded-status"></p>
           <div class="city-civic-actions" data-role="wounded-buttons"></div>
+        </div>
+        <div class="market-section hidden" data-role="market">
+          <h4>NPC 商人</h4>
+          <p data-role="market-status"></p>
+          <label>资源 <select data-field="market-resource">
+            <option value="0">粮食</option><option value="1">木材</option>
+            <option value="2">石料</option><option value="3">铁锭</option>
+          </select></label>
+          <label>数量 <input type="number" min="1" step="1" value="100" data-field="market-amount"></label>
+          <div class="city-civic-actions">
+            <button type="button" data-action="buy-merchant">向商人买入</button>
+            <button type="button" data-action="sell-merchant">向商人卖出</button>
+          </div>
+          <h4>同服挂单</h4>
+          <p data-role="market-offers-status"></p>
+          <div data-role="market-offers"></div>
+          <h4>我的挂单</h4>
+          <div data-role="market-own"></div>
+          <h4>商队运输</h4>
+          <div data-role="market-deliveries"></div>
+          <h4>发布挂单</h4>
+          <label>数量 <input type="number" min="1" step="1" value="100" data-field="offer-amount"></label>
+          <label>单价（千金币/单位） <input type="number" min="1" step="1" value="100" data-field="offer-price"></label>
+          <label>可见范围 <select data-field="offer-hours">
+            <option value="1">1 小时</option><option value="4">4 小时</option>
+            <option value="12">12 小时</option><option value="24">24 小时</option>
+          </select></label>
+          <button type="button" data-action="create-offer">发布挂单</button>
+        </div>
+        <div class="storehouse-section hidden" data-role="storehouse">
+          <h4>仓库</h4>
+          <p data-role="storehouse-status"></p>
         </div>
         <div class="city-offices hidden" data-role="city-offices">
           <h4>招贤馆三职</h4>
@@ -231,6 +284,12 @@ export class MainCityBuildingPanel {
     const wallEl = this.panel.querySelector<HTMLElement>('[data-role="wall-defenses"]');
     wallEl?.classList.toggle("hidden", slotKey !== "wall");
     if (slotKey === "wall") this.renderWall();
+    const marketEl = this.panel.querySelector<HTMLElement>('[data-role="market"]');
+    marketEl?.classList.toggle("hidden", slotKey !== "market");
+    if (slotKey === "market") this.renderMarket();
+    const storeEl = this.panel.querySelector<HTMLElement>('[data-role="storehouse"]');
+    storeEl?.classList.toggle("hidden", slotKey !== "warehouse");
+    if (slotKey === "warehouse") this.renderStorehouse();
     if (demolishBtn) {
       demolishBtn.classList.toggle("hidden", level <= 0);
       demolishBtn.disabled = upgrading || (building?.building_cfg_id === 1 && level <= 1);
@@ -330,6 +389,93 @@ export class MainCityBuildingPanel {
     }
   }
 
+  setMarket(view: MarketView | null): void {
+    this.market = view;
+    this.renderMarket();
+  }
+
+  setStorehouse(view: StorehouseView | null): void {
+    this.storehouse = view;
+    this.renderStorehouse();
+  }
+
+  private resourceName(resourceType: number | undefined): string {
+    return ["粮食", "木材", "石料", "铁锭"][resourceType ?? 0] ?? "资源";
+  }
+
+  private renderMarket(): void {
+    const section = this.panel?.querySelector<HTMLElement>('[data-role="market"]');
+    if (!section || section.classList.contains("hidden")) return;
+    const status = section.querySelector<HTMLElement>('[data-role="market-status"]');
+    const offersStatus = section.querySelector<HTMLElement>('[data-role="market-offers-status"]');
+    const offers = section.querySelector<HTMLElement>('[data-role="market-offers"]');
+    const own = section.querySelector<HTMLElement>('[data-role="market-own"]');
+    const deliveries = section.querySelector<HTMLElement>('[data-role="market-deliveries"]');
+    if (!status || !offersStatus || !offers || !own || !deliveries) return;
+    const m = this.market;
+    if (!m) {
+      status.textContent = "市场数据加载中";
+      offersStatus.textContent = "";
+      offers.innerHTML = "";
+      own.innerHTML = "";
+      deliveries.innerHTML = "";
+      return;
+    }
+    status.textContent = `市场 Lv${m.market_level ?? 0} · 挂单 ${m.own_offers?.length ?? 0}/${m.listing_capacity ?? 0}` +
+      ` · 商队 ${m.deliveries?.length ?? 0}/${m.caravan_capacity ?? 0} · 金币 ${m.gold ?? 0}`;
+    offersStatus.textContent = `可见挂单 ${m.offers?.length ?? 0} 条 · 单笔上限 ${m.max_listing_amount ?? 0}`;
+    offers.innerHTML = "";
+    for (const offer of m.offers ?? []) {
+      const row = document.createElement("div");
+      row.className = "market-offer-row";
+      row.textContent = `${offer.seller_name ?? "玩家"} · ${this.resourceName(offer.resource_type)}×${offer.amount ?? 0}` +
+        ` · ${((offer.price_milli ?? 0) / 1000).toFixed(2)} 金/单位 · 总价 ${offer.gold_total ?? 0}` +
+        ` · 距离 ${offer.distance ?? 0} · 运输 ${offer.deliver_seconds ?? 0}s `;
+      const buy = document.createElement("button");
+      buy.type = "button";
+      buy.dataset.action = "buy-offer";
+      buy.dataset.offerId = String(offer.offer_id ?? 0);
+      buy.textContent = "买入";
+      row.appendChild(buy);
+      offers.appendChild(row);
+    }
+    own.innerHTML = "";
+    for (const offer of m.own_offers ?? []) {
+      const row = document.createElement("div");
+      row.className = "market-offer-row";
+      row.textContent = `${this.resourceName(offer.resource_type)}×${offer.amount ?? 0} · 总价 ${offer.gold_total ?? 0} `;
+      const cancel = document.createElement("button");
+      cancel.type = "button";
+      cancel.dataset.action = "cancel-offer";
+      cancel.dataset.offerId = String(offer.offer_id ?? 0);
+      cancel.textContent = "取消";
+      row.appendChild(cancel);
+      own.appendChild(row);
+    }
+    deliveries.innerHTML = "";
+    for (const d of m.deliveries ?? []) {
+      const row = document.createElement("div");
+      row.className = "market-offer-row";
+      row.textContent = `${this.resourceName(d.resource_type)}×${d.amount ?? 0} · 预计 ${new Date(d.deliver_at_ms ?? 0).toLocaleTimeString()} 到达`;
+      deliveries.appendChild(row);
+    }
+  }
+
+  private renderStorehouse(): void {
+    const section = this.panel?.querySelector<HTMLElement>('[data-role="storehouse"]');
+    if (!section || section.classList.contains("hidden")) return;
+    const status = section.querySelector<HTMLElement>('[data-role="storehouse-status"]');
+    if (!status) return;
+    const s = this.storehouse;
+    if (!s) {
+      status.textContent = "仓库数据加载中";
+      return;
+    }
+    const p = s.protected_amount ?? {};
+    status.textContent = `仓库 Lv${s.level ?? 0} · 容量加成 ${s.capacity_bonus ?? 0} · 保护 ${s.protection_percent ?? 0}%` +
+      ` · 受保护 粮${p.food ?? 0} 木${p.wood ?? 0} 石${p.stone ?? 0} 铁${p.iron ?? 0}`;
+  }
+
   private renderOffices(): void {
     const section = this.panel?.querySelector<HTMLElement>('[data-role="city-offices"]');
     if (!section || section.classList.contains("hidden")) return;
@@ -395,6 +541,18 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    const marketAction = btn?.getAttribute("data-action");
+    if (marketAction && ["buy-merchant", "sell-merchant", "create-offer", "cancel-offer", "buy-offer"].includes(marketAction)) {
+      const section = this.panel.querySelector<HTMLElement>('[data-role="market"]');
+      const resourceType = Number(section?.querySelector<HTMLSelectElement>('[data-field="market-resource"]')?.value ?? 0);
+      const merchantAmount = Number(section?.querySelector<HTMLInputElement>('[data-field="market-amount"]')?.value ?? 0);
+      const offerAmount = Number(section?.querySelector<HTMLInputElement>('[data-field="offer-amount"]')?.value ?? 0);
+      const priceMilli = Number(section?.querySelector<HTMLInputElement>('[data-field="offer-price"]')?.value ?? 0);
+      const hours = Number(section?.querySelector<HTMLSelectElement>('[data-field="offer-hours"]')?.value ?? 1);
+      const offerId = Number(btn?.dataset.offerId ?? 0);
+      this.onMarketAction?.(marketAction, resourceType, marketAction === "create-offer" ? offerAmount : merchantAmount, priceMilli, hours, offerId);
+      return;
+    }
     const wallAction = btn?.getAttribute("data-action");
     if (wallAction === "build-defense" || wallAction === "heal-wounded") {
       const defenseType = Number(btn?.dataset.defenseType ?? 0);

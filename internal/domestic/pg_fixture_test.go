@@ -43,7 +43,7 @@ func applyDomesticSchema(t *testing.T, pool *pgxpool.Pool) {
 			return
 		}
 	}
-	for _, name := range []string{"001_account.sql", "002_world.sql", "003_domestic.sql", "007_domestic_production_checkpoint.sql", "m4_042_city_civic.sql", "m4_008_work_queue_id_sequence.sql"} {
+	for _, name := range []string{"001_account.sql", "002_world.sql", "003_domestic.sql", "007_domestic_production_checkpoint.sql", "m4_042_city_civic.sql", "m4_044_market.sql", "m4_008_work_queue_id_sequence.sql"} {
 		specDir, err := pgfixture.SpecDir()
 		if err != nil {
 			t.Fatal(err)

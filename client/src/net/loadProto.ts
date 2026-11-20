@@ -75,6 +75,13 @@ export const Routes = {
   ListWallDefenses: "domestic.v1.ListWallDefenses",
   BuildWallDefense: "domestic.v1.BuildWallDefense",
   HealWounded: "domestic.v1.HealWounded",
+  GetStorehouse: "domestic.v1.GetStorehouse",
+  GetMarket: "domestic.v1.GetMarket",
+  BuyFromMerchant: "domestic.v1.BuyFromMerchant",
+  SellToMerchant: "domestic.v1.SellToMerchant",
+  CreateMarketOffer: "domestic.v1.CreateMarketOffer",
+  CancelMarketOffer: "domestic.v1.CancelMarketOffer",
+  BuyMarketOffer: "domestic.v1.BuyMarketOffer",
   RecruitTroop: "military.v1.RecruitTroop",
   StartMarch: "military.v1.StartMarch",
   RecallMarch: "military.v1.RecallMarch",
@@ -200,6 +207,20 @@ export type ProtoTypes = {
   BuildWallDefenseResponse: protobuf.Type;
   HealWoundedRequest: protobuf.Type;
   HealWoundedResponse: protobuf.Type;
+  GetStorehouseRequest: protobuf.Type;
+  GetStorehouseResponse: protobuf.Type;
+  GetMarketRequest: protobuf.Type;
+  GetMarketResponse: protobuf.Type;
+  BuyFromMerchantRequest: protobuf.Type;
+  BuyFromMerchantResponse: protobuf.Type;
+  SellToMerchantRequest: protobuf.Type;
+  SellToMerchantResponse: protobuf.Type;
+  CreateMarketOfferRequest: protobuf.Type;
+  CreateMarketOfferResponse: protobuf.Type;
+  CancelMarketOfferRequest: protobuf.Type;
+  CancelMarketOfferResponse: protobuf.Type;
+  BuyMarketOfferRequest: protobuf.Type;
+  BuyMarketOfferResponse: protobuf.Type;
   StartBuildingUpgradeResponse: protobuf.Type;
   RecruitTroopRequest: protobuf.Type;
   RecruitTroopResponse: protobuf.Type;
@@ -371,6 +392,20 @@ export function getTypes(): ProtoTypes {
     BuildWallDefenseResponse: r.lookupType("sanguo.domestic.v1.BuildWallDefenseResponse"),
     HealWoundedRequest: r.lookupType("sanguo.domestic.v1.HealWoundedRequest"),
     HealWoundedResponse: r.lookupType("sanguo.domestic.v1.HealWoundedResponse"),
+    GetStorehouseRequest: r.lookupType("sanguo.domestic.v1.GetStorehouseRequest"),
+    GetStorehouseResponse: r.lookupType("sanguo.domestic.v1.GetStorehouseResponse"),
+    GetMarketRequest: r.lookupType("sanguo.domestic.v1.GetMarketRequest"),
+    GetMarketResponse: r.lookupType("sanguo.domestic.v1.GetMarketResponse"),
+    BuyFromMerchantRequest: r.lookupType("sanguo.domestic.v1.BuyFromMerchantRequest"),
+    BuyFromMerchantResponse: r.lookupType("sanguo.domestic.v1.BuyFromMerchantResponse"),
+    SellToMerchantRequest: r.lookupType("sanguo.domestic.v1.SellToMerchantRequest"),
+    SellToMerchantResponse: r.lookupType("sanguo.domestic.v1.SellToMerchantResponse"),
+    CreateMarketOfferRequest: r.lookupType("sanguo.domestic.v1.CreateMarketOfferRequest"),
+    CreateMarketOfferResponse: r.lookupType("sanguo.domestic.v1.CreateMarketOfferResponse"),
+    CancelMarketOfferRequest: r.lookupType("sanguo.domestic.v1.CancelMarketOfferRequest"),
+    CancelMarketOfferResponse: r.lookupType("sanguo.domestic.v1.CancelMarketOfferResponse"),
+    BuyMarketOfferRequest: r.lookupType("sanguo.domestic.v1.BuyMarketOfferRequest"),
+    BuyMarketOfferResponse: r.lookupType("sanguo.domestic.v1.BuyMarketOfferResponse"),
     StartBuildingUpgradeResponse: r.lookupType("sanguo.domestic.v1.StartBuildingUpgradeResponse"),
     RecruitTroopRequest: r.lookupType("sanguo.military.v1.RecruitTroopRequest"),
     RecruitTroopResponse: r.lookupType("sanguo.military.v1.RecruitTroopResponse"),
