@@ -28,6 +28,8 @@ type Army struct {
 	Morale         float64
 	// Tactics is the optional drill-ground preset per troop role.
 	Tactics map[TroopType]Tactic
+	// Defenses are city wall structures (R3-S1). They act last each round.
+	Defenses []WallGroup
 }
 
 // BattleInput is the pure-function input; IDs break speed ties (§6).
@@ -57,7 +59,8 @@ type RoundReport struct {
 	// Distance is the remaining one-dimensional gap after the round (R3-S1).
 	Distance int
 	// Actions records group moves and attacks in action order (R3-S1).
-	Actions []RoundAction
+	Actions  []RoundAction
+	Defenses map[string]int
 }
 
 // HeroSummary is the player-facing hero card stored in a battle report.
@@ -99,4 +102,6 @@ type BattleReport struct {
 	// OccupyResult is "occupied", "cap_reached" or empty when the march did
 	// not carry an occupation intent (R1-S5).
 	OccupyResult string
+	// FinalDefenses is the remaining wall structure count by code (R3-S1).
+	FinalDefenses map[string]int
 }

@@ -139,6 +139,7 @@ func battleReportDetailProto(rep battle.BattleReport) *militaryv1.BattleReportDe
 		Loot:               lootProto(rep.Loot),
 		OccupyResult:       rep.OccupyResult,
 		StartDistance:      int32(rep.StartDistance),
+		FinalDefenses:      wallMapToProto(rep.FinalDefenses),
 	}
 	for _, rr := range rep.Rounds {
 		round := &militaryv1.BattleRound{
@@ -148,16 +149,28 @@ func battleReportDetailProto(rep battle.BattleReport) *militaryv1.BattleReportDe
 			AttackerToDefHp: int32(rr.AttackerToDefHP),
 			DefenderToAttHp: int32(rr.DefenderToAttHP),
 			Distance:        int32(rr.Distance),
+			Defenses:        wallMapToProto(rr.Defenses),
 		}
 		for _, action := range rr.Actions {
 			round.Actions = append(round.Actions, &militaryv1.BattleRoundAction{
 				Side: action.Side, Troop: string(action.Troop), Kind: action.Kind,
-				Target: string(action.Target), DamageHp: int32(action.DamageHP),
+				Target: string(action.Target), DamageHp: int32(action.DamageHP), Defense: action.Defense,
 			})
 		}
 		d.Rounds = append(d.Rounds, round)
 	}
 	return d
+}
+
+func wallMapToProto(m map[string]int) map[string]int32 {
+	if len(m) == 0 {
+		return nil
+	}
+	out := make(map[string]int32, len(m))
+	for k, v := range m {
+		out[k] = int32(v)
+	}
+	return out
 }
 
 func heroSummaryProto(h battle.HeroSummary) *militaryv1.BattleHeroSummary {

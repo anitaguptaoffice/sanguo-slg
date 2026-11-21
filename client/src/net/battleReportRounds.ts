@@ -15,6 +15,7 @@ export type BattleRoundTableRow = {
   defenderAction: string;
   attackerRemaining: string;
   defenderRemaining: string;
+  defenses: string;
 };
 
 export function formatBattleRoundActionSummary(
@@ -31,10 +32,12 @@ export function formatBattleRoundActionSummary(
   if (side === "attacker") {
     if (toDef > 0) return `${motion}造成伤害 ${toDef}`;
     if (toAtt > 0) return `${motion}未造成伤害`;
+    if (fires) return `${motion}攻击未造成伤害`;
     return moves ? `${motion}推进` : "对峙";
   }
   if (toAtt > 0) return `${motion}造成伤害 ${toAtt}`;
   if (toDef > 0) return `${motion}未造成伤害`;
+  if (fires) return `${motion}攻击未造成伤害`;
   return moves ? `${motion}推进` : "对峙";
 }
 
@@ -47,6 +50,9 @@ export function buildBattleRoundTableRow(round: BattleRoundView | undefined): Ba
     defenderAction: formatBattleRoundActionSummary("defender", round),
     attackerRemaining: formatCasualtyMap(round?.attacker_troops),
     defenderRemaining: formatCasualtyMap(round?.defender_troops),
+    defenses: round?.defenses && Object.keys(round.defenses).length
+      ? Object.entries(round.defenses).map(([code, count]) => `${code} ${count}`).join("、")
+      : "无",
   };
 }
 

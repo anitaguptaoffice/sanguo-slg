@@ -223,6 +223,8 @@ message BattleReportDetail {
   string occupy_result = 12;
   // R3-S1: 开场一维战场距离。
   int32 start_distance = 13;
+  // R3-S1: 城防工事剩余数量。
+  map<string, int32> final_defenses = 14;
 }
 
 message BattleRoundAction {
@@ -234,6 +236,8 @@ message BattleRoundAction {
   string kind = 3;
   string target = 4;
   int32 damage_hp = 5;
+  // R3-S1: 城防工事代码；普通兵种行动时为空。
+  string defense = 6;
 }
 
 message BattleRound {
@@ -246,6 +250,8 @@ message BattleRound {
   int32 distance = 6;
   // R3-S1: 本回合按速度排列的移动/攻击动作。
   repeated BattleRoundAction actions = 7;
+  // R3-S1: 回合结束时城防工事剩余数量。
+  map<string, int32> defenses = 8;
 }
 
 message BattleReportView {

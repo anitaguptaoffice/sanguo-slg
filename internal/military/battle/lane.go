@@ -34,6 +34,7 @@ type Tactic struct {
 type RoundAction struct {
 	Side     string
 	Troop    TroopType
+	Defense  string
 	Kind     string // "move" or "attack"
 	Target   TroopType
 	DamageHP int
@@ -145,9 +146,14 @@ func simulateLane(in BattleInput) BattleReport {
 
 	distance := laneInitial(att, def)
 	report.StartDistance = distance
+	walls := wallCopies(in.Defender.Defenses)
+	report.FinalDefenses = wallCounts(walls)
 	order := laneTurnOrder()
 	for round := 1; round <= laneMaxRounds; round++ {
-		if troopTotal(att) == 0 || troopTotal(def) == 0 {
+		if troopTotal(att) == 0 {
+			break
+		}
+		if troopTotal(def) == 0 && len(wallCounts(walls)) == 0 {
 			break
 		}
 		rr := RoundReport{Round: round, Actions: nil}
@@ -185,6 +191,23 @@ func simulateLane(in BattleInput) BattleReport {
 			}
 			target, ok := laneTarget(role.troop, enemy, tactic)
 			if !ok {
+				if role.side != 0 {
+					continue
+				}
+				code, wall, found := laneFirstWall(walls)
+				if !found {
+					continue
+				}
+				damage := laneWallDamage(role.troop, actor[role.troop], actorArmy, wall, in.BattleID, round, phase)
+				loss := laneWallLoss(wall, damage)
+				wall.Count -= loss
+				walls[code] = wall
+				rr.Actions = append(rr.Actions, RoundAction{
+					Side: "attacker", Troop: role.troop, Defense: code, Kind: "attack", DamageHP: int(damage),
+				})
+				if loss > 0 {
+					rr.AttackerToDefHP += int(damage)
+				}
 				continue
 			}
 			damage := laneDamage(role.troop, actor[role.troop], actorArmy, target, enemy[target], enemyArmy,
@@ -198,25 +221,85 @@ func simulateLane(in BattleInput) BattleReport {
 			} else {
 				rr.DefenderToAttHP += applied
 			}
-			if troopTotal(att) == 0 || troopTotal(def) == 0 {
+			if troopTotal(att) == 0 || (troopTotal(def) == 0 && len(wallCounts(walls)) == 0) {
 				break
 			}
 		}
+		if troopTotal(att) > 0 && len(wallCounts(walls)) > 0 {
+			rr.Actions = append(rr.Actions, laneWallActions(walls, att, in.Attacker, distance, in.BattleID, round)...)
+		}
 		rr.Distance = distance
+		rr.Defenses = wallCounts(walls)
 		rr.AttackerTroops = cloneTroops(att)
 		rr.DefenderTroops = cloneTroops(def)
 		report.Rounds = append(report.Rounds, rr)
-		if troopTotal(att) == 0 || troopTotal(def) == 0 {
+		if troopTotal(att) == 0 || (troopTotal(def) == 0 && len(wallCounts(walls)) == 0) {
 			break
 		}
 	}
 
 	report.FinalAttacker = cloneTroops(att)
 	report.FinalDefender = cloneTroops(def)
+	report.FinalDefenses = wallCounts(walls)
 	report.Result = decideResult(att, def, in)
+	if troopTotal(def) == 0 && troopTotal(att) > 0 && len(wallCounts(walls)) > 0 {
+		report.Result = ResultDefenderWin
+	}
 	report.AttackerCasualties = casualties(startAtt, att)
 	report.DefenderCasualties = casualties(startDef, def)
 	return report
+}
+
+func laneFirstWall(walls map[string]WallGroup) (string, WallGroup, bool) {
+	for _, code := range []string{"trap", "stakes", "tower", "log", "rock"} {
+		if g, ok := walls[code]; ok && g.Count > 0 {
+			return code, g, true
+		}
+	}
+	return "", WallGroup{}, false
+}
+
+func laneWallDamage(actor TroopType, count int, army Army, wall WallGroup, battleID string, round, phase int) float64 {
+	atk := troopStats[actor]
+	atkHero, _ := heroStatsMults(army)
+	atkPool := float64(count) * atk.atk * atkHero * clampMorale(army.Morale)
+	defPool := float64(wall.Count) * wall.Def
+	return atkPool * atkPool / (atkPool + defPool + damageEpsilon) * laneDamageScale * damageUniform(battleID, round, phase, string(actor)+"-wall")
+}
+
+func laneWallLoss(wall WallGroup, damage float64) int {
+	if damage <= 0 || wall.HP <= 0 {
+		return 0
+	}
+	loss := int(math.Ceil(damage / wall.HP))
+	if loss > wall.Count {
+		loss = wall.Count
+	}
+	return loss
+}
+
+func laneWallActions(walls map[string]WallGroup, att map[TroopType]int, army Army, distance int, battleID string, round int) []RoundAction {
+	var out []RoundAction
+	for _, code := range []string{"trap", "stakes", "tower", "log", "rock"} {
+		wall, ok := walls[code]
+		if !ok || wall.Count <= 0 || float64(distance) > wall.Range {
+			continue
+		}
+		target, ok := laneTarget(TroopInfantry, att, Tactic{})
+		if !ok {
+			continue
+		}
+		atkHero, _ := heroStatsMults(army)
+		atk := float64(wall.Count) * wall.Atk
+		def := float64(att[target]) * troopStats[target].def * atkHero
+		damage := int(atk * atk / (atk + def + damageEpsilon) * laneDamageScale * damageUniform(battleID, round, 50+len(out), code))
+		applied := laneApplyDamage(att, target, damage)
+		out = append(out, RoundAction{Side: "defender", Defense: code, Kind: "attack", Target: target, DamageHP: applied})
+		if troopTotal(att) == 0 {
+			break
+		}
+	}
+	return out
 }
 
 func laneSide(side int) string {

@@ -2323,11 +2323,14 @@ export class MainCityScene implements Scene {
         session.cityId,
         [{ unit_cfg_id: 1, count: 100 }],
         [{ unit_cfg_id: 3, count: 100 }],
-      )) as { detail?: { result?: string; start_distance?: number; rounds?: unknown[] } };
+      )) as { detail?: { result?: string; start_distance?: number; rounds?: unknown[]; final_defenses?: Record<string, number> } };
       const detail = res.detail;
       const rounds = detail?.rounds?.length ?? 0;
+      const walls = detail?.final_defenses && Object.keys(detail.final_defenses).length
+        ? Object.entries(detail.final_defenses).map(([code, n]) => `${code} ${n}`).join("、")
+        : "无";
       this.buildingPanel.setDrillResult(
-        `沙盘结果：${detail?.result ?? "—"} · 开场距离 ${detail?.start_distance ?? 0} · ${rounds} 回合`,
+        `沙盘结果：${detail?.result ?? "—"} · 开场距离 ${detail?.start_distance ?? 0} · ${rounds} 回合 · 城防 ${walls}`,
       );
       this.renderHud();
     } catch (error) {

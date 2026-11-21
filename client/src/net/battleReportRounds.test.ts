@@ -43,6 +43,17 @@ describe("battleReportRounds", () => {
     expect(row.attackerAction).toContain("攻击 1");
   });
 
+  it("reports wall defenses and wall attacks", () => {
+    const row = buildBattleRoundTableRow({
+      round: 2,
+      distance: 0,
+      defenses: { tower: 2 },
+      actions: [{ side: "defender", defense: "tower", kind: "attack", damage_hp: 40 }],
+    });
+    expect(row.defenses).toBe("tower 2");
+    expect(row.defenderAction).toContain("攻击 1");
+  });
+
   it("summarizes defender damage", () => {
     expect(
       formatBattleRoundActionSummary("defender", {

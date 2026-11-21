@@ -909,6 +909,7 @@ export class BattleReportPanel {
           <th scope="col">守方行动</th>
           <th scope="col">攻方剩余</th>
           <th scope="col">守方剩余</th>
+          <th scope="col">城防</th>
         </tr>
       `;
       table.appendChild(thead);
@@ -929,6 +930,7 @@ export class BattleReportPanel {
           <td>${row.defenderAction}</td>
           <td>${row.attackerRemaining}</td>
           <td>${row.defenderRemaining}</td>
+          <td>${row.defenses}</td>
         `;
         tbody.appendChild(tr);
       }

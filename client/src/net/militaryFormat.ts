@@ -639,6 +639,7 @@ export type BattleReportDetailView = {
   hero_exp_gained?: number;
   occupy_result?: string;
   start_distance?: number;
+  final_defenses?: Record<string, number>;
   attacker_hero_level?: number;
   defender_hero_level?: number;
   rounds?: {
@@ -648,9 +649,11 @@ export type BattleReportDetailView = {
     attacker_to_def_hp?: number;
     defender_to_att_hp?: number;
     distance?: number;
+    defenses?: Record<string, number>;
     actions?: {
       side?: string;
       troop?: string;
+      defense?: string;
       kind?: string;
       target?: string;
       damage_hp?: number;
@@ -671,7 +674,10 @@ export function formatBattleRoundLine(round: BattleRoundView | undefined): strin
   const def = formatCasualtyMap(round.defender_troops);
   const dmg = `伤害 攻→守 ${round.attacker_to_def_hp ?? 0} / 守→攻 ${round.defender_to_att_hp ?? 0}`;
   const distance = round.distance === undefined ? "" : ` · 距离 ${round.distance}`;
-  return `第 ${n} 回合 · 攻 ${att} · 守 ${def} · ${dmg}${distance}`;
+  const walls = round.defenses && Object.keys(round.defenses).length
+    ? ` · 城防 ${Object.entries(round.defenses).map(([k, v]) => `${k} ${v}`).join("、")}`
+    : "";
+  return `第 ${n} 回合 · 攻 ${att} · 守 ${def} · ${dmg}${distance}${walls}`;
 }
 
 /** R1-S4 战报上下文：目标、攻守主将与战利品。 */
