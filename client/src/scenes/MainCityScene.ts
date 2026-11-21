@@ -1058,6 +1058,7 @@ export class MainCityScene implements Scene {
       () => void this.runDrill(),
       (action, slotType, tier, equipmentId, gemCfgId) =>
         void this.equipmentAction(action, slotType, tier, equipmentId, gemCfgId),
+      (action, npcCfgId) => void this.historicalAction(action, npcCfgId),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -2193,6 +2194,7 @@ export class MainCityScene implements Scene {
     if (slotKey === "warehouse") void this.refreshStorehouse();
     if (slotKey === "drill_ground") void this.refreshTactics();
     if (slotKey === "smithy" || slotKey === "stable") void this.refreshEquipment();
+    if (slotKey === "inn") void this.refreshHistorical();
   }
 
   private getCityOfficeContext() {
@@ -2335,6 +2337,42 @@ export class MainCityScene implements Scene {
       this.buildingPanel.setDrillResult(
         `沙盘结果：${detail?.result ?? "—"} · 开场距离 ${detail?.start_distance ?? 0} · ${rounds} 回合 · 城防 ${walls}`,
       );
+      this.renderHud();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async refreshHistorical(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const res = (await this.gateway.listHistoricalHeroes(session.cityId)) as {
+        heroes?: { npc_cfg_id?: number; display_name?: string; level?: number; x?: number; y?: number;
+          state?: number; discovered?: boolean }[];
+      };
+      if (this.session !== session) return;
+      this.buildingPanel.setHistorical(res.heroes ?? []);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async historicalAction(action: string, npcCfgId: number): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      if (action === "search-historical") {
+        const res = (await this.gateway.searchHistoricalHero(session.cityId, npcCfgId)) as { gold?: number };
+        this.status = `传闻已打听到位，余金 ${res.gold ?? 0}`;
+      } else if (action === "persuade-historical") {
+        const res = (await this.gateway.persuadeHistoricalHero(session.cityId, npcCfgId)) as { hero_id?: number; gold?: number };
+        this.status = `名将已归顺（将领#${res.hero_id ?? 0}），余金 ${res.gold ?? 0}`;
+      }
+      await this.refreshState();
+      await this.refreshHistorical();
       this.renderHud();
     } catch (error) {
       this.status = formatPanelGatewayErrorFromUnknown("build", error);

@@ -42,6 +42,9 @@ const (
 	RouteEquipItem                  = "hero.v1.EquipItem"
 	RouteUnequipItem                = "hero.v1.UnequipItem"
 	RouteTrainMount                 = "hero.v1.TrainMount"
+	RouteListHistoricalHeroes       = "hero.v1.ListHistoricalHeroes"
+	RouteSearchHistoricalHero       = "hero.v1.SearchHistoricalHero"
+	RoutePersuadeHistoricalHero     = "hero.v1.PersuadeHistoricalHero"
 )
 
 func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
@@ -83,5 +86,8 @@ func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
 		RouteEquipItem:                  s.handleEquipItem,
 		RouteUnequipItem:                s.handleUnequipItem,
 		RouteTrainMount:                 s.handleTrainMount,
+		RouteListHistoricalHeroes:       s.handleListHistoricalHeroes,
+		RouteSearchHistoricalHero:       s.handleSearchHistoricalHero,
+		RoutePersuadeHistoricalHero:     s.handlePersuadeHistoricalHero,
 	}
 }

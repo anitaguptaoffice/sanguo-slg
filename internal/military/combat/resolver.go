@@ -3,6 +3,7 @@ package combat
 import (
 	"context"
 	"fmt"
+	"hash/fnv"
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/battle"
@@ -22,10 +23,13 @@ type Resolver struct {
 	// TechBonus returns attacker attack/defense percentages from academy research.
 	TechBonus func(order march.MarchOrder) (attackPct, defensePct int32)
 	// Tactics loads the attacker city's drill-ground presets. Nil means defaults.
-	Tactics       func(ctx context.Context, serverID int32, cityID int64) (map[int32]battle.Tactic, error)
-	nextReport    int64
-	beginArrival  func(context.Context, pgx.TxOptions) (pgx.Tx, error)
-	commitArrival func(context.Context, pgx.Tx, march.ArrivalCommit) (march.ArrivalCommitted, error)
+	Tactics func(ctx context.Context, serverID int32, cityID int64) (map[int32]battle.Tactic, error)
+	// HistoricalCapture rolls battlefield capture of a historical hero at the
+	// defeated tile. roll is deterministic in 0..99.
+	HistoricalCapture func(ctx context.Context, serverID int32, playerID, cityID int64, x, y int32, roll int) error
+	nextReport        int64
+	beginArrival      func(context.Context, pgx.TxOptions) (pgx.Tx, error)
+	commitArrival     func(context.Context, pgx.Tx, march.ArrivalCommit) (march.ArrivalCommitted, error)
 }
 
 // NewResolver wires dependencies; catalog defaults to march.DefaultUnitCatalog when nil.
@@ -130,6 +134,11 @@ func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArri
 		Defender:   ArmyFromStacksWithHero(r.UnitCatalog, g.Troops, g.HeroLevel, g.HeroForce, g.HeroIntel, g.Morale),
 	}
 	rep := battle.Simulate(bin)
+	if r.HistoricalCapture != nil && rep.Result == battle.ResultAttackerWin {
+		h := fnv.New32a()
+		_, _ = h.Write([]byte(fmt.Sprintf("march-%d", ev.MarchID)))
+		_ = r.HistoricalCapture(ctx, r.ServerID, ev.PlayerID, ev.Order.OriginCityID, int32(ev.Order.ToX), int32(ev.Order.ToY), int(h.Sum32()%100))
+	}
 	rep.TargetName = g.Name
 	rep.AttackerHero = battle.HeroSummary{Name: hero.Name, Level: hero.Level, Force: hero.Force, Intel: hero.Intel}
 	rep.DefenderHero = battle.HeroSummary{Name: g.HeroName, Level: int32(g.HeroLevel), Force: g.HeroForce, Intel: g.HeroIntel}
