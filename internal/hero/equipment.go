@@ -50,6 +50,18 @@ type EquipmentService struct {
 	Now  func() time.Time
 }
 
+func (e *EquipmentService) MonarchID(ctx context.Context, serverID int32, playerID int64) int64 {
+	if e == nil || e.Pool == nil {
+		return 0
+	}
+	var id int64
+	if err := e.Pool.QueryRow(ctx, `SELECT hero_id FROM player_hero
+		WHERE server_id=$1 AND player_id=$2 AND is_monarch LIMIT 1`, serverID, playerID).Scan(&id); err != nil {
+		return 0
+	}
+	return id
+}
+
 func NewEquipment(pool *pgxpool.Pool, now func() time.Time) *EquipmentService {
 	if now == nil {
 		now = time.Now
