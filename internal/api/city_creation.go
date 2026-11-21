@@ -136,11 +136,11 @@ func initializeMonarch(ctx context.Context, tx pgx.Tx, serverID int32, playerID 
 	_, err := tx.Exec(ctx, `INSERT INTO player_hero
 		(server_id,hero_id,player_id,template_cfg_id,display_name,level,exp,loyalty,
 		 force,intel,politics,command,status,created_at,is_monarch)
-		SELECT $1,nextval('player_hero_id_seq'),$2,1001,COALESCE(p.display_name,'君主')||'·君主',1,0,100,
+		SELECT $1,nextval('player_hero_id_seq'),$2,9900,COALESCE(p.display_name,'君主')||'·君主',1,0,100,
 		 COALESCE((t.base_stats->>'force')::int,0),COALESCE((t.base_stats->>'intel')::int,0),
 		 COALESCE((t.base_stats->>'politics')::int,0),COALESCE((t.base_stats->>'command')::int,0),
 		 1,now(),true
-		FROM player p LEFT JOIN cfg_hero_template t ON t.template_cfg_id=1001
+		FROM player p LEFT JOIN cfg_hero_template t ON t.template_cfg_id=9900
 		WHERE p.server_id=$1 AND p.player_id=$2
 		AND NOT EXISTS (SELECT 1 FROM player_hero h WHERE h.server_id=$1 AND h.player_id=$2 AND h.is_monarch)`,
 		serverID, playerID)

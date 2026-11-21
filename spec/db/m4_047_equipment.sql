@@ -1,4 +1,8 @@
 -- R3-S2: 装备/坐骑/宝珠配置与玩家装备实例。
+INSERT INTO cfg_hero_template(template_cfg_id,code,name,rarity,base_stats)
+ VALUES (9900,'monarch','君主',5,'{"force":72,"intel":75,"politics":88,"command":78}')
+ ON CONFLICT (template_cfg_id) DO UPDATE SET code=EXCLUDED.code,name=EXCLUDED.name,rarity=EXCLUDED.rarity,base_stats=EXCLUDED.base_stats;
+
 CREATE TABLE IF NOT EXISTS cfg_equipment (
     cfg_id        INT PRIMARY KEY,
     slot_type     SMALLINT NOT NULL CHECK (slot_type >= 0 AND slot_type <= 4),
