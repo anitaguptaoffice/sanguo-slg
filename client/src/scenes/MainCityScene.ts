@@ -1059,6 +1059,7 @@ export class MainCityScene implements Scene {
       (action, slotType, tier, equipmentId, gemCfgId) =>
         void this.equipmentAction(action, slotType, tier, equipmentId, gemCfgId),
       (action, npcCfgId) => void this.historicalAction(action, npcCfgId),
+      (trickType, targetMarchId) => void this.castTrick(trickType, targetMarchId),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -2336,6 +2337,26 @@ export class MainCityScene implements Scene {
         : "无";
       this.buildingPanel.setDrillResult(
         `沙盘结果：${detail?.result ?? "—"} · 开场距离 ${detail?.start_distance ?? 0} · ${rounds} 回合 · 城防 ${walls}`,
+      );
+      this.renderHud();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async castTrick(trickType: number, targetMarchId: number): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const res = (await this.gateway.castTrick(session.cityId, trickType, targetMarchId)) as {
+        success?: boolean; chance?: number; roll?: number; new_deadline_ms?: number; feint_until_ms?: number;
+      };
+      const eta = res.new_deadline_ms ? new Date(res.new_deadline_ms).toLocaleTimeString() : "";
+      const feint = res.feint_until_ms ? new Date(res.feint_until_ms).toLocaleTimeString() : "";
+      this.buildingPanel.setTrickResult(
+        `计谋${res.success ? "成功" : "失败"}（判定 ${res.roll ?? 0}/${res.chance ?? 0}）` +
+        (eta ? ` · 新 ETA ${eta}` : "") + (feint ? ` · 伪装至 ${feint}` : ""),
       );
       this.renderHud();
     } catch (error) {
