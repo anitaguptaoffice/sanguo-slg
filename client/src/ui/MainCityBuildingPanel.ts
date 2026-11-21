@@ -96,6 +96,7 @@ export class MainCityBuildingPanel {
     private readonly onWallAction?: (action: string, defenseType: number, unitId: number) => void,
     private readonly onMarketAction?: (action: string, resourceType: number, amount: number, priceMilli: number, hours: number, offerId: number) => void,
     private readonly onTacticAction?: (troopType: number, targetType: number, hold: boolean) => void,
+    private readonly onRunDrill?: () => void,
   ) {}
 
   attach(): void {
@@ -164,6 +165,7 @@ export class MainCityBuildingPanel {
           </select></label>
           <label><input type="checkbox" data-field="tactic-hold"> 坚守不推进</label>
           <button type="button" data-action="save-tactic">保存战术</button>
+          <button type="button" data-action="run-drill">沙盘演习（100 步 vs 100 弓）</button>
           <div data-role="tactic-list"></div>
         </div>
         <div class="storehouse-section hidden" data-role="storehouse">
@@ -429,6 +431,11 @@ export class MainCityBuildingPanel {
     this.renderTactics();
   }
 
+  setDrillResult(text: string): void {
+    const status = this.panel?.querySelector<HTMLElement>('[data-role="drill-status"]');
+    if (status) status.textContent = text;
+  }
+
   private renderTactics(): void {
     const section = this.panel?.querySelector<HTMLElement>('[data-role="drill-tactics"]');
     if (!section || section.classList.contains("hidden")) return;
@@ -584,6 +591,10 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    if (btn?.getAttribute("data-action") === "run-drill") {
+      this.onRunDrill?.();
+      return;
+    }
     if (btn?.getAttribute("data-action") === "save-tactic") {
       const section = this.panel.querySelector<HTMLElement>('[data-role="drill-tactics"]');
       const troopType = Number(section?.querySelector<HTMLSelectElement>('[data-field="tactic-troop"]')?.value ?? 0);

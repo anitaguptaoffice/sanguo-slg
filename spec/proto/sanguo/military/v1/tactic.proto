@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package sanguo.military.v1;
 
+import "sanguo/military/v1/military.proto";
+
 option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/military/v1;militaryv1";
 
 // 校场战术预设（R3-S1）。troop_type/target_type：
@@ -28,4 +30,19 @@ message SetTacticPresetRequest {
 }
 message SetTacticPresetResponse {
   repeated TacticPresetView presets = 1;
+}
+
+message DrillTroop {
+  int32 unit_cfg_id = 1;
+  int32 count = 2;
+}
+
+// route: military.v1.RunDrill
+message RunDrillRequest {
+  int64 city_id = 1;
+  repeated DrillTroop attacker = 2;
+  repeated DrillTroop defender = 3;
+}
+message RunDrillResponse {
+  BattleReportDetail detail = 1;
 }

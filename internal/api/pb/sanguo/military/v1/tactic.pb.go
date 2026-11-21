@@ -293,11 +293,168 @@ func (x *SetTacticPresetResponse) GetPresets() []*TacticPresetView {
 	return nil
 }
 
+type DrillTroop struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UnitCfgId     int32                  `protobuf:"varint,1,opt,name=unit_cfg_id,json=unitCfgId,proto3" json:"unit_cfg_id,omitempty"`
+	Count         int32                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DrillTroop) Reset() {
+	*x = DrillTroop{}
+	mi := &file_sanguo_military_v1_tactic_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DrillTroop) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DrillTroop) ProtoMessage() {}
+
+func (x *DrillTroop) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_military_v1_tactic_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DrillTroop.ProtoReflect.Descriptor instead.
+func (*DrillTroop) Descriptor() ([]byte, []int) {
+	return file_sanguo_military_v1_tactic_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *DrillTroop) GetUnitCfgId() int32 {
+	if x != nil {
+		return x.UnitCfgId
+	}
+	return 0
+}
+
+func (x *DrillTroop) GetCount() int32 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+// route: military.v1.RunDrill
+type RunDrillRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CityId        int64                  `protobuf:"varint,1,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	Attacker      []*DrillTroop          `protobuf:"bytes,2,rep,name=attacker,proto3" json:"attacker,omitempty"`
+	Defender      []*DrillTroop          `protobuf:"bytes,3,rep,name=defender,proto3" json:"defender,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RunDrillRequest) Reset() {
+	*x = RunDrillRequest{}
+	mi := &file_sanguo_military_v1_tactic_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RunDrillRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RunDrillRequest) ProtoMessage() {}
+
+func (x *RunDrillRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_military_v1_tactic_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RunDrillRequest.ProtoReflect.Descriptor instead.
+func (*RunDrillRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_military_v1_tactic_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *RunDrillRequest) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+func (x *RunDrillRequest) GetAttacker() []*DrillTroop {
+	if x != nil {
+		return x.Attacker
+	}
+	return nil
+}
+
+func (x *RunDrillRequest) GetDefender() []*DrillTroop {
+	if x != nil {
+		return x.Defender
+	}
+	return nil
+}
+
+type RunDrillResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Detail        *BattleReportDetail    `protobuf:"bytes,1,opt,name=detail,proto3" json:"detail,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RunDrillResponse) Reset() {
+	*x = RunDrillResponse{}
+	mi := &file_sanguo_military_v1_tactic_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RunDrillResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RunDrillResponse) ProtoMessage() {}
+
+func (x *RunDrillResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_military_v1_tactic_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RunDrillResponse.ProtoReflect.Descriptor instead.
+func (*RunDrillResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_military_v1_tactic_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *RunDrillResponse) GetDetail() *BattleReportDetail {
+	if x != nil {
+		return x.Detail
+	}
+	return nil
+}
+
 var File_sanguo_military_v1_tactic_proto protoreflect.FileDescriptor
 
 const file_sanguo_military_v1_tactic_proto_rawDesc = "" +
 	"\n" +
-	"\x1fsanguo/military/v1/tactic.proto\x12\x12sanguo.military.v1\"f\n" +
+	"\x1fsanguo/military/v1/tactic.proto\x12\x12sanguo.military.v1\x1a!sanguo/military/v1/military.proto\"f\n" +
 	"\x10TacticPresetView\x12\x1d\n" +
 	"\n" +
 	"troop_type\x18\x01 \x01(\x05R\ttroopType\x12\x1f\n" +
@@ -318,7 +475,17 @@ const file_sanguo_military_v1_tactic_proto_rawDesc = "" +
 	"targetType\x12\x12\n" +
 	"\x04hold\x18\x04 \x01(\bR\x04hold\"Y\n" +
 	"\x17SetTacticPresetResponse\x12>\n" +
-	"\apresets\x18\x01 \x03(\v2$.sanguo.military.v1.TacticPresetViewR\apresetsBMZKgithub.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/military/v1;militaryv1b\x06proto3"
+	"\apresets\x18\x01 \x03(\v2$.sanguo.military.v1.TacticPresetViewR\apresets\"B\n" +
+	"\n" +
+	"DrillTroop\x12\x1e\n" +
+	"\vunit_cfg_id\x18\x01 \x01(\x05R\tunitCfgId\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x05R\x05count\"\xa2\x01\n" +
+	"\x0fRunDrillRequest\x12\x17\n" +
+	"\acity_id\x18\x01 \x01(\x03R\x06cityId\x12:\n" +
+	"\battacker\x18\x02 \x03(\v2\x1e.sanguo.military.v1.DrillTroopR\battacker\x12:\n" +
+	"\bdefender\x18\x03 \x03(\v2\x1e.sanguo.military.v1.DrillTroopR\bdefender\"R\n" +
+	"\x10RunDrillResponse\x12>\n" +
+	"\x06detail\x18\x01 \x01(\v2&.sanguo.military.v1.BattleReportDetailR\x06detailBMZKgithub.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/military/v1;militaryv1b\x06proto3"
 
 var (
 	file_sanguo_military_v1_tactic_proto_rawDescOnce sync.Once
@@ -332,22 +499,29 @@ func file_sanguo_military_v1_tactic_proto_rawDescGZIP() []byte {
 	return file_sanguo_military_v1_tactic_proto_rawDescData
 }
 
-var file_sanguo_military_v1_tactic_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_sanguo_military_v1_tactic_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_sanguo_military_v1_tactic_proto_goTypes = []any{
 	(*TacticPresetView)(nil),          // 0: sanguo.military.v1.TacticPresetView
 	(*ListTacticPresetsRequest)(nil),  // 1: sanguo.military.v1.ListTacticPresetsRequest
 	(*ListTacticPresetsResponse)(nil), // 2: sanguo.military.v1.ListTacticPresetsResponse
 	(*SetTacticPresetRequest)(nil),    // 3: sanguo.military.v1.SetTacticPresetRequest
 	(*SetTacticPresetResponse)(nil),   // 4: sanguo.military.v1.SetTacticPresetResponse
+	(*DrillTroop)(nil),                // 5: sanguo.military.v1.DrillTroop
+	(*RunDrillRequest)(nil),           // 6: sanguo.military.v1.RunDrillRequest
+	(*RunDrillResponse)(nil),          // 7: sanguo.military.v1.RunDrillResponse
+	(*BattleReportDetail)(nil),        // 8: sanguo.military.v1.BattleReportDetail
 }
 var file_sanguo_military_v1_tactic_proto_depIdxs = []int32{
 	0, // 0: sanguo.military.v1.ListTacticPresetsResponse.presets:type_name -> sanguo.military.v1.TacticPresetView
 	0, // 1: sanguo.military.v1.SetTacticPresetResponse.presets:type_name -> sanguo.military.v1.TacticPresetView
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	5, // 2: sanguo.military.v1.RunDrillRequest.attacker:type_name -> sanguo.military.v1.DrillTroop
+	5, // 3: sanguo.military.v1.RunDrillRequest.defender:type_name -> sanguo.military.v1.DrillTroop
+	8, // 4: sanguo.military.v1.RunDrillResponse.detail:type_name -> sanguo.military.v1.BattleReportDetail
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_sanguo_military_v1_tactic_proto_init() }
@@ -355,13 +529,14 @@ func file_sanguo_military_v1_tactic_proto_init() {
 	if File_sanguo_military_v1_tactic_proto != nil {
 		return
 	}
+	file_sanguo_military_v1_military_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sanguo_military_v1_tactic_proto_rawDesc), len(file_sanguo_military_v1_tactic_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

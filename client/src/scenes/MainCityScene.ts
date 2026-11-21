@@ -1055,6 +1055,7 @@ export class MainCityScene implements Scene {
       (action, resourceType, amount, priceMilli, hours, offerId) =>
         void this.marketAction(action, resourceType, amount, priceMilli, hours, offerId),
       (troopType, targetType, hold) => void this.saveTactic(troopType, targetType, hold),
+      () => void this.runDrill(),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -2307,6 +2308,27 @@ export class MainCityScene implements Scene {
       if (this.session !== session) return;
       this.buildingPanel.setTactics(res.presets ?? []);
       this.status = "校场战术已保存";
+      this.renderHud();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async runDrill(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const res = (await this.gateway.runDrill(
+        session.cityId,
+        [{ unit_cfg_id: 1, count: 100 }],
+        [{ unit_cfg_id: 3, count: 100 }],
+      )) as { detail?: { result?: string; start_distance?: number; rounds?: unknown[] } };
+      const detail = res.detail;
+      const rounds = detail?.rounds?.length ?? 0;
+      this.buildingPanel.setDrillResult(
+        `沙盘结果：${detail?.result ?? "—"} · 开场距离 ${detail?.start_distance ?? 0} · ${rounds} 回合`,
+      );
       this.renderHud();
     } catch (error) {
       this.status = formatPanelGatewayErrorFromUnknown("build", error);
