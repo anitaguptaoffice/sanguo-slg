@@ -81,12 +81,16 @@ func (s *Server) handleRunDrill(ctx context.Context, pkt *commonv1.ClientPacket)
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid drill troops"), nil
 	}
 	catalog := march.DefaultUnitCatalog()
+	attackerArmy := combat.ArmyFromStacks(catalog, attacker, 0, 1)
+	if tactics, err := combat.TacticsPG(s.PlayersPool())(ctx, pc.ServerID, req.GetCityId()); err == nil {
+		attackerArmy.UnitTactics = tactics
+	}
 	defenderArmy := combat.ArmyFromStacks(catalog, defender, 0, 1)
 	defenderArmy.Defenses = s.drillWalls(ctx, pc.ServerID, req.GetCityId())
 	rep := battle.Simulate(battle.BattleInput{
 		BattleID:   fmt.Sprintf("drill-%d-%d", req.GetCityId(), time.Now().UnixNano()),
 		AttackerID: "drill-attacker", DefenderID: "drill-defender",
-		Attacker: combat.ArmyFromStacks(catalog, attacker, 0, 1),
+		Attacker: attackerArmy,
 		Defender: defenderArmy,
 	})
 	data, err := marshal(&militaryv1.RunDrillResponse{Detail: battleReportDetailProto(rep)})

@@ -225,6 +225,11 @@ message BattleReportDetail {
   int32 start_distance = 13;
   // R3-S1: 城防工事剩余数量。
   map<string, int32> final_defenses = 14;
+  // R3-S1: 十二兵种终局/伤亡明细。
+  map<int32, int32> final_attacker_units = 15;
+  map<int32, int32> final_defender_units = 16;
+  map<int32, int32> attacker_casualties_units = 17;
+  map<int32, int32> defender_casualties_units = 18;
 }
 
 message BattleRoundAction {
@@ -238,6 +243,7 @@ message BattleRoundAction {
   int32 damage_hp = 5;
   // R3-S1: 城防工事代码；普通兵种行动时为空。
   string defense = 6;
+  int32 unit_cfg_id = 7;
 }
 
 message BattleRound {
@@ -252,6 +258,8 @@ message BattleRound {
   repeated BattleRoundAction actions = 7;
   // R3-S1: 回合结束时城防工事剩余数量。
   map<string, int32> defenses = 8;
+  map<int32, int32> attacker_units = 9;
+  map<int32, int32> defender_units = 10;
 }
 
 message BattleReportView {

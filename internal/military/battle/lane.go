@@ -32,12 +32,13 @@ type Tactic struct {
 
 // RoundAction is one group action inside a round.
 type RoundAction struct {
-	Side     string
-	Troop    TroopType
-	Defense  string
-	Kind     string // "move" or "attack"
-	Target   TroopType
-	DamageHP int
+	Side      string
+	Troop     TroopType
+	UnitCfgID int32
+	Defense   string
+	Kind      string // "move" or "attack"
+	Target    TroopType
+	DamageHP  int
 }
 
 func laneRange(tt TroopType) int {

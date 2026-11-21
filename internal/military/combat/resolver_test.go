@@ -61,9 +61,9 @@ func TestResolveAttackUsesCityTactics(t *testing.T) {
 	ctx := context.Background()
 	svc := report.NewService(report.NewMemStore())
 	r := NewResolver(1, svc, garrisonFixture(), nil)
-	r.Tactics = func(context.Context, int32, int64) (map[battle.TroopType]battle.Tactic, error) {
-		return map[battle.TroopType]battle.Tactic{
-			battle.TroopCavalry: {Target: battle.TroopArcher},
+	r.Tactics = func(context.Context, int32, int64) (map[int32]battle.Tactic, error) {
+		return map[int32]battle.Tactic{
+			2: {Target: battle.TroopArcher},
 		}, nil
 	}
 	ev := march.MarchArrivalEvent{
@@ -77,7 +77,7 @@ func TestResolveAttackUsesCityTactics(t *testing.T) {
 	}
 	for _, rr := range res.Report.Rounds {
 		for _, a := range rr.Actions {
-			if a.Side == "attacker" && a.Troop == battle.TroopCavalry && a.Kind == "attack" {
+			if a.Side == "attacker" && a.UnitCfgID == 2 && a.Kind == "attack" {
 				if a.Target != battle.TroopArcher {
 					t.Fatalf("cavalry targeted %s", a.Target)
 				}

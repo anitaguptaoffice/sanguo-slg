@@ -12,6 +12,7 @@ message TacticPresetView {
   int32 troop_type = 1;
   int32 target_type = 2;
   bool hold = 3;
+  int32 unit_cfg_id = 4;
 }
 
 // route: military.v1.ListTacticPresets
@@ -27,6 +28,7 @@ message SetTacticPresetRequest {
   int32 troop_type = 2;
   int32 target_type = 3;
   bool hold = 4;
+  int32 unit_cfg_id = 5;
 }
 message SetTacticPresetResponse {
   repeated TacticPresetView presets = 1;

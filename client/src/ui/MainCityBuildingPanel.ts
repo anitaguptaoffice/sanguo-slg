@@ -61,7 +61,7 @@ export type MarketView = {
   max_listing_amount?: number; gold?: number; offers?: MarketOfferRow[];
   own_offers?: MarketOfferRow[]; deliveries?: MarketDeliveryRow[];
 };
-export type TacticPresetRow = { troop_type?: number; target_type?: number; hold?: boolean };
+export type TacticPresetRow = { unit_cfg_id?: number; troop_type?: number; target_type?: number; hold?: boolean };
 export type StorehouseView = {
   level?: number; capacity_bonus?: number; protection_percent?: number;
   protected_amount?: { food?: number; wood?: number; stone?: number; iron?: number };
@@ -95,7 +95,7 @@ export class MainCityBuildingPanel {
     private readonly onOfficeAction?: (action: string, office: number, heroId: number) => void,
     private readonly onWallAction?: (action: string, defenseType: number, unitId: number) => void,
     private readonly onMarketAction?: (action: string, resourceType: number, amount: number, priceMilli: number, hours: number, offerId: number) => void,
-    private readonly onTacticAction?: (troopType: number, targetType: number, hold: boolean) => void,
+    private readonly onTacticAction?: (unitCfgId: number, targetType: number, hold: boolean) => void,
     private readonly onRunDrill?: () => void,
   ) {}
 
@@ -156,8 +156,12 @@ export class MainCityBuildingPanel {
           <h4>校场战术</h4>
           <p data-role="drill-status"></p>
           <label>兵种 <select data-field="tactic-troop">
-            <option value="0">步兵</option><option value="1">骑兵</option>
-            <option value="2">弓兵</option><option value="3">器械</option>
+            <option value="1">步兵</option><option value="2">骑兵</option>
+            <option value="3">弓兵</option><option value="4">器械</option>
+            <option value="5">民夫</option><option value="6">义兵</option>
+            <option value="7">斥候</option><option value="8">长枪兵</option>
+            <option value="9">刀盾兵</option><option value="10">长弓手</option>
+            <option value="11">轻骑</option><option value="12">铁骑</option>
           </select></label>
           <label>集火目标 <select data-field="tactic-target">
             <option value="-1">默认</option><option value="0">步兵</option>
@@ -442,13 +446,15 @@ export class MainCityBuildingPanel {
     const status = section.querySelector<HTMLElement>('[data-role="drill-status"]');
     const list = section.querySelector<HTMLElement>('[data-role="tactic-list"]');
     if (!status || !list) return;
-    const names = ["步兵", "骑兵", "弓兵", "器械"];
-    const targetName = (n: number | undefined) => (n === undefined || n < 0 ? "默认" : names[n] ?? "默认");
-    status.textContent = "按兵种设置集火目标；坚守会停止推进";
+    const unitNames = ["步兵", "骑兵", "弓兵", "器械", "民夫", "义兵", "斥候", "长枪兵", "刀盾兵", "长弓手", "轻骑", "铁骑"];
+    const targetNames = ["步兵", "骑兵", "弓兵", "器械"];
+    const targetName = (n: number | undefined) => (n === undefined || n < 0 ? "默认" : targetNames[n] ?? "默认");
+    status.textContent = "按具体兵种设置集火目标；坚守会停止推进";
     list.textContent = "";
     for (const row of this.tactics) {
+      const unit = row.unit_cfg_id ?? (row.troop_type ?? 0) + 1;
       const line = document.createElement("div");
-      line.textContent = `${names[row.troop_type ?? 0]} → ${targetName(row.target_type)}${row.hold ? " · 坚守" : ""}`;
+      line.textContent = `${unitNames[unit - 1] ?? `兵种#${unit}`} → ${targetName(row.target_type)}${row.hold ? " · 坚守" : ""}`;
       list.appendChild(line);
     }
   }
@@ -597,10 +603,10 @@ export class MainCityBuildingPanel {
     }
     if (btn?.getAttribute("data-action") === "save-tactic") {
       const section = this.panel.querySelector<HTMLElement>('[data-role="drill-tactics"]');
-      const troopType = Number(section?.querySelector<HTMLSelectElement>('[data-field="tactic-troop"]')?.value ?? 0);
+      const unitCfgId = Number(section?.querySelector<HTMLSelectElement>('[data-field="tactic-troop"]')?.value ?? 1);
       const targetType = Number(section?.querySelector<HTMLSelectElement>('[data-field="tactic-target"]')?.value ?? -1);
       const hold = !!section?.querySelector<HTMLInputElement>('[data-field="tactic-hold"]')?.checked;
-      this.onTacticAction?.(troopType, targetType, hold);
+      this.onTacticAction?.(unitCfgId, targetType, hold);
       return;
     }
     const marketAction = btn?.getAttribute("data-action");

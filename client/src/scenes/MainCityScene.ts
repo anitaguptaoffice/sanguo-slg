@@ -1054,7 +1054,7 @@ export class MainCityScene implements Scene {
       (action, defenseType, unitId) => void this.wallAction(action, defenseType, unitId),
       (action, resourceType, amount, priceMilli, hours, offerId) =>
         void this.marketAction(action, resourceType, amount, priceMilli, hours, offerId),
-      (troopType, targetType, hold) => void this.saveTactic(troopType, targetType, hold),
+      (unitCfgId, targetType, hold) => void this.saveTactic(unitCfgId, targetType, hold),
       () => void this.runDrill(),
     );
     this.buildingPanel.attach();
@@ -2288,7 +2288,7 @@ export class MainCityScene implements Scene {
     if (!session?.cityId) return;
     try {
       const res = (await this.gateway.listTacticPresets(session.cityId)) as {
-        presets?: { troop_type?: number; target_type?: number; hold?: boolean }[];
+        presets?: { unit_cfg_id?: number; target_type?: number; hold?: boolean }[];
       };
       if (this.session !== session) return;
       this.buildingPanel.setTactics(res.presets ?? []);
@@ -2298,12 +2298,12 @@ export class MainCityScene implements Scene {
     }
   }
 
-  private async saveTactic(troopType: number, targetType: number, hold: boolean): Promise<void> {
+  private async saveTactic(unitCfgId: number, targetType: number, hold: boolean): Promise<void> {
     const session = this.session;
     if (!session?.cityId) return;
     try {
-      const res = (await this.gateway.setTacticPreset(session.cityId, troopType, targetType, hold)) as {
-        presets?: { troop_type?: number; target_type?: number; hold?: boolean }[];
+      const res = (await this.gateway.setTacticPreset(session.cityId, unitCfgId, targetType, hold)) as {
+        presets?: { unit_cfg_id?: number; target_type?: number; hold?: boolean }[];
       };
       if (this.session !== session) return;
       this.buildingPanel.setTactics(res.presets ?? []);

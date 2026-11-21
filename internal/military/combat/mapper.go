@@ -2,6 +2,7 @@ package combat
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/battle"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
@@ -15,6 +16,7 @@ func ArmyFromStacks(catalog map[int32]march.UnitSpec, stacks []march.TroopStack,
 // ArmyFromStacksWithHero additionally carries the hero force/intel multipliers.
 func ArmyFromStacksWithHero(catalog map[int32]march.UnitSpec, stacks []march.TroopStack, heroLevel int, force, intel int32, morale float64) battle.Army {
 	troops := make(map[battle.TroopType]int)
+	units := make(map[int32]int)
 	for _, st := range stacks {
 		if st.Count <= 0 {
 			continue
@@ -23,6 +25,7 @@ func ArmyFromStacksWithHero(catalog map[int32]march.UnitSpec, stacks []march.Tro
 		if !ok {
 			continue
 		}
+		units[st.UnitCfgID] += int(st.Count)
 		code := spec.CombatType
 		if code == "" {
 			code = spec.Code
@@ -36,7 +39,7 @@ func ArmyFromStacksWithHero(catalog map[int32]march.UnitSpec, stacks []march.Tro
 	if morale <= 0 {
 		morale = 1
 	}
-	return battle.Army{Troops: troops, HeroLevel: heroLevel, HeroForce: force, HeroIntel: intel, Morale: morale}
+	return battle.Army{Troops: troops, Units: units, HeroLevel: heroLevel, HeroForce: force, HeroIntel: intel, Morale: morale}
 }
 
 func troopTypeFromCode(code string) (battle.TroopType, error) {
@@ -52,6 +55,25 @@ func troopTypeFromCode(code string) (battle.TroopType, error) {
 	default:
 		return "", fmt.Errorf("combat: unknown unit code %q", code)
 	}
+}
+
+// StacksFromUnits converts exact unit survivors back to cfg_unit stacks.
+func StacksFromUnits(m map[int32]int) []march.TroopStack {
+	if len(m) == 0 {
+		return nil
+	}
+	ids := make([]int32, 0, len(m))
+	for id, n := range m {
+		if n > 0 {
+			ids = append(ids, id)
+		}
+	}
+	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+	out := make([]march.TroopStack, 0, len(ids))
+	for _, id := range ids {
+		out = append(out, march.TroopStack{UnitCfgID: id, Count: int32(m[id])})
+	}
+	return out
 }
 
 // StacksFromArmy converts battle troop maps back to cfg_unit stacks (catalog order 1–4).

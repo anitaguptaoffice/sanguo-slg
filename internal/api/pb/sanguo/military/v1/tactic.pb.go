@@ -28,6 +28,7 @@ type TacticPresetView struct {
 	TroopType     int32                  `protobuf:"varint,1,opt,name=troop_type,json=troopType,proto3" json:"troop_type,omitempty"`
 	TargetType    int32                  `protobuf:"varint,2,opt,name=target_type,json=targetType,proto3" json:"target_type,omitempty"`
 	Hold          bool                   `protobuf:"varint,3,opt,name=hold,proto3" json:"hold,omitempty"`
+	UnitCfgId     int32                  `protobuf:"varint,4,opt,name=unit_cfg_id,json=unitCfgId,proto3" json:"unit_cfg_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -81,6 +82,13 @@ func (x *TacticPresetView) GetHold() bool {
 		return x.Hold
 	}
 	return false
+}
+
+func (x *TacticPresetView) GetUnitCfgId() int32 {
+	if x != nil {
+		return x.UnitCfgId
+	}
+	return 0
 }
 
 // route: military.v1.ListTacticPresets
@@ -187,6 +195,7 @@ type SetTacticPresetRequest struct {
 	TroopType     int32                  `protobuf:"varint,2,opt,name=troop_type,json=troopType,proto3" json:"troop_type,omitempty"`
 	TargetType    int32                  `protobuf:"varint,3,opt,name=target_type,json=targetType,proto3" json:"target_type,omitempty"`
 	Hold          bool                   `protobuf:"varint,4,opt,name=hold,proto3" json:"hold,omitempty"`
+	UnitCfgId     int32                  `protobuf:"varint,5,opt,name=unit_cfg_id,json=unitCfgId,proto3" json:"unit_cfg_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -247,6 +256,13 @@ func (x *SetTacticPresetRequest) GetHold() bool {
 		return x.Hold
 	}
 	return false
+}
+
+func (x *SetTacticPresetRequest) GetUnitCfgId() int32 {
+	if x != nil {
+		return x.UnitCfgId
+	}
+	return 0
 }
 
 type SetTacticPresetResponse struct {
@@ -454,26 +470,28 @@ var File_sanguo_military_v1_tactic_proto protoreflect.FileDescriptor
 
 const file_sanguo_military_v1_tactic_proto_rawDesc = "" +
 	"\n" +
-	"\x1fsanguo/military/v1/tactic.proto\x12\x12sanguo.military.v1\x1a!sanguo/military/v1/military.proto\"f\n" +
+	"\x1fsanguo/military/v1/tactic.proto\x12\x12sanguo.military.v1\x1a!sanguo/military/v1/military.proto\"\x86\x01\n" +
 	"\x10TacticPresetView\x12\x1d\n" +
 	"\n" +
 	"troop_type\x18\x01 \x01(\x05R\ttroopType\x12\x1f\n" +
 	"\vtarget_type\x18\x02 \x01(\x05R\n" +
 	"targetType\x12\x12\n" +
-	"\x04hold\x18\x03 \x01(\bR\x04hold\"3\n" +
+	"\x04hold\x18\x03 \x01(\bR\x04hold\x12\x1e\n" +
+	"\vunit_cfg_id\x18\x04 \x01(\x05R\tunitCfgId\"3\n" +
 	"\x18ListTacticPresetsRequest\x12\x17\n" +
 	"\acity_id\x18\x01 \x01(\x03R\x06cityId\"|\n" +
 	"\x19ListTacticPresetsResponse\x12>\n" +
 	"\apresets\x18\x01 \x03(\v2$.sanguo.military.v1.TacticPresetViewR\apresets\x12\x1f\n" +
 	"\vdrill_level\x18\x02 \x01(\x05R\n" +
-	"drillLevel\"\x85\x01\n" +
+	"drillLevel\"\xa5\x01\n" +
 	"\x16SetTacticPresetRequest\x12\x17\n" +
 	"\acity_id\x18\x01 \x01(\x03R\x06cityId\x12\x1d\n" +
 	"\n" +
 	"troop_type\x18\x02 \x01(\x05R\ttroopType\x12\x1f\n" +
 	"\vtarget_type\x18\x03 \x01(\x05R\n" +
 	"targetType\x12\x12\n" +
-	"\x04hold\x18\x04 \x01(\bR\x04hold\"Y\n" +
+	"\x04hold\x18\x04 \x01(\bR\x04hold\x12\x1e\n" +
+	"\vunit_cfg_id\x18\x05 \x01(\x05R\tunitCfgId\"Y\n" +
 	"\x17SetTacticPresetResponse\x12>\n" +
 	"\apresets\x18\x01 \x03(\v2$.sanguo.military.v1.TacticPresetViewR\apresets\"B\n" +
 	"\n" +

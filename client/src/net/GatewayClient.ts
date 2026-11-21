@@ -65,7 +65,7 @@ export type GatewayPort = {
   buildWallDefense(cityId: number, defenseType: number): Promise<unknown>;
   healWounded(cityId: number, unitCfgId: number, count: number): Promise<unknown>;
   listTacticPresets(cityId: number): Promise<unknown>;
-  setTacticPreset(cityId: number, troopType: number, targetType: number, hold: boolean): Promise<unknown>;
+  setTacticPreset(cityId: number, unitCfgId: number, targetType: number, hold: boolean): Promise<unknown>;
   runDrill(cityId: number, attacker: { unit_cfg_id: number; count: number }[], defender: { unit_cfg_id: number; count: number }[]): Promise<unknown>;
   getStorehouse(cityId: number): Promise<unknown>;
   getMarket(cityId: number): Promise<unknown>;
@@ -673,10 +673,10 @@ export class GatewayClient implements GatewayPort {
     return this.rpc(Routes.ListTacticPresets, "ListTacticPresetsRequest", { city_id: cityId }, ListTacticPresetsResponse, true);
   }
 
-  async setTacticPreset(cityId: number, troopType: number, targetType: number, hold: boolean) {
+  async setTacticPreset(cityId: number, unitCfgId: number, targetType: number, hold: boolean) {
     const { SetTacticPresetResponse } = getTypes();
     return this.rpc(Routes.SetTacticPreset, "SetTacticPresetRequest", {
-      city_id: cityId, troop_type: troopType, target_type: targetType, hold,
+      city_id: cityId, unit_cfg_id: unitCfgId, target_type: targetType, hold,
     }, SetTacticPresetResponse, true);
   }
 

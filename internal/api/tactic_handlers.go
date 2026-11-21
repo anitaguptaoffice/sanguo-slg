@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"sort"
 
 	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
@@ -17,31 +18,32 @@ func (s *Server) drillLevel(ctx context.Context, serverID int32, cityID int64) (
 }
 
 func (s *Server) tacticPresets(ctx context.Context, serverID int32, cityID int64) ([]*militaryv1.TacticPresetView, error) {
-	rows, err := s.PlayersPool().Query(ctx, `SELECT troop_type,target_type,hold FROM city_tactic
+	rows, err := s.PlayersPool().Query(ctx, `SELECT unit_cfg_id,target_type,hold FROM city_unit_tactic
 		WHERE server_id=$1 AND city_id=$2`, serverID, cityID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	seen := make(map[int32]bool)
-	presets := make([]*militaryv1.TacticPresetView, 0, 4)
+	presets := make([]*militaryv1.TacticPresetView, 0, 12)
 	for rows.Next() {
-		var troop, target int32
+		var unit, target int32
 		var hold bool
-		if err := rows.Scan(&troop, &target, &hold); err != nil {
+		if err := rows.Scan(&unit, &target, &hold); err != nil {
 			return nil, err
 		}
-		seen[troop] = true
-		presets = append(presets, &militaryv1.TacticPresetView{TroopType: troop, TargetType: target, Hold: hold})
+		seen[unit] = true
+		presets = append(presets, &militaryv1.TacticPresetView{UnitCfgId: unit, TargetType: target, Hold: hold})
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
-	for troop := int32(0); troop < 4; troop++ {
-		if !seen[troop] {
-			presets = append(presets, &militaryv1.TacticPresetView{TroopType: troop, TargetType: -1})
+	for unit := int32(1); unit <= 12; unit++ {
+		if !seen[unit] {
+			presets = append(presets, &militaryv1.TacticPresetView{UnitCfgId: unit, TargetType: -1})
 		}
 	}
+	sort.Slice(presets, func(i, j int) bool { return presets[i].GetUnitCfgId() < presets[j].GetUnitCfgId() })
 	return presets, nil
 }
 
@@ -84,7 +86,7 @@ func (s *Server) handleSetTacticPreset(ctx context.Context, pkt *commonv1.Client
 	if !s.officeCity(ctx, pc, req.GetCityId()) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
 	}
-	if req.GetTroopType() < 0 || req.GetTroopType() > 3 || req.GetTargetType() < -1 || req.GetTargetType() > 3 {
+	if req.GetUnitCfgId() < 1 || req.GetUnitCfgId() > 12 || req.GetTargetType() < -1 || req.GetTargetType() > 3 {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid tactic"), nil
 	}
 	level, err := s.drillLevel(ctx, pc.ServerID, req.GetCityId())
@@ -94,10 +96,10 @@ func (s *Server) handleSetTacticPreset(ctx context.Context, pkt *commonv1.Client
 	if level < 1 {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_DOMESTIC_INVALID_BUILDING, "drill ground not built"), nil
 	}
-	if _, err := s.PlayersPool().Exec(ctx, `INSERT INTO city_tactic(server_id,city_id,troop_type,target_type,hold)
+	if _, err := s.PlayersPool().Exec(ctx, `INSERT INTO city_unit_tactic(server_id,city_id,unit_cfg_id,target_type,hold)
 		VALUES($1,$2,$3,$4,$5)
-		ON CONFLICT (server_id,city_id,troop_type) DO UPDATE SET target_type=EXCLUDED.target_type,hold=EXCLUDED.hold`,
-		pc.ServerID, req.GetCityId(), req.GetTroopType(), req.GetTargetType(), req.GetHold()); err != nil {
+		ON CONFLICT (server_id,city_id,unit_cfg_id) DO UPDATE SET target_type=EXCLUDED.target_type,hold=EXCLUDED.hold`,
+		pc.ServerID, req.GetCityId(), req.GetUnitCfgId(), req.GetTargetType(), req.GetHold()); err != nil {
 		return nil, err
 	}
 	presets, err := s.tacticPresets(ctx, pc.ServerID, req.GetCityId())

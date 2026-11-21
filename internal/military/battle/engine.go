@@ -3,6 +3,9 @@ package battle
 // Simulate runs the R3-S1 one-dimensional distance engine and returns a
 // deterministic battle report.
 func Simulate(in BattleInput) BattleReport {
+	if len(in.Attacker.Units) > 0 || len(in.Defender.Units) > 0 {
+		return simulateLaneUnits(in)
+	}
 	return simulateLane(in)
 }
 

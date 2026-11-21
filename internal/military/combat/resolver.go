@@ -22,7 +22,7 @@ type Resolver struct {
 	// TechBonus returns attacker attack/defense percentages from academy research.
 	TechBonus func(order march.MarchOrder) (attackPct, defensePct int32)
 	// Tactics loads the attacker city's drill-ground presets. Nil means defaults.
-	Tactics       func(ctx context.Context, serverID int32, cityID int64) (map[battle.TroopType]battle.Tactic, error)
+	Tactics       func(ctx context.Context, serverID int32, cityID int64) (map[int32]battle.Tactic, error)
 	nextReport    int64
 	beginArrival  func(context.Context, pgx.TxOptions) (pgx.Tx, error)
 	commitArrival func(context.Context, pgx.Tx, march.ArrivalCommit) (march.ArrivalCommitted, error)
@@ -116,7 +116,7 @@ func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArri
 	attacker := ArmyFromStacksWithHero(r.UnitCatalog, ev.Troops, int(hero.Level), hero.Force, hero.Intel, 1)
 	if r.Tactics != nil && ev.Order.OriginCityID > 0 {
 		if tactics, err := r.Tactics(ctx, r.ServerID, ev.Order.OriginCityID); err == nil {
-			attacker.Tactics = tactics
+			attacker.UnitTactics = tactics
 		}
 	}
 	if r.TechBonus != nil {
@@ -146,8 +146,12 @@ func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArri
 		}
 	}
 
-	attRemain := StacksFromArmy(r.UnitCatalog, rep.FinalAttacker)
-	defRemain := StacksFromArmy(r.UnitCatalog, rep.FinalDefender)
+	attRemain := StacksFromUnits(rep.FinalAttackerUnits)
+	defRemain := StacksFromUnits(rep.FinalDefenderUnits)
+	if len(rep.FinalAttackerUnits) == 0 && len(rep.FinalDefenderUnits) == 0 {
+		attRemain = StacksFromArmy(r.UnitCatalog, rep.FinalAttacker)
+		defRemain = StacksFromArmy(r.UnitCatalog, rep.FinalDefender)
+	}
 	if r.commitArrival != nil {
 		return r.persistArrival(ctx, ev, ArrivalResult{Report: rep, AttackerRemaining: attRemain, DefenderRemaining: defRemain, Loot: loot, BattleRan: true})
 	}

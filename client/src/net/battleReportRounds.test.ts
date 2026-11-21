@@ -43,6 +43,17 @@ describe("battleReportRounds", () => {
     expect(row.attackerAction).toContain("攻击 1");
   });
 
+  it("uses the twelve-unit breakdown when present", () => {
+    const row = buildBattleRoundTableRow({
+      round: 1,
+      attacker_units: { 1: 80, 5: 10 },
+      defender_units: { 2: 40 },
+    });
+    expect(row.attackerRemaining).toContain("步兵 80");
+    expect(row.attackerRemaining).toContain("民夫 10");
+    expect(row.defenderRemaining).toContain("骑兵 40");
+  });
+
   it("reports wall defenses and wall attacks", () => {
     const row = buildBattleRoundTableRow({
       round: 2,

@@ -1,5 +1,6 @@
 import {
   formatCasualtyMap,
+  formatUnitMap,
   type BattleRoundView,
 } from "@/net/militaryFormat";
 
@@ -48,8 +49,8 @@ export function buildBattleRoundTableRow(round: BattleRoundView | undefined): Ba
     distance: round?.distance === undefined ? "—" : String(round.distance),
     attackerAction: formatBattleRoundActionSummary("attacker", round),
     defenderAction: formatBattleRoundActionSummary("defender", round),
-    attackerRemaining: formatCasualtyMap(round?.attacker_troops),
-    defenderRemaining: formatCasualtyMap(round?.defender_troops),
+    attackerRemaining: round?.attacker_units ? formatUnitMap(round.attacker_units) : formatCasualtyMap(round?.attacker_troops),
+    defenderRemaining: round?.defender_units ? formatUnitMap(round.defender_units) : formatCasualtyMap(round?.defender_troops),
     defenses: round?.defenses && Object.keys(round.defenses).length
       ? Object.entries(round.defenses).map(([code, count]) => `${code} ${count}`).join("、")
       : "无",

@@ -2,10 +2,8 @@ import { localCalendarDayKey } from "@/net/socialFormat";
 
 /** 兵种配置 ID → 展示名（与 spec/data cfg_unit 一致）。 */
 export const UNIT_LABEL: Record<number, string> = {
-  1: "步兵",
-  2: "骑兵",
-  3: "弓兵",
-  4: "器械",
+  1: "步兵", 2: "骑兵", 3: "弓兵", 4: "器械", 5: "民夫", 6: "义兵",
+  7: "斥候", 8: "长枪兵", 9: "刀盾兵", 10: "长弓手", 11: "轻骑", 12: "铁骑",
 };
 
 export type CityTroopStack = {
@@ -615,6 +613,15 @@ export function formatCasualtyMap(casualties: Record<string, number> | undefined
   return parts.length ? parts.join("、") : "无";
 }
 
+export function formatUnitMap(units: Record<string, number> | undefined): string {
+  if (!units) return "无";
+  const parts = Object.entries(units)
+    .filter(([, n]) => (n ?? 0) > 0)
+    .sort(([a], [b]) => Number(a) - Number(b))
+    .map(([id, n]) => `${UNIT_LABEL[Number(id)] ?? `兵种#${id}`} ${n}`);
+  return parts.length ? parts.join("、") : "无";
+}
+
 export function formatBattleResultText(result: string | undefined): string {
   if (!result) return "—";
   return BATTLE_RESULT_LABEL[result] ?? result;
@@ -650,6 +657,8 @@ export type BattleReportDetailView = {
     defender_to_att_hp?: number;
     distance?: number;
     defenses?: Record<string, number>;
+    attacker_units?: Record<string, number>;
+    defender_units?: Record<string, number>;
     actions?: {
       side?: string;
       troop?: string;
@@ -657,12 +666,17 @@ export type BattleReportDetailView = {
       kind?: string;
       target?: string;
       damage_hp?: number;
+      unit_cfg_id?: number;
     }[];
   }[];
   attacker_casualties?: Record<string, number>;
   defender_casualties?: Record<string, number>;
   final_attacker?: Record<string, number>;
   final_defender?: Record<string, number>;
+  final_attacker_units?: Record<string, number>;
+  final_defender_units?: Record<string, number>;
+  attacker_casualties_units?: Record<string, number>;
+  defender_casualties_units?: Record<string, number>;
 };
 
 export type BattleRoundView = NonNullable<BattleReportDetailView["rounds"]>[number];

@@ -1445,8 +1445,13 @@ type BattleReportDetail struct {
 	StartDistance int32 `protobuf:"varint,13,opt,name=start_distance,json=startDistance,proto3" json:"start_distance,omitempty"`
 	// R3-S1: 城防工事剩余数量。
 	FinalDefenses map[string]int32 `protobuf:"bytes,14,rep,name=final_defenses,json=finalDefenses,proto3" json:"final_defenses,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// R3-S1: 十二兵种终局/伤亡明细。
+	FinalAttackerUnits      map[int32]int32 `protobuf:"bytes,15,rep,name=final_attacker_units,json=finalAttackerUnits,proto3" json:"final_attacker_units,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	FinalDefenderUnits      map[int32]int32 `protobuf:"bytes,16,rep,name=final_defender_units,json=finalDefenderUnits,proto3" json:"final_defender_units,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	AttackerCasualtiesUnits map[int32]int32 `protobuf:"bytes,17,rep,name=attacker_casualties_units,json=attackerCasualtiesUnits,proto3" json:"attacker_casualties_units,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	DefenderCasualtiesUnits map[int32]int32 `protobuf:"bytes,18,rep,name=defender_casualties_units,json=defenderCasualtiesUnits,proto3" json:"defender_casualties_units,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *BattleReportDetail) Reset() {
@@ -1577,6 +1582,34 @@ func (x *BattleReportDetail) GetFinalDefenses() map[string]int32 {
 	return nil
 }
 
+func (x *BattleReportDetail) GetFinalAttackerUnits() map[int32]int32 {
+	if x != nil {
+		return x.FinalAttackerUnits
+	}
+	return nil
+}
+
+func (x *BattleReportDetail) GetFinalDefenderUnits() map[int32]int32 {
+	if x != nil {
+		return x.FinalDefenderUnits
+	}
+	return nil
+}
+
+func (x *BattleReportDetail) GetAttackerCasualtiesUnits() map[int32]int32 {
+	if x != nil {
+		return x.AttackerCasualtiesUnits
+	}
+	return nil
+}
+
+func (x *BattleReportDetail) GetDefenderCasualtiesUnits() map[int32]int32 {
+	if x != nil {
+		return x.DefenderCasualtiesUnits
+	}
+	return nil
+}
+
 type BattleRoundAction struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// attacker / defender
@@ -1589,6 +1622,7 @@ type BattleRoundAction struct {
 	DamageHp int32  `protobuf:"varint,5,opt,name=damage_hp,json=damageHp,proto3" json:"damage_hp,omitempty"`
 	// R3-S1: 城防工事代码；普通兵种行动时为空。
 	Defense       string `protobuf:"bytes,6,opt,name=defense,proto3" json:"defense,omitempty"`
+	UnitCfgId     int32  `protobuf:"varint,7,opt,name=unit_cfg_id,json=unitCfgId,proto3" json:"unit_cfg_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1665,6 +1699,13 @@ func (x *BattleRoundAction) GetDefense() string {
 	return ""
 }
 
+func (x *BattleRoundAction) GetUnitCfgId() int32 {
+	if x != nil {
+		return x.UnitCfgId
+	}
+	return 0
+}
+
 type BattleRound struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Round           int32                  `protobuf:"varint,1,opt,name=round,proto3" json:"round,omitempty"`
@@ -1678,6 +1719,8 @@ type BattleRound struct {
 	Actions []*BattleRoundAction `protobuf:"bytes,7,rep,name=actions,proto3" json:"actions,omitempty"`
 	// R3-S1: 回合结束时城防工事剩余数量。
 	Defenses      map[string]int32 `protobuf:"bytes,8,rep,name=defenses,proto3" json:"defenses,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	AttackerUnits map[int32]int32  `protobuf:"bytes,9,rep,name=attacker_units,json=attackerUnits,proto3" json:"attacker_units,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	DefenderUnits map[int32]int32  `protobuf:"bytes,10,rep,name=defender_units,json=defenderUnits,proto3" json:"defender_units,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1764,6 +1807,20 @@ func (x *BattleRound) GetActions() []*BattleRoundAction {
 func (x *BattleRound) GetDefenses() map[string]int32 {
 	if x != nil {
 		return x.Defenses
+	}
+	return nil
+}
+
+func (x *BattleRound) GetAttackerUnits() map[int32]int32 {
+	if x != nil {
+		return x.AttackerUnits
+	}
+	return nil
+}
+
+func (x *BattleRound) GetDefenderUnits() map[int32]int32 {
+	if x != nil {
+		return x.DefenderUnits
 	}
 	return nil
 }
@@ -2133,8 +2190,7 @@ const file_sanguo_military_v1_military_proto_rawDesc = "" +
 	"\x05stone\x18\x03 \x01(\x03R\x05stone\x12\x12\n" +
 	"\x04iron\x18\x04 \x01(\x03R\x04iron\x12\x12\n" +
 	"\x04gold\x18\x05 \x01(\x03R\x04gold\x128\n" +
-	"\x05items\x18\x06 \x03(\v2\".sanguo.military.v1.BattleLootItemR\x05items\"\xa2\n" +
-	"\n" +
+	"\x05items\x18\x06 \x03(\v2\".sanguo.military.v1.BattleLootItemR\x05items\"\xae\x10\n" +
 	"\x12BattleReportDetail\x12\x16\n" +
 	"\x06result\x18\x01 \x01(\tR\x06result\x127\n" +
 	"\x06rounds\x18\x02 \x03(\v2\x1f.sanguo.military.v1.BattleRoundR\x06rounds\x12o\n" +
@@ -2151,7 +2207,11 @@ const file_sanguo_military_v1_military_proto_rawDesc = "" +
 	"\x0fhero_exp_gained\x18\v \x01(\x03R\rheroExpGained\x12#\n" +
 	"\roccupy_result\x18\f \x01(\tR\foccupyResult\x12%\n" +
 	"\x0estart_distance\x18\r \x01(\x05R\rstartDistance\x12`\n" +
-	"\x0efinal_defenses\x18\x0e \x03(\v29.sanguo.military.v1.BattleReportDetail.FinalDefensesEntryR\rfinalDefenses\x1aE\n" +
+	"\x0efinal_defenses\x18\x0e \x03(\v29.sanguo.military.v1.BattleReportDetail.FinalDefensesEntryR\rfinalDefenses\x12p\n" +
+	"\x14final_attacker_units\x18\x0f \x03(\v2>.sanguo.military.v1.BattleReportDetail.FinalAttackerUnitsEntryR\x12finalAttackerUnits\x12p\n" +
+	"\x14final_defender_units\x18\x10 \x03(\v2>.sanguo.military.v1.BattleReportDetail.FinalDefenderUnitsEntryR\x12finalDefenderUnits\x12\x7f\n" +
+	"\x19attacker_casualties_units\x18\x11 \x03(\v2C.sanguo.military.v1.BattleReportDetail.AttackerCasualtiesUnitsEntryR\x17attackerCasualtiesUnits\x12\x7f\n" +
+	"\x19defender_casualties_units\x18\x12 \x03(\v2C.sanguo.military.v1.BattleReportDetail.DefenderCasualtiesUnitsEntryR\x17defenderCasualtiesUnits\x1aE\n" +
 	"\x17AttackerCasualtiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1aE\n" +
@@ -2166,14 +2226,27 @@ const file_sanguo_military_v1_military_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1a@\n" +
 	"\x12FinalDefensesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\"\xa0\x01\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1aE\n" +
+	"\x17FinalAttackerUnitsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1aE\n" +
+	"\x17FinalDefenderUnitsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1aJ\n" +
+	"\x1cAttackerCasualtiesUnitsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1aJ\n" +
+	"\x1cDefenderCasualtiesUnitsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\"\xc0\x01\n" +
 	"\x11BattleRoundAction\x12\x12\n" +
 	"\x04side\x18\x01 \x01(\tR\x04side\x12\x14\n" +
 	"\x05troop\x18\x02 \x01(\tR\x05troop\x12\x12\n" +
 	"\x04kind\x18\x03 \x01(\tR\x04kind\x12\x16\n" +
 	"\x06target\x18\x04 \x01(\tR\x06target\x12\x1b\n" +
 	"\tdamage_hp\x18\x05 \x01(\x05R\bdamageHp\x12\x18\n" +
-	"\adefense\x18\x06 \x01(\tR\adefense\"\xa4\x05\n" +
+	"\adefense\x18\x06 \x01(\tR\adefense\x12\x1e\n" +
+	"\vunit_cfg_id\x18\a \x01(\x05R\tunitCfgId\"\xde\a\n" +
 	"\vBattleRound\x12\x14\n" +
 	"\x05round\x18\x01 \x01(\x05R\x05round\x12\\\n" +
 	"\x0fattacker_troops\x18\x02 \x03(\v23.sanguo.military.v1.BattleRound.AttackerTroopsEntryR\x0eattackerTroops\x12\\\n" +
@@ -2182,7 +2255,10 @@ const file_sanguo_military_v1_military_proto_rawDesc = "" +
 	"\x12defender_to_att_hp\x18\x05 \x01(\x05R\x0fdefenderToAttHp\x12\x1a\n" +
 	"\bdistance\x18\x06 \x01(\x05R\bdistance\x12?\n" +
 	"\aactions\x18\a \x03(\v2%.sanguo.military.v1.BattleRoundActionR\aactions\x12I\n" +
-	"\bdefenses\x18\b \x03(\v2-.sanguo.military.v1.BattleRound.DefensesEntryR\bdefenses\x1aA\n" +
+	"\bdefenses\x18\b \x03(\v2-.sanguo.military.v1.BattleRound.DefensesEntryR\bdefenses\x12Y\n" +
+	"\x0eattacker_units\x18\t \x03(\v22.sanguo.military.v1.BattleRound.AttackerUnitsEntryR\rattackerUnits\x12Y\n" +
+	"\x0edefender_units\x18\n" +
+	" \x03(\v22.sanguo.military.v1.BattleRound.DefenderUnitsEntryR\rdefenderUnits\x1aA\n" +
 	"\x13AttackerTroopsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1aA\n" +
@@ -2191,6 +2267,12 @@ const file_sanguo_military_v1_military_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1a;\n" +
 	"\rDefensesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1a@\n" +
+	"\x12AttackerUnitsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1a@\n" +
+	"\x12DefenderUnitsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\"\x95\x01\n" +
 	"\x10BattleReportView\x12A\n" +
 	"\asummary\x18\x01 \x01(\v2'.sanguo.military.v1.BattleReportSummaryR\asummary\x12>\n" +
@@ -2227,7 +2309,7 @@ func file_sanguo_military_v1_military_proto_rawDescGZIP() []byte {
 }
 
 var file_sanguo_military_v1_military_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_sanguo_military_v1_military_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
+var file_sanguo_military_v1_military_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
 var file_sanguo_military_v1_military_proto_goTypes = []any{
 	(MarchPhase)(0),                   // 0: sanguo.military.v1.MarchPhase
 	(*RecruitTroopRequest)(nil),       // 1: sanguo.military.v1.RecruitTroopRequest
@@ -2261,21 +2343,27 @@ var file_sanguo_military_v1_military_proto_goTypes = []any{
 	nil,                               // 29: sanguo.military.v1.BattleReportDetail.FinalAttackerEntry
 	nil,                               // 30: sanguo.military.v1.BattleReportDetail.FinalDefenderEntry
 	nil,                               // 31: sanguo.military.v1.BattleReportDetail.FinalDefensesEntry
-	nil,                               // 32: sanguo.military.v1.BattleRound.AttackerTroopsEntry
-	nil,                               // 33: sanguo.military.v1.BattleRound.DefenderTroopsEntry
-	nil,                               // 34: sanguo.military.v1.BattleRound.DefensesEntry
-	(*v1.CityTroopStack)(nil),         // 35: sanguo.common.v1.CityTroopStack
-	(*v1.ResourceWallet)(nil),         // 36: sanguo.common.v1.ResourceWallet
+	nil,                               // 32: sanguo.military.v1.BattleReportDetail.FinalAttackerUnitsEntry
+	nil,                               // 33: sanguo.military.v1.BattleReportDetail.FinalDefenderUnitsEntry
+	nil,                               // 34: sanguo.military.v1.BattleReportDetail.AttackerCasualtiesUnitsEntry
+	nil,                               // 35: sanguo.military.v1.BattleReportDetail.DefenderCasualtiesUnitsEntry
+	nil,                               // 36: sanguo.military.v1.BattleRound.AttackerTroopsEntry
+	nil,                               // 37: sanguo.military.v1.BattleRound.DefenderTroopsEntry
+	nil,                               // 38: sanguo.military.v1.BattleRound.DefensesEntry
+	nil,                               // 39: sanguo.military.v1.BattleRound.AttackerUnitsEntry
+	nil,                               // 40: sanguo.military.v1.BattleRound.DefenderUnitsEntry
+	(*v1.CityTroopStack)(nil),         // 41: sanguo.common.v1.CityTroopStack
+	(*v1.ResourceWallet)(nil),         // 42: sanguo.common.v1.ResourceWallet
 }
 var file_sanguo_military_v1_military_proto_depIdxs = []int32{
-	35, // 0: sanguo.military.v1.RecruitTroopResponse.troop:type_name -> sanguo.common.v1.CityTroopStack
-	36, // 1: sanguo.military.v1.RecruitTroopResponse.wallet:type_name -> sanguo.common.v1.ResourceWallet
+	41, // 0: sanguo.military.v1.RecruitTroopResponse.troop:type_name -> sanguo.common.v1.CityTroopStack
+	42, // 1: sanguo.military.v1.RecruitTroopResponse.wallet:type_name -> sanguo.common.v1.ResourceWallet
 	5,  // 2: sanguo.military.v1.RecruitTroopV2Response.acceptance:type_name -> sanguo.military.v1.RecruitAcceptance
 	0,  // 3: sanguo.military.v1.MarchSummary.phase:type_name -> sanguo.military.v1.MarchPhase
-	35, // 4: sanguo.military.v1.MarchSummary.troops:type_name -> sanguo.common.v1.CityTroopStack
-	35, // 5: sanguo.military.v1.StartMarchRequest.troops:type_name -> sanguo.common.v1.CityTroopStack
+	41, // 4: sanguo.military.v1.MarchSummary.troops:type_name -> sanguo.common.v1.CityTroopStack
+	41, // 5: sanguo.military.v1.StartMarchRequest.troops:type_name -> sanguo.common.v1.CityTroopStack
 	6,  // 6: sanguo.military.v1.StartMarchResponse.march:type_name -> sanguo.military.v1.MarchSummary
-	35, // 7: sanguo.military.v1.StartMarchResponse.city_troops:type_name -> sanguo.common.v1.CityTroopStack
+	41, // 7: sanguo.military.v1.StartMarchResponse.city_troops:type_name -> sanguo.common.v1.CityTroopStack
 	6,  // 8: sanguo.military.v1.RecallMarchResponse.march:type_name -> sanguo.military.v1.MarchSummary
 	6,  // 9: sanguo.military.v1.SpeedupMarchResponse.march:type_name -> sanguo.military.v1.MarchSummary
 	6,  // 10: sanguo.military.v1.ListMarchesResponse.marches:type_name -> sanguo.military.v1.MarchSummary
@@ -2289,19 +2377,25 @@ var file_sanguo_military_v1_military_proto_depIdxs = []int32{
 	16, // 18: sanguo.military.v1.BattleReportDetail.defender_hero:type_name -> sanguo.military.v1.BattleHeroSummary
 	18, // 19: sanguo.military.v1.BattleReportDetail.loot:type_name -> sanguo.military.v1.BattleLoot
 	31, // 20: sanguo.military.v1.BattleReportDetail.final_defenses:type_name -> sanguo.military.v1.BattleReportDetail.FinalDefensesEntry
-	32, // 21: sanguo.military.v1.BattleRound.attacker_troops:type_name -> sanguo.military.v1.BattleRound.AttackerTroopsEntry
-	33, // 22: sanguo.military.v1.BattleRound.defender_troops:type_name -> sanguo.military.v1.BattleRound.DefenderTroopsEntry
-	20, // 23: sanguo.military.v1.BattleRound.actions:type_name -> sanguo.military.v1.BattleRoundAction
-	34, // 24: sanguo.military.v1.BattleRound.defenses:type_name -> sanguo.military.v1.BattleRound.DefensesEntry
-	15, // 25: sanguo.military.v1.BattleReportView.summary:type_name -> sanguo.military.v1.BattleReportSummary
-	19, // 26: sanguo.military.v1.BattleReportView.detail:type_name -> sanguo.military.v1.BattleReportDetail
-	22, // 27: sanguo.military.v1.GetBattleReportResponse.report:type_name -> sanguo.military.v1.BattleReportView
-	15, // 28: sanguo.military.v1.ListBattleReportsResponse.reports:type_name -> sanguo.military.v1.BattleReportSummary
-	29, // [29:29] is the sub-list for method output_type
-	29, // [29:29] is the sub-list for method input_type
-	29, // [29:29] is the sub-list for extension type_name
-	29, // [29:29] is the sub-list for extension extendee
-	0,  // [0:29] is the sub-list for field type_name
+	32, // 21: sanguo.military.v1.BattleReportDetail.final_attacker_units:type_name -> sanguo.military.v1.BattleReportDetail.FinalAttackerUnitsEntry
+	33, // 22: sanguo.military.v1.BattleReportDetail.final_defender_units:type_name -> sanguo.military.v1.BattleReportDetail.FinalDefenderUnitsEntry
+	34, // 23: sanguo.military.v1.BattleReportDetail.attacker_casualties_units:type_name -> sanguo.military.v1.BattleReportDetail.AttackerCasualtiesUnitsEntry
+	35, // 24: sanguo.military.v1.BattleReportDetail.defender_casualties_units:type_name -> sanguo.military.v1.BattleReportDetail.DefenderCasualtiesUnitsEntry
+	36, // 25: sanguo.military.v1.BattleRound.attacker_troops:type_name -> sanguo.military.v1.BattleRound.AttackerTroopsEntry
+	37, // 26: sanguo.military.v1.BattleRound.defender_troops:type_name -> sanguo.military.v1.BattleRound.DefenderTroopsEntry
+	20, // 27: sanguo.military.v1.BattleRound.actions:type_name -> sanguo.military.v1.BattleRoundAction
+	38, // 28: sanguo.military.v1.BattleRound.defenses:type_name -> sanguo.military.v1.BattleRound.DefensesEntry
+	39, // 29: sanguo.military.v1.BattleRound.attacker_units:type_name -> sanguo.military.v1.BattleRound.AttackerUnitsEntry
+	40, // 30: sanguo.military.v1.BattleRound.defender_units:type_name -> sanguo.military.v1.BattleRound.DefenderUnitsEntry
+	15, // 31: sanguo.military.v1.BattleReportView.summary:type_name -> sanguo.military.v1.BattleReportSummary
+	19, // 32: sanguo.military.v1.BattleReportView.detail:type_name -> sanguo.military.v1.BattleReportDetail
+	22, // 33: sanguo.military.v1.GetBattleReportResponse.report:type_name -> sanguo.military.v1.BattleReportView
+	15, // 34: sanguo.military.v1.ListBattleReportsResponse.reports:type_name -> sanguo.military.v1.BattleReportSummary
+	35, // [35:35] is the sub-list for method output_type
+	35, // [35:35] is the sub-list for method input_type
+	35, // [35:35] is the sub-list for extension type_name
+	35, // [35:35] is the sub-list for extension extendee
+	0,  // [0:35] is the sub-list for field type_name
 }
 
 func init() { file_sanguo_military_v1_military_proto_init() }
@@ -2315,7 +2409,7 @@ func file_sanguo_military_v1_military_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sanguo_military_v1_military_proto_rawDesc), len(file_sanguo_military_v1_military_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   34,
+			NumMessages:   40,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

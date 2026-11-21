@@ -28,6 +28,11 @@ type Army struct {
 	Morale         float64
 	// Tactics is the optional drill-ground preset per troop role.
 	Tactics map[TroopType]Tactic
+	// Units is the optional twelve-unit breakdown. When present, R3-S1 fights
+	// per unit_cfg_id instead of aggregating into four roles.
+	Units map[int32]int
+	// UnitTactics is the optional drill-ground preset per unit_cfg_id.
+	UnitTactics map[int32]Tactic
 	// Defenses are city wall structures (R3-S1). They act last each round.
 	Defenses []WallGroup
 }
@@ -61,6 +66,9 @@ type RoundReport struct {
 	// Actions records group moves and attacks in action order (R3-S1).
 	Actions  []RoundAction
 	Defenses map[string]int
+	// AttackerUnits/DefenderUnits preserve the twelve-unit breakdown.
+	AttackerUnits map[int32]int
+	DefenderUnits map[int32]int
 }
 
 // HeroSummary is the player-facing hero card stored in a battle report.
@@ -104,4 +112,9 @@ type BattleReport struct {
 	OccupyResult string
 	// FinalDefenses is the remaining wall structure count by code (R3-S1).
 	FinalDefenses map[string]int
+	// Twelve-unit final state and casualties (R3-S1).
+	FinalAttackerUnits      map[int32]int
+	FinalDefenderUnits      map[int32]int
+	AttackerCasualtiesUnits map[int32]int
+	DefenderCasualtiesUnits map[int32]int
 }
