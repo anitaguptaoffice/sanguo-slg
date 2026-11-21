@@ -40,6 +40,9 @@ type InjectCaptiveInput struct {
 func CountOwnedHeroes(heroes []*Hero) int {
 	n := 0
 	for _, h := range heroes {
+		if h.TemplateCfgID == MonarchTemplateCfgID {
+			continue
+		}
 		if h.Status != StatusCaptive && h.Status != StatusComing {
 			n++
 		}

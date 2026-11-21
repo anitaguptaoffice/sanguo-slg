@@ -32,9 +32,11 @@ func (s *Server) handleListPlayerHeroes(ctx context.Context, pkt *commonv1.Clien
 		return nil, err
 	}
 	out := make([]*herov1.PlayerHeroSummary, 0, len(res.Heroes))
+	monarch := s.equipmentService().MonarchID(ctx, pc.ServerID, pc.PlayerID)
 	for _, h := range res.Heroes {
 		out = append(out, &herov1.PlayerHeroSummary{
 			HeroId: h.HeroID, TemplateCfgId: h.TemplateCfgID, Level: h.Level, Loyalty: int32(h.Loyalty),
+			IsMonarch: h.HeroID == monarch,
 		})
 	}
 	data, err := marshal(&herov1.ListPlayerHeroesResponse{Heroes: out, TotalCount: int32(res.Total)})

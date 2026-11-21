@@ -136,3 +136,36 @@ describe("MainCityBuildingPanel drill tactics", () => {
     panel.detach();
   });
 });
+
+describe("MainCityBuildingPanel equipment", () => {
+  it("renders forge, equipped and inventory actions", () => {
+    const mount = document.createElement("div");
+    const calls: unknown[][] = [];
+    const panel = new MainCityBuildingPanel(
+      mount, { smithy: "铁匠铺" }, () => null, () => {}, () => "idle",
+      undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+      (...args: unknown[]) => calls.push(args),
+    );
+    panel.attach();
+    panel.selectSlot("smithy");
+    panel.setEquipment(11, [
+      { equipment_id: 9, slot_type: 2, name: "青龙刀", enhance_level: 2, max_enhance: 9,
+        attrs: { force: 12 }, gems: [1], equipped: true },
+    ], [
+      { equipment_id: 10, slot_type: 3, name: "赤兔马", enhance_level: 0, max_enhance: 9,
+        attrs: { force: 3, command: 3 }, speed_pct: 9 },
+    ], 3, 3);
+    const section = mount.querySelector<HTMLElement>('[data-role="equipment"]')!;
+    expect(section.querySelector('[data-role="equipment-status"]')?.textContent).toContain("铁匠铺 Lv3");
+    expect(section.querySelector('[data-role="equipment-equipped"]')?.textContent).toContain("青龙刀");
+    expect(section.querySelector('[data-role="equipment-inventory"]')?.textContent).toContain("赤兔马");
+    (section.querySelector('[data-action="forge-equipment"][data-slot-type="2"][data-tier="2"]') as HTMLButtonElement).click();
+    (section.querySelector('[data-action="equip-item"]') as HTMLButtonElement).click();
+    (section.querySelector('[data-action="unequip-item"]') as HTMLButtonElement).click();
+    expect(calls.map((c) => c[0])).toEqual(["forge-equipment", "equip-item", "unequip-item"]);
+    expect(calls[0]).toEqual(["forge-equipment", 2, 2, 0, 1]);
+    expect(calls[1][3]).toBe(10);
+    expect(calls[2][3]).toBe(9);
+    panel.detach();
+  });
+});
