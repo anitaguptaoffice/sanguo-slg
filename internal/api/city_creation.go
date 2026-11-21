@@ -124,6 +124,15 @@ func (s *Server) initializeDurableCity(ctx context.Context, tx pgx.Tx, playerID,
 // initializeMonarch creates the player's unique monarch hero in the city
 // creation transaction. Re-running keeps the existing monarch untouched.
 func initializeMonarch(ctx context.Context, tx pgx.Tx, serverID int32, playerID int64) error {
+	var ready bool
+	if err := tx.QueryRow(ctx, `SELECT to_regclass('player_hero_id_seq') IS NOT NULL
+		AND EXISTS (SELECT 1 FROM pg_catalog.pg_attribute a JOIN pg_catalog.pg_class c ON c.oid=a.attrelid
+			WHERE c.relname='player_hero' AND a.attname='is_monarch' AND a.attnum>0 AND NOT a.attisdropped)`).Scan(&ready); err != nil {
+		return err
+	}
+	if !ready {
+		return nil
+	}
 	_, err := tx.Exec(ctx, `INSERT INTO player_hero
 		(server_id,hero_id,player_id,template_cfg_id,display_name,level,exp,loyalty,
 		 force,intel,politics,command,status,created_at,is_monarch)
