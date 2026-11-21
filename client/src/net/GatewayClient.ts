@@ -76,6 +76,7 @@ export type GatewayPort = {
   trainMount(cityId: number, equipmentId: number): Promise<unknown>;
   listTacticPresets(cityId: number): Promise<unknown>;
   setTacticPreset(cityId: number, unitCfgId: number, targetType: number, hold: boolean): Promise<unknown>;
+  castTrick(cityId: number, trickType: number, targetMarchId: number): Promise<unknown>;
   runDrill(cityId: number, attacker: { unit_cfg_id: number; count: number }[], defender: { unit_cfg_id: number; count: number }[]): Promise<unknown>;
   getStorehouse(cityId: number): Promise<unknown>;
   getMarket(cityId: number): Promise<unknown>;
@@ -738,6 +739,11 @@ export class GatewayClient implements GatewayPort {
     return this.rpc(Routes.SetTacticPreset, "SetTacticPresetRequest", {
       city_id: cityId, unit_cfg_id: unitCfgId, target_type: targetType, hold,
     }, SetTacticPresetResponse, true);
+  }
+
+  async castTrick(cityId: number, trickType: number, targetMarchId: number) {
+    const { CastTrickResponse } = getTypes();
+    return this.rpc(Routes.CastTrick, "CastTrickRequest", { server_id: 1, city_id: cityId, trick_type: trickType, target_march_id: targetMarchId }, CastTrickResponse, true);
   }
 
   async runDrill(cityId: number, attacker: { unit_cfg_id: number; count: number }[], defender: { unit_cfg_id: number; count: number }[]) {

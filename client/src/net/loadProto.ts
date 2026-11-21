@@ -88,6 +88,7 @@ export const Routes = {
   ListTacticPresets: "military.v1.ListTacticPresets",
   SetTacticPreset: "military.v1.SetTacticPreset",
   RunDrill: "military.v1.RunDrill",
+  CastTrick: "military.v1.CastTrick",
   GetStorehouse: "domestic.v1.GetStorehouse",
   GetMarket: "domestic.v1.GetMarket",
   BuyFromMerchant: "domestic.v1.BuyFromMerchant",
@@ -246,6 +247,8 @@ export type ProtoTypes = {
   SetTacticPresetResponse: protobuf.Type;
   RunDrillRequest: protobuf.Type;
   RunDrillResponse: protobuf.Type;
+  CastTrickRequest: protobuf.Type;
+  CastTrickResponse: protobuf.Type;
   GetStorehouseRequest: protobuf.Type;
   GetStorehouseResponse: protobuf.Type;
   GetMarketRequest: protobuf.Type;
@@ -456,6 +459,8 @@ export function getTypes(): ProtoTypes {
     SetTacticPresetRequest: r.lookupType("sanguo.military.v1.SetTacticPresetRequest"),
     SetTacticPresetResponse: r.lookupType("sanguo.military.v1.SetTacticPresetResponse"),
     RunDrillRequest: r.lookupType("sanguo.military.v1.RunDrillRequest"),
+    CastTrickRequest: r.lookupType("sanguo.military.v1.CastTrickRequest"),
+    CastTrickResponse: r.lookupType("sanguo.military.v1.CastTrickResponse"),
     RunDrillResponse: r.lookupType("sanguo.military.v1.RunDrillResponse"),
     GetStorehouseRequest: r.lookupType("sanguo.domestic.v1.GetStorehouseRequest"),
     GetStorehouseResponse: r.lookupType("sanguo.domestic.v1.GetStorehouseResponse"),

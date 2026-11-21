@@ -117,6 +117,7 @@ export class MainCityBuildingPanel {
     private readonly onRunDrill?: () => void,
     private readonly onEquipmentAction?: (action: string, slotType: number, tier: number, equipmentId: number, gemCfgId: number) => void,
     private readonly onHistoricalAction?: (action: string, npcCfgId: number) => void,
+    private readonly onTrickAction?: (trickType: number, targetMarchId: number) => void,
   ) {}
 
   attach(): void {
@@ -209,6 +210,17 @@ export class MainCityBuildingPanel {
         <div class="storehouse-section hidden" data-role="storehouse">
           <h4>仓库</h4>
           <p data-role="storehouse-status"></p>
+        </div>
+        <div class="trick-section hidden" data-role="tricks">
+          <h4>招贤馆计谋</h4>
+          <p data-role="trick-status">需任命军师，消耗 1 个锦囊；千里奔袭选己方行军，八门金锁/关门打狗选敌方行军</p>
+          <label>目标行军 ID <input type="number" min="1" step="1" data-field="trick-march" value="1"></label>
+          <div class="city-civic-actions">
+            <button type="button" data-action="cast-trick" data-trick-type="1">千里奔袭</button>
+            <button type="button" data-action="cast-trick" data-trick-type="2">八门金锁</button>
+            <button type="button" data-action="cast-trick" data-trick-type="3">关门打狗</button>
+            <button type="button" data-action="cast-trick" data-trick-type="4">空城计</button>
+          </div>
         </div>
         <div class="city-offices hidden" data-role="city-offices">
           <h4>招贤馆三职</h4>
@@ -336,6 +348,8 @@ export class MainCityBuildingPanel {
     const academy = this.panel.querySelector<HTMLElement>('[data-role="academy-technics"]');
     academy?.classList.toggle("hidden", slotKey !== "academy");
     if (slotKey === "academy") this.renderTechnics();
+    const trickEl = this.panel.querySelector<HTMLElement>('[data-role="tricks"]');
+    trickEl?.classList.toggle("hidden", slotKey !== "recruit_hall");
     const officesEl = this.panel.querySelector<HTMLElement>('[data-role="city-offices"]');
     officesEl?.classList.toggle("hidden", slotKey !== "recruit_hall");
     if (slotKey === "recruit_hall") this.renderOffices();
@@ -521,6 +535,11 @@ export class MainCityBuildingPanel {
     this.blacksmithLevel = blacksmith;
     this.stableLevel = stable;
     this.renderEquipment();
+  }
+
+  setTrickResult(text: string): void {
+    const status = this.panel?.querySelector<HTMLElement>('[data-role="trick-status"]');
+    if (status) status.textContent = text;
   }
 
   setDrillResult(text: string): void {
@@ -740,6 +759,12 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    if (btn?.getAttribute("data-action") === "cast-trick") {
+      const trickType = Number(btn?.dataset.trickType ?? 0);
+      const target = Number(this.panel.querySelector<HTMLInputElement>('[data-field="trick-march"]')?.value ?? 0);
+      this.onTrickAction?.(trickType, target);
+      return;
+    }
     const historicalAction = btn?.getAttribute("data-action");
     if (historicalAction === "search-historical" || historicalAction === "persuade-historical") {
       this.onHistoricalAction?.(historicalAction, Number(btn?.dataset.npcCfgId ?? 0));

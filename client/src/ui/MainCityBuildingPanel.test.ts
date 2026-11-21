@@ -195,3 +195,24 @@ describe("MainCityBuildingPanel historical heroes", () => {
     panel.detach();
   });
 });
+
+describe("MainCityBuildingPanel tricks", () => {
+  it("dispatches a selected trick with the target march", () => {
+    const mount = document.createElement("div");
+    const calls: unknown[][] = [];
+    const panel = new MainCityBuildingPanel(
+      mount, { recruit_hall: "招贤馆" }, () => null, () => {}, () => "idle",
+      undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+      (...args: unknown[]) => calls.push(args),
+    );
+    panel.attach();
+    panel.selectSlot("recruit_hall");
+    const section = mount.querySelector<HTMLElement>('[data-role="tricks"]')!;
+    (section.querySelector('[data-field="trick-march"]') as HTMLInputElement).value = "7";
+    (section.querySelector('[data-action="cast-trick"][data-trick-type="2"]') as HTMLButtonElement).click();
+    panel.setTrickResult("计谋成功");
+    expect(calls).toEqual([[2, 7]]);
+    expect(section.querySelector('[data-role="trick-status"]')?.textContent).toBe("计谋成功");
+    panel.detach();
+  });
+});
