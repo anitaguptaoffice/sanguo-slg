@@ -64,6 +64,13 @@ export type GatewayPort = {
   listWallDefenses(cityId: number): Promise<unknown>;
   buildWallDefense(cityId: number, defenseType: number): Promise<unknown>;
   healWounded(cityId: number, unitCfgId: number, count: number): Promise<unknown>;
+  getHeroEquipment(cityId: number, heroId: number): Promise<unknown>;
+  forgeEquipment(cityId: number, slotType: number, tier: number): Promise<unknown>;
+  enhanceEquipment(cityId: number, equipmentId: number): Promise<unknown>;
+  socketGem(cityId: number, equipmentId: number, gemCfgId: number): Promise<unknown>;
+  equipItem(cityId: number, heroId: number, equipmentId: number): Promise<unknown>;
+  unequipItem(cityId: number, heroId: number, slotType: number): Promise<unknown>;
+  trainMount(cityId: number, equipmentId: number): Promise<unknown>;
   listTacticPresets(cityId: number): Promise<unknown>;
   setTacticPreset(cityId: number, unitCfgId: number, targetType: number, hold: boolean): Promise<unknown>;
   runDrill(cityId: number, attacker: { unit_cfg_id: number; count: number }[], defender: { unit_cfg_id: number; count: number }[]): Promise<unknown>;
@@ -666,6 +673,41 @@ export class GatewayClient implements GatewayPort {
   async healWounded(cityId: number, unitCfgId: number, count: number) {
     const { HealWoundedResponse } = getTypes();
     return this.rpc(Routes.HealWounded, "HealWoundedRequest", { city_id: cityId, unit_cfg_id: unitCfgId, count }, HealWoundedResponse, true);
+  }
+
+  async getHeroEquipment(cityId: number, heroId: number) {
+    const { GetHeroEquipmentResponse } = getTypes();
+    return this.rpc(Routes.GetHeroEquipment, "GetHeroEquipmentRequest", { server_id: 1, hero_id: heroId, city_id: cityId }, GetHeroEquipmentResponse, true);
+  }
+
+  async forgeEquipment(cityId: number, slotType: number, tier: number) {
+    const { ForgeEquipmentResponse } = getTypes();
+    return this.rpc(Routes.ForgeEquipment, "ForgeEquipmentRequest", { server_id: 1, city_id: cityId, slot_type: slotType, tier }, ForgeEquipmentResponse, true);
+  }
+
+  async enhanceEquipment(cityId: number, equipmentId: number) {
+    const { EnhanceEquipmentResponse } = getTypes();
+    return this.rpc(Routes.EnhanceEquipment, "EnhanceEquipmentRequest", { server_id: 1, city_id: cityId, equipment_id: equipmentId }, EnhanceEquipmentResponse, true);
+  }
+
+  async socketGem(cityId: number, equipmentId: number, gemCfgId: number) {
+    const { SocketGemResponse } = getTypes();
+    return this.rpc(Routes.SocketGem, "SocketGemRequest", { server_id: 1, city_id: cityId, equipment_id: equipmentId, gem_cfg_id: gemCfgId }, SocketGemResponse, true);
+  }
+
+  async equipItem(cityId: number, heroId: number, equipmentId: number) {
+    const { EquipItemResponse } = getTypes();
+    return this.rpc(Routes.EquipItem, "EquipItemRequest", { server_id: 1, city_id: cityId, hero_id: heroId, equipment_id: equipmentId }, EquipItemResponse, true);
+  }
+
+  async unequipItem(cityId: number, heroId: number, slotType: number) {
+    const { UnequipItemResponse } = getTypes();
+    return this.rpc(Routes.UnequipItem, "UnequipItemRequest", { server_id: 1, city_id: cityId, hero_id: heroId, slot_type: slotType }, UnequipItemResponse, true);
+  }
+
+  async trainMount(cityId: number, equipmentId: number) {
+    const { TrainMountResponse } = getTypes();
+    return this.rpc(Routes.TrainMount, "TrainMountRequest", { server_id: 1, city_id: cityId, equipment_id: equipmentId }, TrainMountResponse, true);
   }
 
   async listTacticPresets(cityId: number) {

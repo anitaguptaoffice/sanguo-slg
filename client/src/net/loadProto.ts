@@ -75,6 +75,13 @@ export const Routes = {
   ListWallDefenses: "domestic.v1.ListWallDefenses",
   BuildWallDefense: "domestic.v1.BuildWallDefense",
   HealWounded: "domestic.v1.HealWounded",
+  GetHeroEquipment: "hero.v1.GetHeroEquipment",
+  ForgeEquipment: "hero.v1.ForgeEquipment",
+  EnhanceEquipment: "hero.v1.EnhanceEquipment",
+  SocketGem: "hero.v1.SocketGem",
+  EquipItem: "hero.v1.EquipItem",
+  UnequipItem: "hero.v1.UnequipItem",
+  TrainMount: "hero.v1.TrainMount",
   ListTacticPresets: "military.v1.ListTacticPresets",
   SetTacticPreset: "military.v1.SetTacticPreset",
   RunDrill: "military.v1.RunDrill",
@@ -210,6 +217,20 @@ export type ProtoTypes = {
   BuildWallDefenseResponse: protobuf.Type;
   HealWoundedRequest: protobuf.Type;
   HealWoundedResponse: protobuf.Type;
+  GetHeroEquipmentRequest: protobuf.Type;
+  GetHeroEquipmentResponse: protobuf.Type;
+  ForgeEquipmentRequest: protobuf.Type;
+  ForgeEquipmentResponse: protobuf.Type;
+  EnhanceEquipmentRequest: protobuf.Type;
+  EnhanceEquipmentResponse: protobuf.Type;
+  SocketGemRequest: protobuf.Type;
+  SocketGemResponse: protobuf.Type;
+  EquipItemRequest: protobuf.Type;
+  EquipItemResponse: protobuf.Type;
+  UnequipItemRequest: protobuf.Type;
+  UnequipItemResponse: protobuf.Type;
+  TrainMountRequest: protobuf.Type;
+  TrainMountResponse: protobuf.Type;
   ListTacticPresetsRequest: protobuf.Type;
   ListTacticPresetsResponse: protobuf.Type;
   SetTacticPresetRequest: protobuf.Type;
@@ -401,6 +422,20 @@ export function getTypes(): ProtoTypes {
     BuildWallDefenseResponse: r.lookupType("sanguo.domestic.v1.BuildWallDefenseResponse"),
     HealWoundedRequest: r.lookupType("sanguo.domestic.v1.HealWoundedRequest"),
     HealWoundedResponse: r.lookupType("sanguo.domestic.v1.HealWoundedResponse"),
+    GetHeroEquipmentRequest: r.lookupType("sanguo.hero.v1.GetHeroEquipmentRequest"),
+    GetHeroEquipmentResponse: r.lookupType("sanguo.hero.v1.GetHeroEquipmentResponse"),
+    ForgeEquipmentRequest: r.lookupType("sanguo.hero.v1.ForgeEquipmentRequest"),
+    ForgeEquipmentResponse: r.lookupType("sanguo.hero.v1.ForgeEquipmentResponse"),
+    EnhanceEquipmentRequest: r.lookupType("sanguo.hero.v1.EnhanceEquipmentRequest"),
+    EnhanceEquipmentResponse: r.lookupType("sanguo.hero.v1.EnhanceEquipmentResponse"),
+    SocketGemRequest: r.lookupType("sanguo.hero.v1.SocketGemRequest"),
+    SocketGemResponse: r.lookupType("sanguo.hero.v1.SocketGemResponse"),
+    EquipItemRequest: r.lookupType("sanguo.hero.v1.EquipItemRequest"),
+    EquipItemResponse: r.lookupType("sanguo.hero.v1.EquipItemResponse"),
+    UnequipItemRequest: r.lookupType("sanguo.hero.v1.UnequipItemRequest"),
+    UnequipItemResponse: r.lookupType("sanguo.hero.v1.UnequipItemResponse"),
+    TrainMountRequest: r.lookupType("sanguo.hero.v1.TrainMountRequest"),
+    TrainMountResponse: r.lookupType("sanguo.hero.v1.TrainMountResponse"),
     ListTacticPresetsRequest: r.lookupType("sanguo.military.v1.ListTacticPresetsRequest"),
     ListTacticPresetsResponse: r.lookupType("sanguo.military.v1.ListTacticPresetsResponse"),
     SetTacticPresetRequest: r.lookupType("sanguo.military.v1.SetTacticPresetRequest"),

@@ -1056,6 +1056,8 @@ export class MainCityScene implements Scene {
         void this.marketAction(action, resourceType, amount, priceMilli, hours, offerId),
       (unitCfgId, targetType, hold) => void this.saveTactic(unitCfgId, targetType, hold),
       () => void this.runDrill(),
+      (action, slotType, tier, equipmentId, gemCfgId) =>
+        void this.equipmentAction(action, slotType, tier, equipmentId, gemCfgId),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -2190,6 +2192,7 @@ export class MainCityScene implements Scene {
     if (slotKey === "market") void this.refreshMarket();
     if (slotKey === "warehouse") void this.refreshStorehouse();
     if (slotKey === "drill_ground") void this.refreshTactics();
+    if (slotKey === "smithy" || slotKey === "stable") void this.refreshEquipment();
   }
 
   private getCityOfficeContext() {
@@ -2332,6 +2335,67 @@ export class MainCityScene implements Scene {
       this.buildingPanel.setDrillResult(
         `沙盘结果：${detail?.result ?? "—"} · 开场距离 ${detail?.start_distance ?? 0} · ${rounds} 回合 · 城防 ${walls}`,
       );
+      this.renderHud();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async equipmentHeroId(): Promise<number> {
+    const session = this.session;
+    if (!session) return 0;
+    const res = (await this.gateway.listPlayerHeroes(session.serverId)) as {
+      heroes?: { hero_id?: number; is_monarch?: boolean }[];
+    };
+    const heroes = res.heroes ?? [];
+    return heroes.find((h) => h.is_monarch)?.hero_id ?? heroes[0]?.hero_id ?? 0;
+  }
+
+  private async refreshEquipment(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const heroId = await this.equipmentHeroId();
+      if (!heroId) {
+        this.status = "暂无可装备的将领";
+        this.renderHud();
+        return;
+      }
+      const res = (await this.gateway.getHeroEquipment(session.cityId, heroId)) as {
+        equipped?: Record<string, unknown>[]; inventory?: Record<string, unknown>[];
+        blacksmith_level?: number; stable_level?: number;
+      };
+      if (this.session !== session) return;
+      this.buildingPanel.setEquipment(heroId, (res.equipped ?? []) as never, (res.inventory ?? []) as never,
+        res.blacksmith_level ?? 0, res.stable_level ?? 0);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async equipmentAction(action: string, slotType: number, tier: number, equipmentId: number, gemCfgId: number): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const heroId = await this.equipmentHeroId();
+      if (action === "forge-equipment") {
+        await this.gateway.forgeEquipment(session.cityId, slotType, tier);
+      } else if (action === "enhance-equipment") {
+        await this.gateway.enhanceEquipment(session.cityId, equipmentId);
+      } else if (action === "socket-gem") {
+        await this.gateway.socketGem(session.cityId, equipmentId, gemCfgId);
+      } else if (action === "equip-item") {
+        await this.gateway.equipItem(session.cityId, heroId, equipmentId);
+      } else if (action === "unequip-item") {
+        await this.gateway.unequipItem(session.cityId, heroId, slotType);
+      } else if (action === "train-mount") {
+        await this.gateway.trainMount(session.cityId, equipmentId);
+      }
+      await this.refreshState();
+      await this.refreshEquipment();
+      this.status = "装备操作完成";
       this.renderHud();
     } catch (error) {
       this.status = formatPanelGatewayErrorFromUnknown("build", error);

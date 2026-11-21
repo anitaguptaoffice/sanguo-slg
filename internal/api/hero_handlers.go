@@ -35,6 +35,7 @@ func (s *Server) handleListPlayerHeroes(ctx context.Context, pkt *commonv1.Clien
 	for _, h := range res.Heroes {
 		out = append(out, &herov1.PlayerHeroSummary{
 			HeroId: h.HeroID, TemplateCfgId: h.TemplateCfgID, Level: h.Level, Loyalty: int32(h.Loyalty),
+			IsMonarch: h.IsMonarch,
 		})
 	}
 	data, err := marshal(&herov1.ListPlayerHeroesResponse{Heroes: out, TotalCount: int32(res.Total)})

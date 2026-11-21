@@ -98,12 +98,12 @@ func (p *PGStore) GetHero(ctx context.Context, serverID int32, heroID int64) (*H
 	var h Hero
 	err := p.Pool.QueryRow(ctx, `
 		SELECT server_id, hero_id, player_id, template_cfg_id, COALESCE(display_name,''), level, exp, loyalty,
-		       force, intel, politics, command, force_add, intel_add, politics_add, status, created_at
+		       force, intel, politics, command, force_add, intel_add, politics_add, status, is_monarch, created_at
 		FROM player_hero
 		WHERE server_id = $1 AND hero_id = $2
 	`, serverID, heroID).Scan(
 		&h.ServerID, &h.HeroID, &h.PlayerID, &h.TemplateCfgID, &h.DisplayName, &h.Level, &h.Exp, &h.Loyalty,
-		&h.Force, &h.Intel, &h.Politics, &h.Command, &h.ForceAdd, &h.IntelAdd, &h.PoliticsAdd, &h.Status, &h.CreatedAt,
+		&h.Force, &h.Intel, &h.Politics, &h.Command, &h.ForceAdd, &h.IntelAdd, &h.PoliticsAdd, &h.Status, &h.IsMonarch, &h.CreatedAt,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
@@ -120,7 +120,7 @@ func (p *PGStore) ListPlayerHeroes(ctx context.Context, serverID int32, playerID
 	}
 	rows, err := p.Pool.Query(ctx, `
 		SELECT server_id, hero_id, player_id, template_cfg_id, COALESCE(display_name,''), level, exp, loyalty,
-		       force, intel, politics, command, force_add, intel_add, politics_add, status, created_at
+		       force, intel, politics, command, force_add, intel_add, politics_add, status, is_monarch, created_at
 		FROM player_hero
 		WHERE server_id = $1 AND player_id = $2
 		ORDER BY hero_id
@@ -134,7 +134,7 @@ func (p *PGStore) ListPlayerHeroes(ctx context.Context, serverID int32, playerID
 		var h Hero
 		if err := rows.Scan(
 			&h.ServerID, &h.HeroID, &h.PlayerID, &h.TemplateCfgID, &h.DisplayName, &h.Level, &h.Exp, &h.Loyalty,
-			&h.Force, &h.Intel, &h.Politics, &h.Command, &h.ForceAdd, &h.IntelAdd, &h.PoliticsAdd, &h.Status, &h.CreatedAt,
+			&h.Force, &h.Intel, &h.Politics, &h.Command, &h.ForceAdd, &h.IntelAdd, &h.PoliticsAdd, &h.Status, &h.IsMonarch, &h.CreatedAt,
 		); err != nil {
 			return nil, err
 		}

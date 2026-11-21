@@ -13,6 +13,7 @@ message PlayerHeroSummary {
   int32 loyalty = 4;
   // 将领状态：1=空闲 2=驻守 3=出征 5=城主（与 internal/hero/types.go 对齐；未下发时客户端按未知处理）。
   int32 status = 5;
+  bool is_monarch = 6;
 }
 
 message ListPlayerHeroesRequest {
@@ -486,3 +487,60 @@ message RestHeroResponse {
   int32 march_force = 2;
   int32 march_force_max = 3;
 }
+
+message EquipmentView {
+  int64 equipment_id = 1;
+  int32 cfg_id = 2;
+  int32 slot_type = 3;
+  int32 tier = 4;
+  string name = 5;
+  int32 enhance_level = 6;
+  int32 max_enhance = 7;
+  repeated int32 gems = 8;
+  HeroAttributes attrs = 9;
+  int32 speed_pct = 10;
+  bool equipped = 11;
+  int64 hero_id = 12;
+}
+
+// route: hero.v1.GetHeroEquipment
+message GetHeroEquipmentRequest {
+  int32 server_id = 1;
+  int64 hero_id = 2;
+  int64 city_id = 3;
+}
+message GetHeroEquipmentResponse {
+  repeated EquipmentView equipped = 1;
+  repeated EquipmentView inventory = 2;
+  int32 blacksmith_level = 3;
+  int32 stable_level = 4;
+}
+
+// route: hero.v1.ForgeEquipment
+message ForgeEquipmentRequest {
+  int32 server_id = 1;
+  int64 city_id = 2;
+  int32 slot_type = 3;
+  int32 tier = 4;
+}
+message ForgeEquipmentResponse { EquipmentView equipment = 1; int64 gold = 2; }
+
+// route: hero.v1.EnhanceEquipment
+message EnhanceEquipmentRequest { int32 server_id = 1; int64 city_id = 2; int64 equipment_id = 3; }
+message EnhanceEquipmentResponse { EquipmentView equipment = 1; int64 gold = 2; }
+
+// route: hero.v1.SocketGem
+message SocketGemRequest { int32 server_id = 1; int64 city_id = 2; int64 equipment_id = 3; int32 gem_cfg_id = 4; }
+message SocketGemResponse { EquipmentView equipment = 1; int64 gold = 2; }
+
+// route: hero.v1.EquipItem
+message EquipItemRequest { int32 server_id = 1; int64 hero_id = 2; int64 city_id = 3; int64 equipment_id = 4; }
+message EquipItemResponse { repeated EquipmentView equipped = 1; }
+
+// route: hero.v1.UnequipItem
+message UnequipItemRequest { int32 server_id = 1; int64 hero_id = 2; int64 city_id = 3; int32 slot_type = 4; }
+message UnequipItemResponse { repeated EquipmentView equipped = 1; }
+
+// route: hero.v1.TrainMount
+message TrainMountRequest { int32 server_id = 1; int64 city_id = 2; int64 equipment_id = 3; }
+message TrainMountResponse { EquipmentView equipment = 1; int64 gold = 2; }

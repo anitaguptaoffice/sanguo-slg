@@ -121,6 +121,23 @@ func (s *Server) initializeDurableCity(ctx context.Context, tx pgx.Tx, playerID,
 	return nil
 }
 
+// initializeMonarch creates the player's unique monarch hero in the city
+// creation transaction. Re-running keeps the existing monarch untouched.
+func initializeMonarch(ctx context.Context, tx pgx.Tx, serverID int32, playerID int64) error {
+	_, err := tx.Exec(ctx, `INSERT INTO player_hero
+		(server_id,hero_id,player_id,template_cfg_id,display_name,level,exp,loyalty,
+		 force,intel,politics,command,status,created_at,is_monarch)
+		SELECT $1,nextval('player_hero_id_seq'),$2,1001,COALESCE(p.display_name,'君主')||'·君主',1,0,100,
+		 COALESCE((t.base_stats->>'force')::int,0),COALESCE((t.base_stats->>'intel')::int,0),
+		 COALESCE((t.base_stats->>'politics')::int,0),COALESCE((t.base_stats->>'command')::int,0),
+		 1,now(),true
+		FROM player p LEFT JOIN cfg_hero_template t ON t.template_cfg_id=1001
+		WHERE p.server_id=$1 AND p.player_id=$2
+		AND NOT EXISTS (SELECT 1 FROM player_hero h WHERE h.server_id=$1 AND h.player_id=$2 AND h.is_monarch)`,
+		serverID, playerID)
+	return err
+}
+
 // createPlayerCity places one capital city for pc through the DOM/WORLD atomic
 // creation path. Callers own request validation; error mapping stays with them.
 func (s *Server) createPlayerCity(ctx context.Context, pc PlayerContext, name string, x, y int) (world.City, error) {
@@ -154,6 +171,9 @@ func (s *Server) createPlayerCity(ctx context.Context, pc PlayerContext, name st
 		}
 		c = staged
 		if err := s.initializeDurableCity(ctx, tx, pc.PlayerID, staged.CityID); err != nil {
+			return 0, err
+		}
+		if err := initializeMonarch(ctx, tx, serverID, pc.PlayerID); err != nil {
 			return 0, err
 		}
 		return staged.CityID, nil

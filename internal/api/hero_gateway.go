@@ -35,6 +35,13 @@ const (
 	RouteFinishHeroExpr             = "hero.v1.FinishHeroExpr"
 	RouteFasterHeroExpr             = "hero.v1.FasterHeroExpr"
 	RouteRestHero                   = "hero.v1.RestHero"
+	RouteGetHeroEquipment           = "hero.v1.GetHeroEquipment"
+	RouteForgeEquipment             = "hero.v1.ForgeEquipment"
+	RouteEnhanceEquipment           = "hero.v1.EnhanceEquipment"
+	RouteSocketGem                  = "hero.v1.SocketGem"
+	RouteEquipItem                  = "hero.v1.EquipItem"
+	RouteUnequipItem                = "hero.v1.UnequipItem"
+	RouteTrainMount                 = "hero.v1.TrainMount"
 )
 
 func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
@@ -69,5 +76,12 @@ func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
 		RouteFinishHeroExpr:             s.handleFinishHeroExpr,
 		RouteFasterHeroExpr:             s.handleFasterHeroExpr,
 		RouteRestHero:                   s.handleRestHero,
+		RouteGetHeroEquipment:           s.handleGetHeroEquipment,
+		RouteForgeEquipment:             s.handleForgeEquipment,
+		RouteEnhanceEquipment:           s.handleEnhanceEquipment,
+		RouteSocketGem:                  s.handleSocketGem,
+		RouteEquipItem:                  s.handleEquipItem,
+		RouteUnequipItem:                s.handleUnequipItem,
+		RouteTrainMount:                 s.handleTrainMount,
 	}
 }

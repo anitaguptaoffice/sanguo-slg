@@ -87,6 +87,7 @@ type Hero struct {
 	Force, Intel, Politics, Command int32
 	ForceAdd, IntelAdd, PoliticsAdd int32
 	Status                          int16
+	IsMonarch                       bool
 	CreatedAt                       time.Time
 }
 

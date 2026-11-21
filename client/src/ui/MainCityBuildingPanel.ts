@@ -62,6 +62,12 @@ export type MarketView = {
   own_offers?: MarketOfferRow[]; deliveries?: MarketDeliveryRow[];
 };
 export type TacticPresetRow = { unit_cfg_id?: number; troop_type?: number; target_type?: number; hold?: boolean };
+export type EquipmentRow = {
+  equipment_id?: number; cfg_id?: number; slot_type?: number; tier?: number; name?: string;
+  enhance_level?: number; max_enhance?: number; gems?: number[]; speed_pct?: number;
+  equipped?: boolean; hero_id?: number;
+  attrs?: { force?: number; intel?: number; politics?: number; command?: number };
+};
 export type StorehouseView = {
   level?: number; capacity_bonus?: number; protection_percent?: number;
   protected_amount?: { food?: number; wood?: number; stone?: number; iron?: number };
@@ -80,6 +86,11 @@ export class MainCityBuildingPanel {
   private market: MarketView | null = null;
   private storehouse: StorehouseView | null = null;
   private tactics: TacticPresetRow[] = [];
+  private equipmentHeroId = 0;
+  private equipped: EquipmentRow[] = [];
+  private inventory: EquipmentRow[] = [];
+  private blacksmithLevel = 0;
+  private stableLevel = 0;
   private focusTrap: CenterPanelFocusTrap | null = null;
 
   constructor(
@@ -97,6 +108,7 @@ export class MainCityBuildingPanel {
     private readonly onMarketAction?: (action: string, resourceType: number, amount: number, priceMilli: number, hours: number, offerId: number) => void,
     private readonly onTacticAction?: (unitCfgId: number, targetType: number, hold: boolean) => void,
     private readonly onRunDrill?: () => void,
+    private readonly onEquipmentAction?: (action: string, slotType: number, tier: number, equipmentId: number, gemCfgId: number) => void,
   ) {}
 
   attach(): void {
@@ -171,6 +183,15 @@ export class MainCityBuildingPanel {
           <button type="button" data-action="save-tactic">保存战术</button>
           <button type="button" data-action="run-drill">沙盘演习（100 步 vs 100 弓）</button>
           <div data-role="tactic-list"></div>
+        </div>
+        <div class="equipment-section hidden" data-role="equipment">
+          <h4>装备工坊</h4>
+          <p data-role="equipment-status"></p>
+          <div class="city-civic-actions" data-role="equipment-forge"></div>
+          <h4>已穿戴</h4>
+          <div data-role="equipment-equipped"></div>
+          <h4>背包</h4>
+          <div data-role="equipment-inventory"></div>
         </div>
         <div class="storehouse-section hidden" data-role="storehouse">
           <h4>仓库</h4>
@@ -314,6 +335,9 @@ export class MainCityBuildingPanel {
     const drillEl = this.panel.querySelector<HTMLElement>('[data-role="drill-tactics"]');
     drillEl?.classList.toggle("hidden", slotKey !== "drill_ground");
     if (slotKey === "drill_ground") this.renderTactics();
+    const equipmentEl = this.panel.querySelector<HTMLElement>('[data-role="equipment"]');
+    equipmentEl?.classList.toggle("hidden", slotKey !== "smithy" && slotKey !== "stable");
+    if (slotKey === "smithy" || slotKey === "stable") this.renderEquipment();
     const storeEl = this.panel.querySelector<HTMLElement>('[data-role="storehouse"]');
     storeEl?.classList.toggle("hidden", slotKey !== "warehouse");
     if (slotKey === "warehouse") this.renderStorehouse();
@@ -435,6 +459,15 @@ export class MainCityBuildingPanel {
     this.renderTactics();
   }
 
+  setEquipment(heroId: number, equipped: EquipmentRow[], inventory: EquipmentRow[], blacksmith: number, stable: number): void {
+    this.equipmentHeroId = heroId;
+    this.equipped = equipped;
+    this.inventory = inventory;
+    this.blacksmithLevel = blacksmith;
+    this.stableLevel = stable;
+    this.renderEquipment();
+  }
+
   setDrillResult(text: string): void {
     const status = this.panel?.querySelector<HTMLElement>('[data-role="drill-status"]');
     if (status) status.textContent = text;
@@ -514,6 +547,61 @@ export class MainCityBuildingPanel {
       row.className = "market-offer-row";
       row.textContent = `${this.resourceName(d.resource_type)}×${d.amount ?? 0} · 预计 ${new Date(d.deliver_at_ms ?? 0).toLocaleTimeString()} 到达`;
       deliveries.appendChild(row);
+    }
+  }
+
+  private renderEquipment(): void {
+    const section = this.panel?.querySelector<HTMLElement>('[data-role="equipment"]');
+    if (!section || section.classList.contains("hidden")) return;
+    const status = section.querySelector<HTMLElement>('[data-role="equipment-status"]');
+    const forge = section.querySelector<HTMLElement>('[data-role="equipment-forge"]');
+    const equipped = section.querySelector<HTMLElement>('[data-role="equipment-equipped"]');
+    const inventory = section.querySelector<HTMLElement>('[data-role="equipment-inventory"]');
+    if (!status || !forge || !equipped || !inventory) return;
+    const slots = ["头盔", "铠甲", "武器", "坐骑", "饰品"];
+    status.textContent = `铁匠铺 Lv${this.blacksmithLevel} · 马厩 Lv${this.stableLevel} · 将领#${this.equipmentHeroId}`;
+    forge.textContent = "";
+    for (let slot = 0; slot < 5; slot++) {
+      for (let tier = 1; tier <= 3; tier++) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.dataset.action = "forge-equipment";
+        b.dataset.slotType = String(slot);
+        b.dataset.tier = String(tier);
+        b.textContent = `打造${slots[slot]}T${tier}`;
+        forge.appendChild(b);
+      }
+    }
+    const row = (item: EquipmentRow, actions: string[]) => {
+      const el = document.createElement("div");
+      el.className = "market-offer-row";
+      const a = item.attrs ?? {};
+      el.textContent = `${item.name ?? "装备"} Lv${item.enhance_level ?? 0}/${item.max_enhance ?? 0}` +
+        ` · 力${a.force ?? 0} 智${a.intel ?? 0} 政${a.politics ?? 0} 统${a.command ?? 0}` +
+        (item.speed_pct ? ` · 速${item.speed_pct}%` : "") +
+        (item.gems?.length ? ` · 宝珠${item.gems.join(",")}` : "") + " ";
+      for (const action of actions) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.dataset.action = action;
+        b.dataset.equipmentId = String(item.equipment_id ?? 0);
+        b.dataset.slotType = String(item.slot_type ?? 0);
+        b.textContent = action === "enhance-equipment" ? "强化"
+          : action === "socket-gem" ? "镶嵌宝珠"
+          : action === "equip-item" ? "穿戴"
+          : action === "unequip-item" ? "卸下"
+          : action === "train-mount" ? "驯养" : action;
+        el.appendChild(b);
+      }
+      return el;
+    };
+    equipped.textContent = "";
+    for (const item of this.equipped) equipped.appendChild(row(item, ["unequip-item"]));
+    inventory.textContent = "";
+    for (const item of this.inventory) {
+      const actions = ["enhance-equipment", "socket-gem", "equip-item"];
+      if (item.slot_type === 3) actions.push("train-mount");
+      inventory.appendChild(row(item, actions));
     }
   }
 
@@ -597,6 +685,12 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    const equipmentAction = btn?.getAttribute("data-action");
+    if (equipmentAction && ["forge-equipment", "enhance-equipment", "socket-gem", "equip-item", "unequip-item", "train-mount"].includes(equipmentAction)) {
+      this.onEquipmentAction?.(equipmentAction, Number(btn?.dataset.slotType ?? 0), Number(btn?.dataset.tier ?? 1),
+        Number(btn?.dataset.equipmentId ?? 0), 1);
+      return;
+    }
     if (btn?.getAttribute("data-action") === "run-drill") {
       this.onRunDrill?.();
       return;
