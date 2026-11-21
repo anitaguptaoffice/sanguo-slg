@@ -23,6 +23,9 @@ func questProgressToProto(q quest.PlayerQuestProgress) *questv1.PlayerQuestProgr
 		AcceptedAtMs:    q.AcceptedAtMs,
 		UpdatedAtMs:     q.UpdatedAtMs,
 		RewardPreview:   rewardBundleToProto(q.RewardPreview),
+		Title:           q.Title,
+		Summary:         q.Summary,
+		ObjectiveTexts:  q.ObjectiveTexts,
 	}
 }
 

@@ -231,9 +231,23 @@ function highlightPanelReturnSourceCategory(
 type QuestProgress = {
   quest_cfg_id?: number;
   quest_code?: string;
+  title?: string;
+  summary?: string;
+  objective_texts?: string[];
+  chain_id?: number;
+  chain_order?: number;
   state?: number;
   progress_current?: number;
   progress_target?: number;
+};
+type QuestChainSummary = {
+  chain_id?: number;
+  chain_name?: string;
+  chain_state?: number;
+  total_quest_count?: number;
+  completed_quest_count?: number;
+  active_quest_cfg_id?: number;
+  next_available_quest_cfg_id?: number;
 };
 
 export class ContentPanels {
@@ -244,6 +258,7 @@ export class ContentPanels {
   private questClaimInflight = false;
   private bagReadVersion = 0;
   private questRows: QuestProgress[] = [];
+  private questChains: QuestChainSummary[] = [];
   private shopOffers: ShopOffer[] = [];
   private selectedQuestId = 1001;
   private selectedItemId = 2001;
@@ -763,6 +778,7 @@ export class ContentPanels {
       <button type="button" data-action="refresh-quests">刷新列表</button>
       <button type="button" data-action="accept-quest">接取</button>
       <button type="button" data-action="claim-quest">领奖</button>
+      <ul class="quest-chain-list" data-role="quest-chain-list"></ul>
       <ul class="quest-list" data-role="quest-list"></ul>
     `;
     return el;
@@ -824,6 +840,19 @@ export class ContentPanels {
       </div>
     `;
     return el;
+  }
+
+  private renderQuestChains(): void {
+    const ul = this.questPanel.querySelector<HTMLElement>('[data-role="quest-chain-list"]');
+    if (!ul) return;
+    ul.innerHTML = "";
+    for (const c of this.questChains) {
+      const li = document.createElement("li");
+      const ratio = `${c.completed_quest_count ?? 0}/${c.total_quest_count ?? 0}`;
+      const active = (c.active_quest_cfg_id ?? 0) > 0 ? " · 进行中" : "";
+      li.textContent = `${c.chain_name ?? `链#${c.chain_id}`} · ${ratio}${active}`;
+      ul.appendChild(li);
+    }
   }
 
   private renderQuestList(): void {
@@ -1126,12 +1155,16 @@ export class ContentPanels {
     try {
       const res = (await this.gateway.listPlayerQuests(sid, { includeCompleted: true })) as {
         quests?: QuestProgress[];
+        chains?: QuestChainSummary[];
       };
       if (!current()) return;
       renderSuccessfulReadNotice(this.questPanel, res);
       this.questRows = res.quests ?? [];
+      this.questChains = res.chains ?? [];
+      this.renderQuestChains();
       this.renderQuestList();
-      this.onStatus(`任务 ${this.questRows.length} 条`);
+      const active = this.questChains.find((c) => (c.active_quest_cfg_id ?? 0) > 0);
+      this.onStatus(`成长指引：${this.questChains.length} 条任务链` + (active ? ` · 当前 ${active.chain_name ?? `链#${active.chain_id}`}` : ""));
     } catch (e) {
       if (!current()) return;
       this.onStatus(gatewayErrorMessage(e));

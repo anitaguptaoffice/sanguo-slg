@@ -23,11 +23,18 @@ describe("contentFormat", () => {
       formatQuestLine({
         quest_cfg_id: 1001,
         quest_code: "tutorial_build_hall",
+        title: "奠基治所",
+        objective_texts: ["建筑#1 升至 Lv2"],
         state: 2,
         progress_current: 1,
         progress_target: 2,
       }),
-    ).toContain("进行中");
+    ).toContain("奠基治所");
+    expect(formatQuestLine({
+      quest_cfg_id: 1001, quest_code: "tutorial_build_hall",
+      title: "奠基治所", objective_texts: ["建筑#1 升至 Lv2"], state: 2,
+      progress_current: 1, progress_target: 2,
+    })).toContain("建筑#1 升至 Lv2");
     expect(formatWalletPrice({ gold: 10 })).toBe("币10");
   });
 });

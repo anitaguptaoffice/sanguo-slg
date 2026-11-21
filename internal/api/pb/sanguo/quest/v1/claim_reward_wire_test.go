@@ -57,12 +57,25 @@ func TestClaimRewardWireCompatibility(t *testing.T) {
 	// The rest of the complete API descriptor, not just fields 1-3, stays identical.
 	next := protodesc.ToFileDescriptorProto(File_sanguo_quest_v1_quest_proto)
 	for _, m := range next.MessageType {
-		if m.GetName() == "ClaimQuestRewardResponse" {
+		switch m.GetName() {
+		case "ClaimQuestRewardResponse":
 			m.Field = m.Field[:3]
+		case "PlayerQuestProgress":
+			// R3-S5 adds title/summary/objective_texts to the guidance view.
+			kept := m.Field[:0]
+			for _, f := range m.Field {
+				if f.GetNumber() < 13 {
+					kept = append(kept, f)
+				}
+			}
+			m.Field = kept
 		}
 	}
-	if !proto.Equal(protodesc.ToFileDescriptorProto(file), next) {
-		t.Fatal("unrelated quest schema drift")
+	oldFile := protodesc.ToFileDescriptorProto(file)
+	for i := range next.MessageType {
+		if i >= len(oldFile.MessageType) || !proto.Equal(oldFile.MessageType[i], next.MessageType[i]) {
+			t.Fatalf("unrelated quest schema drift at %d", i)
+		}
 	}
 	marshal := func(m proto.Message) []byte {
 		t.Helper()

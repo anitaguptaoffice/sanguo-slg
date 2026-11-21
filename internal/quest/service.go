@@ -2,6 +2,7 @@ package quest
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -44,31 +45,66 @@ func (s *Service) AcceptQuest(ctx context.Context, actor Actor, questCfgID int32
 	if questCfgID == 1006 {
 		if cfg, ok := s.catalog.Get(questCfgID); ok {
 			if err := wallConfig(cfg); err != nil {
-				return PlayerQuestProgress{}, QuestChainStatus{}, err
+				texts := make([]string, 0, len(cfg.Objectives))
+				for _, o := range cfg.Objectives {
+					texts = append(texts, questObjectiveText(o))
+				}
+				return PlayerQuestProgress{
+					Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, err
 			}
 			// Repair paid missing-row history before Accept can add a timestamp.
 			if err := s.RecoverWall(ctx, actor); err != nil {
-				return PlayerQuestProgress{}, QuestChainStatus{}, err
+				texts := make([]string, 0, len(cfg.Objectives))
+				for _, o := range cfg.Objectives {
+					texts = append(texts, questObjectiveText(o))
+				}
+				return PlayerQuestProgress{
+					Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, err
 			}
 		}
 	}
 	cfg, row, has, err := s.getPlayerQuestFresh(ctx, actor, questCfgID)
 	if err != nil {
-		return PlayerQuestProgress{}, QuestChainStatus{}, err
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, err
 	}
 	if err := s.checkUnlock(ctx, actor, cfg); err != nil {
-		return PlayerQuestProgress{}, QuestChainStatus{}, err
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, err
 	}
 	if err := s.checkPrerequisite(ctx, actor, cfg); err != nil {
-		return PlayerQuestProgress{}, QuestChainStatus{}, err
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, err
 	}
 	if has {
 		switch row.State {
 		case StateInProgress, StateClaimable:
-			return PlayerQuestProgress{}, QuestChainStatus{}, ErrAlreadyAccepted
+			texts := make([]string, 0, len(cfg.Objectives))
+			for _, o := range cfg.Objectives {
+				texts = append(texts, questObjectiveText(o))
+			}
+			return PlayerQuestProgress{
+				Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, ErrAlreadyAccepted
 		case StateCompleted:
 			if !cfg.Repeatable || cfg.QuestType == QuestTypeDaily {
-				return PlayerQuestProgress{}, QuestChainStatus{}, ErrAlreadyCompleted
+				texts := make([]string, 0, len(cfg.Objectives))
+				for _, o := range cfg.Objectives {
+					texts = append(texts, questObjectiveText(o))
+				}
+				return PlayerQuestProgress{
+					Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, ErrAlreadyCompleted
 			}
 		case StateUnaccepted:
 			// Prior-day daily reset left a row; fall through to fresh accept.
@@ -85,7 +121,12 @@ func (s *Service) AcceptQuest(ctx context.Context, actor Actor, questCfgID int32
 		UpdatedAt:  now,
 	}
 	if err := s.store.UpsertPlayerQuest(ctx, row); err != nil {
-		return PlayerQuestProgress{}, QuestChainStatus{}, err
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, err
 	}
 	row, has, err = s.store.GetPlayerQuest(ctx, actor.ServerID, actor.PlayerID, questCfgID)
 	if err == nil {
@@ -96,7 +137,12 @@ func (s *Service) AcceptQuest(ctx context.Context, actor Actor, questCfgID int32
 		}
 	}
 	if err != nil {
-		return PlayerQuestProgress{}, QuestChainStatus{}, err
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, err
 	}
 	view := s.buildProgress(cfg, row, has)
 	chain := s.chainStatus(ctx, actor, cfg.ChainID)
@@ -106,14 +152,29 @@ func (s *Service) AcceptQuest(ctx context.Context, actor Actor, questCfgID int32
 func (s *Service) ReportQuestProgress(ctx context.Context, actor Actor, questCfgID int32, absolute bool, value int32) (PlayerQuestProgress, QuestChainStatus, error) {
 	cfg, ok := s.catalog.Get(questCfgID)
 	if !ok {
-		return PlayerQuestProgress{}, QuestChainStatus{}, ErrQuestNotFound
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, ErrQuestNotFound
 	}
 	row, has, err := s.store.GetPlayerQuest(ctx, actor.ServerID, actor.PlayerID, questCfgID)
 	if err != nil {
-		return PlayerQuestProgress{}, QuestChainStatus{}, err
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, err
 	}
 	if !has || row.State != StateInProgress {
-		return PlayerQuestProgress{}, QuestChainStatus{}, ErrNotInProgress
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, ErrNotInProgress
 	}
 	target := ProgressTargetFor(cfg.Objectives)
 	var next int32
@@ -123,7 +184,12 @@ func (s *Service) ReportQuestProgress(ctx context.Context, actor Actor, questCfg
 		next = row.Progress.Count + value
 	}
 	if next < 0 {
-		return PlayerQuestProgress{}, QuestChainStatus{}, ErrProgressInvalid
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, ErrProgressInvalid
 	}
 	row.Progress.Count = next
 	row.UpdatedAt = s.now()
@@ -133,7 +199,12 @@ func (s *Service) ReportQuestProgress(ctx context.Context, actor Actor, questCfg
 		row.CompletedAt = &t
 	}
 	if err := s.store.UpsertPlayerQuest(ctx, row); err != nil {
-		return PlayerQuestProgress{}, QuestChainStatus{}, err
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, err
 	}
 	view := s.buildProgress(cfg, row, true)
 	chain := s.chainStatus(ctx, actor, cfg.ChainID)
@@ -143,7 +214,12 @@ func (s *Service) ReportQuestProgress(ctx context.Context, actor Actor, questCfg
 func (s *Service) ClaimQuestReward(ctx context.Context, actor Actor, questCfgID int32) (PlayerQuestProgress, QuestChainStatus, RewardBundle, error) {
 	cfg, ok := s.catalog.Get(questCfgID)
 	if !ok {
-		return PlayerQuestProgress{}, QuestChainStatus{}, RewardBundle{}, ErrQuestNotFound
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, RewardBundle{}, ErrQuestNotFound
 	}
 	if isTutorialID(questCfgID) {
 		return s.claimTutorialReward(ctx, actor, cfg)
@@ -153,16 +229,36 @@ func (s *Service) ClaimQuestReward(ctx context.Context, actor Actor, questCfgID 
 	}
 	row, has, err := s.store.GetPlayerQuest(ctx, actor.ServerID, actor.PlayerID, questCfgID)
 	if err != nil {
-		return PlayerQuestProgress{}, QuestChainStatus{}, RewardBundle{}, err
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, RewardBundle{}, err
 	}
 	if !has || row.State != StateClaimable {
 		if has && row.State == StateCompleted {
-			return PlayerQuestProgress{}, QuestChainStatus{}, RewardBundle{}, ErrAlreadyCompleted
+			texts := make([]string, 0, len(cfg.Objectives))
+			for _, o := range cfg.Objectives {
+				texts = append(texts, questObjectiveText(o))
+			}
+			return PlayerQuestProgress{
+				Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, RewardBundle{}, ErrAlreadyCompleted
 		}
-		return PlayerQuestProgress{}, QuestChainStatus{}, RewardBundle{}, ErrNotClaimable
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, RewardBundle{}, ErrNotClaimable
 	}
 	if s.granter == nil {
-		return PlayerQuestProgress{}, QuestChainStatus{}, RewardBundle{}, ErrGrantFailed
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, RewardBundle{}, ErrGrantFailed
 	}
 	req := GrantRequest{
 		ServerID:       actor.ServerID,
@@ -173,14 +269,24 @@ func (s *Service) ClaimQuestReward(ctx context.Context, actor Actor, questCfgID 
 	}
 	granted, err := s.granter.GrantQuestReward(ctx, req)
 	if err != nil {
-		return PlayerQuestProgress{}, QuestChainStatus{}, RewardBundle{}, err
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, RewardBundle{}, err
 	}
 	now := s.now()
 	row.State = StateCompleted
 	row.RewardClaimedAt = &now
 	row.UpdatedAt = now
 	if err := s.store.UpsertPlayerQuest(ctx, row); err != nil {
-		return PlayerQuestProgress{}, QuestChainStatus{}, RewardBundle{}, err
+		texts := make([]string, 0, len(cfg.Objectives))
+		for _, o := range cfg.Objectives {
+			texts = append(texts, questObjectiveText(o))
+		}
+		return PlayerQuestProgress{
+			Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts}, QuestChainStatus{}, RewardBundle{}, err
 	}
 	view := s.buildProgress(cfg, row, true)
 	chain := s.chainStatus(ctx, actor, cfg.ChainID)
@@ -246,6 +352,23 @@ func (s *Service) checkPrerequisite(ctx context.Context, actor Actor, cfg QuestC
 	return nil
 }
 
+func questObjectiveText(o Objective) string {
+	switch o.Type {
+	case "build_level":
+		return fmt.Sprintf("建筑#%d 升至 Lv%d", o.BuildingCfgID, o.Level)
+	case "recruit_hero":
+		return fmt.Sprintf("招募将领 ×%d", o.Count)
+	case "collect_resource":
+		return fmt.Sprintf("收集 %s ×%d", o.Resource, o.Count)
+	case "train_unit":
+		return fmt.Sprintf("训练 %s ×%d", o.UnitCode, o.Count)
+	case "collect_item":
+		return fmt.Sprintf("收集 %s ×%d", o.ItemCode, o.Count)
+	default:
+		return o.Type
+	}
+}
+
 func (s *Service) buildProgress(cfg QuestCfg, row PlayerQuestRow, hasRow bool) PlayerQuestProgress {
 	// Never advertise legacy counts as newly verified wall progress.
 	if cfg.QuestCfgID == 1006 && row.Progress.ServerVerifiedVersion == 0 && (row.State == StateInProgress || row.State == StateClaimable) {
@@ -259,7 +382,12 @@ func (s *Service) buildProgress(cfg QuestCfg, row PlayerQuestRow, hasRow bool) P
 	if !row.UpdatedAt.IsZero() {
 		updatedMs = row.UpdatedAt.UnixMilli()
 	}
+	texts := make([]string, 0, len(cfg.Objectives))
+	for _, o := range cfg.Objectives {
+		texts = append(texts, questObjectiveText(o))
+	}
 	return PlayerQuestProgress{
+		Title: cfg.Rewards.Title, Summary: cfg.Rewards.Summary, ObjectiveTexts: texts,
 		QuestCfgID:      cfg.QuestCfgID,
 		QuestCode:       cfg.Code,
 		ChainID:         cfg.ChainID,
