@@ -54,6 +54,10 @@ message PlayerQuestProgress {
   int64 updated_at_ms = 11;
   // 可领奖励预览（来自 cfg_quest.rewards）。
   sanguo.common.v1.RewardBundle reward_preview = 12;
+  // R3-S5: 任务标题/摘要/目标文本，供成长指引面板直接展示。
+  string title = 13;
+  string summary = 14;
+  repeated string objective_texts = 15;
 }
 
 // 任务链摘要。

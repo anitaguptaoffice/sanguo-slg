@@ -75,6 +75,10 @@ func ParseRewardsJSON(raw []byte) (RewardBundle, error) {
 		return RewardBundle{}, nil
 	}
 	var wire struct {
+		Display struct {
+			Title   string `json:"title"`
+			Summary string `json:"summary"`
+		} `json:"display"`
 		RewardPackID string           `json:"reward_pack_id"`
 		Resources    map[string]int64 `json:"resources"`
 		Items        []struct {
@@ -95,6 +99,8 @@ func ParseRewardsJSON(raw []byte) (RewardBundle, error) {
 		items = append(items, RewardItem{ItemCfgID: it.ItemCfgID, Quantity: qty})
 	}
 	return RewardBundle{
+		Title:        wire.Display.Title,
+		Summary:      wire.Display.Summary,
 		RewardPackID: wire.RewardPackID,
 		Items:        items,
 		Resources:    wire.Resources,
@@ -134,6 +140,18 @@ func ProgressTargetFor(objs []Objective) int32 {
 func chainDisplayName(chainID int32) string {
 	if chainID == 0 {
 		return ""
+	}
+	switch chainID {
+	case 100:
+		return "立业根基"
+	case 200:
+		return "城防初立"
+	case 300:
+		return "强军之路"
+	case 400:
+		return "富国裕民"
+	case 500:
+		return "州郡经营"
 	}
 	return fmt.Sprintf("chain_%d", chainID)
 }

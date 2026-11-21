@@ -109,6 +109,11 @@ export function formatWalletPrice(w: {
 export type QuestRow = {
   quest_cfg_id?: number;
   quest_code?: string;
+  title?: string;
+  summary?: string;
+  objective_texts?: string[];
+  chain_id?: number;
+  chain_order?: number;
   state?: number;
   progress_current?: number;
   progress_target?: number;
@@ -121,5 +126,7 @@ export function formatQuestLine(q: QuestRow): string {
     q.progress_target && q.progress_target > 0
       ? `${q.progress_current ?? 0}/${q.progress_target}`
       : `${q.progress_current ?? 0}`;
-  return `#${id} ${code} · ${questStateLabel(q.state)} · 进度 ${prog}`;
+  const name = q.title?.trim() || code || "任务";
+  const goals = q.objective_texts?.length ? ` · ${q.objective_texts.join("、")}` : "";
+  return `#${id} ${name}${goals} · ${questStateLabel(q.state)} · 进度 ${prog}`;
 }

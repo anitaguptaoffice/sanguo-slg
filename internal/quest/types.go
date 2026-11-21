@@ -57,6 +57,8 @@ type RewardItem struct {
 
 // RewardBundle aligns with common.v1.RewardBundle and spec/rules/content.md JSON.
 type RewardBundle struct {
+	Title        string
+	Summary      string
 	RewardPackID string
 	Items        []RewardItem
 	Resources    map[string]int64
@@ -110,6 +112,9 @@ type PlayerQuestRow struct {
 
 // PlayerQuestProgress is the API view (quest.v1.PlayerQuestProgress).
 type PlayerQuestProgress struct {
+	Title           string
+	Summary         string
+	ObjectiveTexts  []string
 	QuestCfgID      int32
 	QuestCode       string
 	ChainID         int32
