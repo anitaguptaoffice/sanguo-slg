@@ -73,10 +73,17 @@ func EmbeddedCatalog() (map[int32]Template, error) {
 func DefaultCatalog() map[int32]Template {
 	cat, err := EmbeddedCatalog()
 	if err != nil {
-		return legacyDefaultCatalog()
+		cat = legacyDefaultCatalog()
+	}
+	cat[MonarchTemplateCfgID] = Template{
+		TemplateCfgID: MonarchTemplateCfgID, Code: "monarch", Name: "君主", Pool: "monarch", Rarity: 5,
+		Base: BaseStats{Force: 72, Intel: 75, Politics: 88, Command: 78},
 	}
 	return cat
 }
+
+// MonarchTemplateCfgID is reserved for the player's unique monarch hero.
+const MonarchTemplateCfgID int32 = 9900
 
 func legacyDefaultCatalog() map[int32]Template {
 	scroll := ItemCost{RecruitScrollID, 1}
