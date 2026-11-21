@@ -1,6 +1,9 @@
 package api
 
 import (
+	"context"
+
+	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/combat"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/report"
@@ -15,6 +18,11 @@ func WireM2Combat(shardID int32, pool *pgxpool.Pool, hub *march.Hub, garrisons c
 	svc := report.NewService(report.NewPGStore(pool))
 	resolver := combat.NewResolver(shardID, svc, garrisons, nil)
 	resolver.Tactics = combat.TacticsPG(pool)
+	historical := hero.NewHistorical(pool, hero.NewPGStore(pool), nil)
+	resolver.HistoricalCapture = func(ctx context.Context, serverID int32, playerID, cityID int64, x, y int32, roll int) error {
+		_, err := historical.Capture(ctx, serverID, playerID, cityID, x, y, roll)
+		return err
+	}
 	hub.SetMarchArrivalHandler(resolver.HubHandler())
 	return svc
 }

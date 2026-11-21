@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package sanguo.hero.v1;
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/client/pb/sanguo/hero/v1;herov1";
+
+message HistoricalHeroView {
+  int32 npc_cfg_id = 1;
+  int32 template_cfg_id = 2;
+  string display_name = 3;
+  int32 level = 4;
+  int32 force = 5;
+  int32 intel = 6;
+  int32 politics = 7;
+  int32 command = 8;
+  int32 x = 9;
+  int32 y = 10;
+  int32 state = 11;
+  int64 owner_player_id = 12;
+  int64 city_id = 13;
+  int32 friend = 14;
+  bool discovered = 15;
+}
+
+// route: hero.v1.ListHistoricalHeroes
+message ListHistoricalHeroesRequest { int32 server_id = 1; int64 city_id = 2; }
+message ListHistoricalHeroesResponse { repeated HistoricalHeroView heroes = 1; }
+
+// route: hero.v1.SearchHistoricalHero
+message SearchHistoricalHeroRequest { int32 server_id = 1; int64 city_id = 2; int32 npc_cfg_id = 3; }
+message SearchHistoricalHeroResponse { HistoricalHeroView hero = 1; int64 gold = 2; }
+
+// route: hero.v1.PersuadeHistoricalHero
+message PersuadeHistoricalHeroRequest { int32 server_id = 1; int64 city_id = 2; int32 npc_cfg_id = 3; }
+message PersuadeHistoricalHeroResponse {
+  HistoricalHeroView hero = 1;
+  int64 hero_id = 2;
+  int64 gold = 3;
+}

@@ -64,6 +64,9 @@ export type GatewayPort = {
   listWallDefenses(cityId: number): Promise<unknown>;
   buildWallDefense(cityId: number, defenseType: number): Promise<unknown>;
   healWounded(cityId: number, unitCfgId: number, count: number): Promise<unknown>;
+  listHistoricalHeroes(cityId: number): Promise<unknown>;
+  searchHistoricalHero(cityId: number, npcCfgId: number): Promise<unknown>;
+  persuadeHistoricalHero(cityId: number, npcCfgId: number): Promise<unknown>;
   getHeroEquipment(cityId: number, heroId: number): Promise<unknown>;
   forgeEquipment(cityId: number, slotType: number, tier: number): Promise<unknown>;
   enhanceEquipment(cityId: number, equipmentId: number): Promise<unknown>;
@@ -673,6 +676,21 @@ export class GatewayClient implements GatewayPort {
   async healWounded(cityId: number, unitCfgId: number, count: number) {
     const { HealWoundedResponse } = getTypes();
     return this.rpc(Routes.HealWounded, "HealWoundedRequest", { city_id: cityId, unit_cfg_id: unitCfgId, count }, HealWoundedResponse, true);
+  }
+
+  async listHistoricalHeroes(cityId: number) {
+    const { ListHistoricalHeroesResponse } = getTypes();
+    return this.rpc(Routes.ListHistoricalHeroes, "ListHistoricalHeroesRequest", { server_id: 1, city_id: cityId }, ListHistoricalHeroesResponse, true);
+  }
+
+  async searchHistoricalHero(cityId: number, npcCfgId: number) {
+    const { SearchHistoricalHeroResponse } = getTypes();
+    return this.rpc(Routes.SearchHistoricalHero, "SearchHistoricalHeroRequest", { server_id: 1, city_id: cityId, npc_cfg_id: npcCfgId }, SearchHistoricalHeroResponse, true);
+  }
+
+  async persuadeHistoricalHero(cityId: number, npcCfgId: number) {
+    const { PersuadeHistoricalHeroResponse } = getTypes();
+    return this.rpc(Routes.PersuadeHistoricalHero, "PersuadeHistoricalHeroRequest", { server_id: 1, city_id: cityId, npc_cfg_id: npcCfgId }, PersuadeHistoricalHeroResponse, true);
   }
 
   async getHeroEquipment(cityId: number, heroId: number) {

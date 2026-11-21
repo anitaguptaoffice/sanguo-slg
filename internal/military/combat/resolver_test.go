@@ -87,3 +87,29 @@ func TestResolveAttackUsesCityTactics(t *testing.T) {
 	}
 	t.Fatal("cavalry never attacked with the preset target")
 }
+
+func TestResolveAttackCallsHistoricalCaptureOnWin(t *testing.T) {
+	ctx := context.Background()
+	svc := report.NewService(report.NewMemStore())
+	r := NewResolver(1, svc, garrisonFixture(), nil)
+	var gotX, gotY int32
+	r.HistoricalCapture = func(_ context.Context, _ int32, _ int64, _ int64, x, y int32, roll int) error {
+		gotX, gotY = x, y
+		if roll < 0 || roll >= 100 {
+			t.Fatalf("roll=%d", roll)
+		}
+		return nil
+	}
+	ev := march.MarchArrivalEvent{
+		MarchID: 12, PlayerID: 1001,
+		Troops: []march.TroopStack{{UnitCfgID: 1, Count: 20000}},
+		Order:  march.MarchOrder{OriginCityID: 1, ToX: 5, ToY: 5, Purpose: PurposeAttack},
+	}
+	res, err := r.ResolveAttackGarrison(ctx, ev)
+	if err != nil || res.Report.Result != battle.ResultAttackerWin {
+		t.Fatalf("result=%v err=%v", res.Report.Result, err)
+	}
+	if gotX != 5 || gotY != 5 {
+		t.Fatalf("capture coords = %d,%d", gotX, gotY)
+	}
+}

@@ -75,6 +75,9 @@ export const Routes = {
   ListWallDefenses: "domestic.v1.ListWallDefenses",
   BuildWallDefense: "domestic.v1.BuildWallDefense",
   HealWounded: "domestic.v1.HealWounded",
+  ListHistoricalHeroes: "hero.v1.ListHistoricalHeroes",
+  SearchHistoricalHero: "hero.v1.SearchHistoricalHero",
+  PersuadeHistoricalHero: "hero.v1.PersuadeHistoricalHero",
   GetHeroEquipment: "hero.v1.GetHeroEquipment",
   ForgeEquipment: "hero.v1.ForgeEquipment",
   EnhanceEquipment: "hero.v1.EnhanceEquipment",
@@ -217,6 +220,12 @@ export type ProtoTypes = {
   BuildWallDefenseResponse: protobuf.Type;
   HealWoundedRequest: protobuf.Type;
   HealWoundedResponse: protobuf.Type;
+  ListHistoricalHeroesRequest: protobuf.Type;
+  ListHistoricalHeroesResponse: protobuf.Type;
+  SearchHistoricalHeroRequest: protobuf.Type;
+  SearchHistoricalHeroResponse: protobuf.Type;
+  PersuadeHistoricalHeroRequest: protobuf.Type;
+  PersuadeHistoricalHeroResponse: protobuf.Type;
   GetHeroEquipmentRequest: protobuf.Type;
   GetHeroEquipmentResponse: protobuf.Type;
   ForgeEquipmentRequest: protobuf.Type;
@@ -422,6 +431,12 @@ export function getTypes(): ProtoTypes {
     BuildWallDefenseResponse: r.lookupType("sanguo.domestic.v1.BuildWallDefenseResponse"),
     HealWoundedRequest: r.lookupType("sanguo.domestic.v1.HealWoundedRequest"),
     HealWoundedResponse: r.lookupType("sanguo.domestic.v1.HealWoundedResponse"),
+    ListHistoricalHeroesRequest: r.lookupType("sanguo.hero.v1.ListHistoricalHeroesRequest"),
+    ListHistoricalHeroesResponse: r.lookupType("sanguo.hero.v1.ListHistoricalHeroesResponse"),
+    SearchHistoricalHeroRequest: r.lookupType("sanguo.hero.v1.SearchHistoricalHeroRequest"),
+    SearchHistoricalHeroResponse: r.lookupType("sanguo.hero.v1.SearchHistoricalHeroResponse"),
+    PersuadeHistoricalHeroRequest: r.lookupType("sanguo.hero.v1.PersuadeHistoricalHeroRequest"),
+    PersuadeHistoricalHeroResponse: r.lookupType("sanguo.hero.v1.PersuadeHistoricalHeroResponse"),
     GetHeroEquipmentRequest: r.lookupType("sanguo.hero.v1.GetHeroEquipmentRequest"),
     GetHeroEquipmentResponse: r.lookupType("sanguo.hero.v1.GetHeroEquipmentResponse"),
     ForgeEquipmentRequest: r.lookupType("sanguo.hero.v1.ForgeEquipmentRequest"),

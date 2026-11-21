@@ -169,3 +169,29 @@ describe("MainCityBuildingPanel equipment", () => {
     panel.detach();
   });
 });
+
+describe("MainCityBuildingPanel historical heroes", () => {
+  it("renders rumor states and dispatches search/persuade", () => {
+    const mount = document.createElement("div");
+    const calls: unknown[][] = [];
+    const panel = new MainCityBuildingPanel(
+      mount, { inn: "客栈" }, () => null, () => {}, () => "idle",
+      undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+      (...args: unknown[]) => calls.push(args),
+    );
+    panel.attach();
+    panel.selectSlot("inn");
+    panel.setHistorical([
+      { npc_cfg_id: 1001, display_name: "刘备", level: 40, state: 0, discovered: false, x: -1, y: -1 },
+      { npc_cfg_id: 1002, display_name: "关羽", level: 40, state: 1, discovered: true, x: 68, y: 68 },
+    ]);
+    const section = mount.querySelector<HTMLElement>('[data-role="historical"]')!;
+    expect(section.querySelector('[data-role="historical-status"]')?.textContent).toContain("500");
+    expect(section.textContent).toContain("刘备");
+    expect(section.textContent).toContain("被俘");
+    (section.querySelector('[data-action="search-historical"]') as HTMLButtonElement).click();
+    (section.querySelector('[data-action="persuade-historical"]') as HTMLButtonElement).click();
+    expect(calls).toEqual([["search-historical", 1001], ["persuade-historical", 1002]]);
+    panel.detach();
+  });
+});
