@@ -111,3 +111,28 @@ describe("MainCityBuildingPanel market and storehouse", () => {
     panel.detach();
   });
 });
+
+describe("MainCityBuildingPanel drill tactics", () => {
+  it("saves a per-role focus and renders the preset list", () => {
+    const mount = document.createElement("div");
+    const calls: unknown[][] = [];
+    const panel = new MainCityBuildingPanel(
+      mount, { drill_ground: "校场" }, () => null, () => {}, () => "idle",
+      undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+      (...args: unknown[]) => calls.push(args),
+    );
+    panel.attach();
+    panel.selectSlot("drill_ground");
+    panel.setTactics([
+      { troop_type: 1, target_type: 2, hold: true },
+    ]);
+    expect(mount.querySelector('[data-role="tactic-list"]')?.textContent).toContain("骑兵 → 弓兵 · 坚守");
+    const section = mount.querySelector<HTMLElement>('[data-role="drill-tactics"]')!;
+    (section.querySelector('[data-field="tactic-troop"]') as HTMLSelectElement).value = "1";
+    (section.querySelector('[data-field="tactic-target"]') as HTMLSelectElement).value = "2";
+    (section.querySelector('[data-field="tactic-hold"]') as HTMLInputElement).checked = true;
+    (section.querySelector('[data-action="save-tactic"]') as HTMLButtonElement).click();
+    expect(calls).toEqual([[1, 2, true]]);
+    panel.detach();
+  });
+});

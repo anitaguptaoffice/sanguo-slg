@@ -20,7 +20,9 @@ type Resolver struct {
 	// HeroStats loads the attacker hero's level/force/intel; nil keeps level 0.
 	HeroStats func(ctx context.Context, serverID, playerID, heroID int64) (HeroCombatStats, error)
 	// TechBonus returns attacker attack/defense percentages from academy research.
-	TechBonus     func(order march.MarchOrder) (attackPct, defensePct int32)
+	TechBonus func(order march.MarchOrder) (attackPct, defensePct int32)
+	// Tactics loads the attacker city's drill-ground presets. Nil means defaults.
+	Tactics       func(ctx context.Context, serverID int32, cityID int64) (map[battle.TroopType]battle.Tactic, error)
 	nextReport    int64
 	beginArrival  func(context.Context, pgx.TxOptions) (pgx.Tx, error)
 	commitArrival func(context.Context, pgx.Tx, march.ArrivalCommit) (march.ArrivalCommitted, error)
@@ -112,6 +114,11 @@ func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArri
 		}
 	}
 	attacker := ArmyFromStacksWithHero(r.UnitCatalog, ev.Troops, int(hero.Level), hero.Force, hero.Intel, 1)
+	if r.Tactics != nil && ev.Order.OriginCityID > 0 {
+		if tactics, err := r.Tactics(ctx, r.ServerID, ev.Order.OriginCityID); err == nil {
+			attacker.Tactics = tactics
+		}
+	}
 	if r.TechBonus != nil {
 		attacker.TechAttackPct, attacker.TechDefensePct = r.TechBonus(ev.Order)
 	}

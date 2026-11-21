@@ -37,7 +37,7 @@ it("renders the recorded actual eight-round report and preserves survivor values
       await panel.openPanelWithDeepLink(1);
       expect(mount.querySelectorAll(".battle-report-rounds-table tbody tr")).toHaveLength(8);
       const row = mount.querySelector<HTMLTableRowElement>('.battle-report-rounds-table tr[data-round="8"]')!;
-      expect([...row.cells].map(c => c.textContent)).toEqual(["8", "造成伤害 1124", "造成伤害 186", "步兵 166", "弓兵 15、步兵 46"]);
+      expect([...row.cells].map(c => c.textContent)).toEqual(["8", "—", "造成伤害 1124", "造成伤害 186", "步兵 166", "弓兵 15、步兵 46"]);
       panel.toggle();
     }
   } finally { panel.detach(); }

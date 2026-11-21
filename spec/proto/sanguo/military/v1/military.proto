@@ -221,6 +221,19 @@ message BattleReportDetail {
   int64 hero_exp_gained = 11;
   // R1-S5: 占领结果（"occupied" / "cap_reached" / 空）。
   string occupy_result = 12;
+  // R3-S1: 开场一维战场距离。
+  int32 start_distance = 13;
+}
+
+message BattleRoundAction {
+  // attacker / defender
+  string side = 1;
+  // infantry / cavalry / archer / siege
+  string troop = 2;
+  // move / attack
+  string kind = 3;
+  string target = 4;
+  int32 damage_hp = 5;
 }
 
 message BattleRound {
@@ -229,6 +242,10 @@ message BattleRound {
   map<string, int32> defender_troops = 3;
   int32 attacker_to_def_hp = 4;
   int32 defender_to_att_hp = 5;
+  // R3-S1: 回合结束后的剩余距离。
+  int32 distance = 6;
+  // R3-S1: 本回合按速度排列的移动/攻击动作。
+  repeated BattleRoundAction actions = 7;
 }
 
 message BattleReportView {

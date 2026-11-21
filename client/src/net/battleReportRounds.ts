@@ -10,6 +10,7 @@ export const BATTLE_REPORT_ROUNDS_EXPAND_LABEL = "展开全部回合";
 
 export type BattleRoundTableRow = {
   round: number;
+  distance: string;
   attackerAction: string;
   defenderAction: string;
   attackerRemaining: string;
@@ -23,20 +24,25 @@ export function formatBattleRoundActionSummary(
   if (!round) return "—";
   const toDef = round.attacker_to_def_hp ?? 0;
   const toAtt = round.defender_to_att_hp ?? 0;
+  const actions = round.actions?.filter((a) => a.side === side) ?? [];
+  const moves = actions.filter((a) => a.kind === "move").length;
+  const fires = actions.filter((a) => a.kind === "attack").length;
+  const motion = moves || fires ? `移动 ${moves} · 攻击 ${fires} · ` : "";
   if (side === "attacker") {
-    if (toDef > 0) return `造成伤害 ${toDef}`;
-    if (toAtt > 0) return "未造成伤害";
-    return "对峙";
+    if (toDef > 0) return `${motion}造成伤害 ${toDef}`;
+    if (toAtt > 0) return `${motion}未造成伤害`;
+    return moves ? `${motion}推进` : "对峙";
   }
-  if (toAtt > 0) return `造成伤害 ${toAtt}`;
-  if (toDef > 0) return "未造成伤害";
-  return "对峙";
+  if (toAtt > 0) return `${motion}造成伤害 ${toAtt}`;
+  if (toDef > 0) return `${motion}未造成伤害`;
+  return moves ? `${motion}推进` : "对峙";
 }
 
 export function buildBattleRoundTableRow(round: BattleRoundView | undefined): BattleRoundTableRow {
   const n = round?.round ?? 0;
   return {
     round: n,
+    distance: round?.distance === undefined ? "—" : String(round.distance),
     attackerAction: formatBattleRoundActionSummary("attacker", round),
     defenderAction: formatBattleRoundActionSummary("defender", round),
     attackerRemaining: formatCasualtyMap(round?.attacker_troops),

@@ -28,6 +28,21 @@ describe("battleReportRounds", () => {
     expect(buildBattleRoundTableRows([sampleRound])).toHaveLength(1);
   });
 
+  it("shows distance and action-kind summaries", () => {
+    const row = buildBattleRoundTableRow({
+      round: 4,
+      distance: 7,
+      attacker_to_def_hp: 20,
+      actions: [
+        { side: "attacker", troop: "cavalry", kind: "move" },
+        { side: "attacker", troop: "archer", kind: "attack", damage_hp: 20 },
+      ],
+    });
+    expect(row.distance).toBe("7");
+    expect(row.attackerAction).toContain("移动 1");
+    expect(row.attackerAction).toContain("攻击 1");
+  });
+
   it("summarizes defender damage", () => {
     expect(
       formatBattleRoundActionSummary("defender", {

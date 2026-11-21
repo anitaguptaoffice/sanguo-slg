@@ -2,7 +2,7 @@
 # 路径即文档中的「params.yml →」引用。
 
 combat:
-  max_rounds: 8
+  max_rounds: 40
   round_damage_mult: 1.0
   damage_random_min: 0.95
   damage_random_max: 1.05
@@ -11,6 +11,12 @@ combat:
     advantage: 1.25
     disadvantage: 0.80
     neutral: 1.00
+  # R3-S1：一维战场初始距离取双方最大射程；近战每回合推进 speed/10。
+  ranges:
+    infantry: 2
+    cavalry: 2
+    archer: 12
+    siege: 16
   troops:
     infantry:  { atk: 10, def: 15, hp: 100, speed: 50,  food_upkeep: 1 }
     cavalry:   { atk: 18, def: 8,  hp: 80,  speed: 100, food_upkeep: 2 }

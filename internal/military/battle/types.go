@@ -26,6 +26,8 @@ type Army struct {
 	TechAttackPct  int32
 	TechDefensePct int32
 	Morale         float64
+	// Tactics is the optional drill-ground preset per troop role.
+	Tactics map[TroopType]Tactic
 }
 
 // BattleInput is the pure-function input; IDs break speed ties (§6).
@@ -52,6 +54,10 @@ type RoundReport struct {
 	DefenderTroops  map[TroopType]int
 	AttackerToDefHP int
 	DefenderToAttHP int
+	// Distance is the remaining one-dimensional gap after the round (R3-S1).
+	Distance int
+	// Actions records group moves and attacks in action order (R3-S1).
+	Actions []RoundAction
 }
 
 // HeroSummary is the player-facing hero card stored in a battle report.
@@ -77,7 +83,9 @@ type Loot struct {
 
 // BattleReport is the full deterministic output.
 type BattleReport struct {
-	Result             Result
+	Result Result
+	// StartDistance is the opening one-dimensional gap (R3-S1).
+	StartDistance      int
 	Rounds             []RoundReport
 	AttackerCasualties map[TroopType]int
 	DefenderCasualties map[TroopType]int

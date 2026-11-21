@@ -904,6 +904,7 @@ export class BattleReportPanel {
       thead.innerHTML = `
         <tr>
           <th scope="col">回合</th>
+          <th scope="col">距离</th>
           <th scope="col">攻方行动</th>
           <th scope="col">守方行动</th>
           <th scope="col">攻方剩余</th>
@@ -923,6 +924,7 @@ export class BattleReportPanel {
         }
         tr.innerHTML = `
           <td>${row.round}</td>
+          <td>${row.distance}</td>
           <td>${row.attackerAction}</td>
           <td>${row.defenderAction}</td>
           <td>${row.attackerRemaining}</td>

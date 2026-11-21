@@ -67,6 +67,7 @@ func (s *Server) WirePreparedMarch(ctx context.Context, profile freshsource.Prof
 		return err
 	}
 	resolver := combat.NewResolver(profile.ServerID, reports, NewWorldGarrisons(s.world, profile.ServerID), nil)
+	resolver.Tactics = combat.TacticsPG(pool)
 	resolver.TechBonus = func(order march.MarchOrder) (int32, int32) {
 		city, err := s.domestic.SnapshotCity(order.OriginCityID)
 		if err != nil || city == nil {

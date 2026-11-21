@@ -138,15 +138,24 @@ func battleReportDetailProto(rep battle.BattleReport) *militaryv1.BattleReportDe
 		HeroExpGained:      rep.Loot.HeroExp,
 		Loot:               lootProto(rep.Loot),
 		OccupyResult:       rep.OccupyResult,
+		StartDistance:      int32(rep.StartDistance),
 	}
 	for _, rr := range rep.Rounds {
-		d.Rounds = append(d.Rounds, &militaryv1.BattleRound{
+		round := &militaryv1.BattleRound{
 			Round:           int32(rr.Round),
 			AttackerTroops:  troopMapToProto(rr.AttackerTroops),
 			DefenderTroops:  troopMapToProto(rr.DefenderTroops),
 			AttackerToDefHp: int32(rr.AttackerToDefHP),
 			DefenderToAttHp: int32(rr.DefenderToAttHP),
-		})
+			Distance:        int32(rr.Distance),
+		}
+		for _, action := range rr.Actions {
+			round.Actions = append(round.Actions, &militaryv1.BattleRoundAction{
+				Side: action.Side, Troop: string(action.Troop), Kind: action.Kind,
+				Target: string(action.Target), DamageHp: int32(action.DamageHP),
+			})
+		}
+		d.Rounds = append(d.Rounds, round)
 	}
 	return d
 }

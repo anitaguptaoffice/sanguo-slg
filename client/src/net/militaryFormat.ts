@@ -638,6 +638,7 @@ export type BattleReportDetailView = {
   loot?: BattleLootView;
   hero_exp_gained?: number;
   occupy_result?: string;
+  start_distance?: number;
   attacker_hero_level?: number;
   defender_hero_level?: number;
   rounds?: {
@@ -646,6 +647,14 @@ export type BattleReportDetailView = {
     defender_troops?: Record<string, number>;
     attacker_to_def_hp?: number;
     defender_to_att_hp?: number;
+    distance?: number;
+    actions?: {
+      side?: string;
+      troop?: string;
+      kind?: string;
+      target?: string;
+      damage_hp?: number;
+    }[];
   }[];
   attacker_casualties?: Record<string, number>;
   defender_casualties?: Record<string, number>;
@@ -661,7 +670,8 @@ export function formatBattleRoundLine(round: BattleRoundView | undefined): strin
   const att = formatCasualtyMap(round.attacker_troops);
   const def = formatCasualtyMap(round.defender_troops);
   const dmg = `伤害 攻→守 ${round.attacker_to_def_hp ?? 0} / 守→攻 ${round.defender_to_att_hp ?? 0}`;
-  return `第 ${n} 回合 · 攻 ${att} · 守 ${def} · ${dmg}`;
+  const distance = round.distance === undefined ? "" : ` · 距离 ${round.distance}`;
+  return `第 ${n} 回合 · 攻 ${att} · 守 ${def} · ${dmg}${distance}`;
 }
 
 /** R1-S4 战报上下文：目标、攻守主将与战利品。 */
@@ -708,6 +718,7 @@ export function formatBattleReportDetail(
   return (
     `${head}\n` +
     `结果：${formatBattleResultText(detail?.result)}\n` +
+    (detail?.start_distance === undefined ? "" : `开场距离：${detail.start_distance}\n`) +
     `回合数：${roundCount}\n` +
     `攻方伤亡：${formatCasualtyMap(detail?.attacker_casualties)}\n` +
     `守方伤亡：${formatCasualtyMap(detail?.defender_casualties)}`
