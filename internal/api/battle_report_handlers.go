@@ -127,28 +127,68 @@ func battleReportViewProto(rec report.Record) *militaryv1.BattleReportView {
 
 func battleReportDetailProto(rep battle.BattleReport) *militaryv1.BattleReportDetail {
 	d := &militaryv1.BattleReportDetail{
-		Result:             string(rep.Result),
-		AttackerCasualties: troopMapToProto(rep.AttackerCasualties),
-		DefenderCasualties: troopMapToProto(rep.DefenderCasualties),
-		FinalAttacker:      troopMapToProto(rep.FinalAttacker),
-		FinalDefender:      troopMapToProto(rep.FinalDefender),
-		TargetName:         rep.TargetName,
-		AttackerHero:       heroSummaryProto(rep.AttackerHero),
-		DefenderHero:       heroSummaryProto(rep.DefenderHero),
-		HeroExpGained:      rep.Loot.HeroExp,
-		Loot:               lootProto(rep.Loot),
-		OccupyResult:       rep.OccupyResult,
+		Result:                  string(rep.Result),
+		AttackerCasualties:      troopMapToProto(rep.AttackerCasualties),
+		DefenderCasualties:      troopMapToProto(rep.DefenderCasualties),
+		FinalAttacker:           troopMapToProto(rep.FinalAttacker),
+		FinalDefender:           troopMapToProto(rep.FinalDefender),
+		TargetName:              rep.TargetName,
+		AttackerHero:            heroSummaryProto(rep.AttackerHero),
+		DefenderHero:            heroSummaryProto(rep.DefenderHero),
+		HeroExpGained:           rep.Loot.HeroExp,
+		Loot:                    lootProto(rep.Loot),
+		OccupyResult:            rep.OccupyResult,
+		StartDistance:           int32(rep.StartDistance),
+		FinalDefenses:           wallMapToProto(rep.FinalDefenses),
+		FinalAttackerUnits:      unitMapToProto(rep.FinalAttackerUnits),
+		FinalDefenderUnits:      unitMapToProto(rep.FinalDefenderUnits),
+		AttackerCasualtiesUnits: unitMapToProto(rep.AttackerCasualtiesUnits),
+		DefenderCasualtiesUnits: unitMapToProto(rep.DefenderCasualtiesUnits),
 	}
 	for _, rr := range rep.Rounds {
-		d.Rounds = append(d.Rounds, &militaryv1.BattleRound{
+		round := &militaryv1.BattleRound{
 			Round:           int32(rr.Round),
 			AttackerTroops:  troopMapToProto(rr.AttackerTroops),
 			DefenderTroops:  troopMapToProto(rr.DefenderTroops),
 			AttackerToDefHp: int32(rr.AttackerToDefHP),
 			DefenderToAttHp: int32(rr.DefenderToAttHP),
-		})
+			Distance:        int32(rr.Distance),
+			Defenses:        wallMapToProto(rr.Defenses),
+			AttackerUnits:   unitMapToProto(rr.AttackerUnits),
+			DefenderUnits:   unitMapToProto(rr.DefenderUnits),
+		}
+		for _, action := range rr.Actions {
+			round.Actions = append(round.Actions, &militaryv1.BattleRoundAction{
+				Side: action.Side, Troop: string(action.Troop), Kind: action.Kind,
+				Target: string(action.Target), DamageHp: int32(action.DamageHP), Defense: action.Defense,
+				UnitCfgId: action.UnitCfgID,
+			})
+		}
+		d.Rounds = append(d.Rounds, round)
 	}
 	return d
+}
+
+func unitMapToProto(m map[int32]int) map[int32]int32 {
+	if len(m) == 0 {
+		return nil
+	}
+	out := make(map[int32]int32, len(m))
+	for k, v := range m {
+		out[k] = int32(v)
+	}
+	return out
+}
+
+func wallMapToProto(m map[string]int) map[string]int32 {
+	if len(m) == 0 {
+		return nil
+	}
+	out := make(map[string]int32, len(m))
+	for k, v := range m {
+		out[k] = int32(v)
+	}
+	return out
 }
 
 func heroSummaryProto(h battle.HeroSummary) *militaryv1.BattleHeroSummary {

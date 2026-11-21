@@ -46,6 +46,9 @@ const (
 	RouteListWallDefenses     = "domestic.v1.ListWallDefenses"
 	RouteBuildWallDefense     = "domestic.v1.BuildWallDefense"
 	RouteHealWounded          = "domestic.v1.HealWounded"
+	RouteListTacticPresets    = "military.v1.ListTacticPresets"
+	RouteSetTacticPreset      = "military.v1.SetTacticPreset"
+	RouteRunDrill             = "military.v1.RunDrill"
 	RouteGetStorehouse        = "domestic.v1.GetStorehouse"
 	RouteGetMarket            = "domestic.v1.GetMarket"
 	RouteBuyFromMerchant      = "domestic.v1.BuyFromMerchant"
@@ -291,6 +294,9 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteListWallDefenses] = s.handleListWallDefenses
 	handlers[RouteBuildWallDefense] = s.handleBuildWallDefense
 	handlers[RouteHealWounded] = s.handleHealWounded
+	handlers[RouteListTacticPresets] = s.handleListTacticPresets
+	handlers[RouteSetTacticPreset] = s.handleSetTacticPreset
+	handlers[RouteRunDrill] = s.handleRunDrill
 	handlers[RouteGetStorehouse] = s.handleGetStorehouse
 	handlers[RouteGetMarket] = s.handleGetMarket
 	handlers[RouteBuyFromMerchant] = s.handleBuyFromMerchant

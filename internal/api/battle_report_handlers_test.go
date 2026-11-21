@@ -63,6 +63,14 @@ func TestGetAndListBattleReports(t *testing.T) {
 	if getOut.GetReport().GetSummary().GetReportId() != rec.ReportID {
 		t.Fatalf("report id %d", getOut.GetReport().GetSummary().GetReportId())
 	}
+	detail := getOut.GetReport().GetDetail()
+	if detail.GetStartDistance() != int32(rep.StartDistance) || len(detail.GetRounds()) == 0 {
+		t.Fatalf("distance report %+v", detail)
+	}
+	last := detail.GetRounds()[len(detail.GetRounds())-1]
+	if last.GetDistance() != int32(rep.Rounds[len(rep.Rounds)-1].Distance) || len(last.GetActions()) == 0 {
+		t.Fatalf("round distance/actions %+v", last)
+	}
 
 	listPkt := &commonv1.ClientPacket{
 		Route:     api.RouteListBattleReports,

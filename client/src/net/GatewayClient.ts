@@ -64,6 +64,9 @@ export type GatewayPort = {
   listWallDefenses(cityId: number): Promise<unknown>;
   buildWallDefense(cityId: number, defenseType: number): Promise<unknown>;
   healWounded(cityId: number, unitCfgId: number, count: number): Promise<unknown>;
+  listTacticPresets(cityId: number): Promise<unknown>;
+  setTacticPreset(cityId: number, unitCfgId: number, targetType: number, hold: boolean): Promise<unknown>;
+  runDrill(cityId: number, attacker: { unit_cfg_id: number; count: number }[], defender: { unit_cfg_id: number; count: number }[]): Promise<unknown>;
   getStorehouse(cityId: number): Promise<unknown>;
   getMarket(cityId: number): Promise<unknown>;
   buyFromMerchant(cityId: number, resourceType: number, amount: number): Promise<unknown>;
@@ -663,6 +666,23 @@ export class GatewayClient implements GatewayPort {
   async healWounded(cityId: number, unitCfgId: number, count: number) {
     const { HealWoundedResponse } = getTypes();
     return this.rpc(Routes.HealWounded, "HealWoundedRequest", { city_id: cityId, unit_cfg_id: unitCfgId, count }, HealWoundedResponse, true);
+  }
+
+  async listTacticPresets(cityId: number) {
+    const { ListTacticPresetsResponse } = getTypes();
+    return this.rpc(Routes.ListTacticPresets, "ListTacticPresetsRequest", { city_id: cityId }, ListTacticPresetsResponse, true);
+  }
+
+  async setTacticPreset(cityId: number, unitCfgId: number, targetType: number, hold: boolean) {
+    const { SetTacticPresetResponse } = getTypes();
+    return this.rpc(Routes.SetTacticPreset, "SetTacticPresetRequest", {
+      city_id: cityId, unit_cfg_id: unitCfgId, target_type: targetType, hold,
+    }, SetTacticPresetResponse, true);
+  }
+
+  async runDrill(cityId: number, attacker: { unit_cfg_id: number; count: number }[], defender: { unit_cfg_id: number; count: number }[]) {
+    const { RunDrillResponse } = getTypes();
+    return this.rpc(Routes.RunDrill, "RunDrillRequest", { city_id: cityId, attacker, defender }, RunDrillResponse, true);
   }
 
   async getStorehouse(cityId: number) {

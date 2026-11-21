@@ -3,8 +3,6 @@ package battle
 // Combat constants copied from spec/rules/params.yml (read-only reference).
 
 const (
-	maxRounds           = 8
-	roundDamageMult     = 1.0
 	damageRandomMin     = 0.95
 	damageRandomMax     = 1.05
 	counterAdvantage    = 1.25

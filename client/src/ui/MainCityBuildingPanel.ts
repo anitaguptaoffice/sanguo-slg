@@ -61,6 +61,7 @@ export type MarketView = {
   max_listing_amount?: number; gold?: number; offers?: MarketOfferRow[];
   own_offers?: MarketOfferRow[]; deliveries?: MarketDeliveryRow[];
 };
+export type TacticPresetRow = { unit_cfg_id?: number; troop_type?: number; target_type?: number; hold?: boolean };
 export type StorehouseView = {
   level?: number; capacity_bonus?: number; protection_percent?: number;
   protected_amount?: { food?: number; wood?: number; stone?: number; iron?: number };
@@ -78,6 +79,7 @@ export class MainCityBuildingPanel {
   private wallUsed = 0;
   private market: MarketView | null = null;
   private storehouse: StorehouseView | null = null;
+  private tactics: TacticPresetRow[] = [];
   private focusTrap: CenterPanelFocusTrap | null = null;
 
   constructor(
@@ -93,6 +95,8 @@ export class MainCityBuildingPanel {
     private readonly onOfficeAction?: (action: string, office: number, heroId: number) => void,
     private readonly onWallAction?: (action: string, defenseType: number, unitId: number) => void,
     private readonly onMarketAction?: (action: string, resourceType: number, amount: number, priceMilli: number, hours: number, offerId: number) => void,
+    private readonly onTacticAction?: (unitCfgId: number, targetType: number, hold: boolean) => void,
+    private readonly onRunDrill?: () => void,
   ) {}
 
   attach(): void {
@@ -147,6 +151,26 @@ export class MainCityBuildingPanel {
             <option value="12">12 小时</option><option value="24">24 小时</option>
           </select></label>
           <button type="button" data-action="create-offer">发布挂单</button>
+        </div>
+        <div class="drill-tactics hidden" data-role="drill-tactics">
+          <h4>校场战术</h4>
+          <p data-role="drill-status"></p>
+          <label>兵种 <select data-field="tactic-troop">
+            <option value="1">步兵</option><option value="2">骑兵</option>
+            <option value="3">弓兵</option><option value="4">器械</option>
+            <option value="5">民夫</option><option value="6">义兵</option>
+            <option value="7">斥候</option><option value="8">长枪兵</option>
+            <option value="9">刀盾兵</option><option value="10">长弓手</option>
+            <option value="11">轻骑</option><option value="12">铁骑</option>
+          </select></label>
+          <label>集火目标 <select data-field="tactic-target">
+            <option value="-1">默认</option><option value="0">步兵</option>
+            <option value="1">骑兵</option><option value="2">弓兵</option><option value="3">器械</option>
+          </select></label>
+          <label><input type="checkbox" data-field="tactic-hold"> 坚守不推进</label>
+          <button type="button" data-action="save-tactic">保存战术</button>
+          <button type="button" data-action="run-drill">沙盘演习（100 步 vs 100 弓）</button>
+          <div data-role="tactic-list"></div>
         </div>
         <div class="storehouse-section hidden" data-role="storehouse">
           <h4>仓库</h4>
@@ -287,6 +311,9 @@ export class MainCityBuildingPanel {
     const marketEl = this.panel.querySelector<HTMLElement>('[data-role="market"]');
     marketEl?.classList.toggle("hidden", slotKey !== "market");
     if (slotKey === "market") this.renderMarket();
+    const drillEl = this.panel.querySelector<HTMLElement>('[data-role="drill-tactics"]');
+    drillEl?.classList.toggle("hidden", slotKey !== "drill_ground");
+    if (slotKey === "drill_ground") this.renderTactics();
     const storeEl = this.panel.querySelector<HTMLElement>('[data-role="storehouse"]');
     storeEl?.classList.toggle("hidden", slotKey !== "warehouse");
     if (slotKey === "warehouse") this.renderStorehouse();
@@ -401,6 +428,35 @@ export class MainCityBuildingPanel {
 
   private resourceName(resourceType: number | undefined): string {
     return ["粮食", "木材", "石料", "铁锭"][resourceType ?? 0] ?? "资源";
+  }
+
+  setTactics(rows: TacticPresetRow[]): void {
+    this.tactics = rows;
+    this.renderTactics();
+  }
+
+  setDrillResult(text: string): void {
+    const status = this.panel?.querySelector<HTMLElement>('[data-role="drill-status"]');
+    if (status) status.textContent = text;
+  }
+
+  private renderTactics(): void {
+    const section = this.panel?.querySelector<HTMLElement>('[data-role="drill-tactics"]');
+    if (!section || section.classList.contains("hidden")) return;
+    const status = section.querySelector<HTMLElement>('[data-role="drill-status"]');
+    const list = section.querySelector<HTMLElement>('[data-role="tactic-list"]');
+    if (!status || !list) return;
+    const unitNames = ["步兵", "骑兵", "弓兵", "器械", "民夫", "义兵", "斥候", "长枪兵", "刀盾兵", "长弓手", "轻骑", "铁骑"];
+    const targetNames = ["步兵", "骑兵", "弓兵", "器械"];
+    const targetName = (n: number | undefined) => (n === undefined || n < 0 ? "默认" : targetNames[n] ?? "默认");
+    status.textContent = "按具体兵种设置集火目标；坚守会停止推进";
+    list.textContent = "";
+    for (const row of this.tactics) {
+      const unit = row.unit_cfg_id ?? (row.troop_type ?? 0) + 1;
+      const line = document.createElement("div");
+      line.textContent = `${unitNames[unit - 1] ?? `兵种#${unit}`} → ${targetName(row.target_type)}${row.hold ? " · 坚守" : ""}`;
+      list.appendChild(line);
+    }
   }
 
   private renderMarket(): void {
@@ -541,6 +597,18 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    if (btn?.getAttribute("data-action") === "run-drill") {
+      this.onRunDrill?.();
+      return;
+    }
+    if (btn?.getAttribute("data-action") === "save-tactic") {
+      const section = this.panel.querySelector<HTMLElement>('[data-role="drill-tactics"]');
+      const unitCfgId = Number(section?.querySelector<HTMLSelectElement>('[data-field="tactic-troop"]')?.value ?? 1);
+      const targetType = Number(section?.querySelector<HTMLSelectElement>('[data-field="tactic-target"]')?.value ?? -1);
+      const hold = !!section?.querySelector<HTMLInputElement>('[data-field="tactic-hold"]')?.checked;
+      this.onTacticAction?.(unitCfgId, targetType, hold);
+      return;
+    }
     const marketAction = btn?.getAttribute("data-action");
     if (marketAction && ["buy-merchant", "sell-merchant", "create-offer", "cancel-offer", "buy-offer"].includes(marketAction)) {
       const section = this.panel.querySelector<HTMLElement>('[data-role="market"]');

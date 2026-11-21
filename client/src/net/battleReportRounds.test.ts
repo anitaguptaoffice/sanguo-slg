@@ -28,6 +28,43 @@ describe("battleReportRounds", () => {
     expect(buildBattleRoundTableRows([sampleRound])).toHaveLength(1);
   });
 
+  it("shows distance and action-kind summaries", () => {
+    const row = buildBattleRoundTableRow({
+      round: 4,
+      distance: 7,
+      attacker_to_def_hp: 20,
+      actions: [
+        { side: "attacker", troop: "cavalry", kind: "move" },
+        { side: "attacker", troop: "archer", kind: "attack", damage_hp: 20 },
+      ],
+    });
+    expect(row.distance).toBe("7");
+    expect(row.attackerAction).toContain("移动 1");
+    expect(row.attackerAction).toContain("攻击 1");
+  });
+
+  it("uses the twelve-unit breakdown when present", () => {
+    const row = buildBattleRoundTableRow({
+      round: 1,
+      attacker_units: { 1: 80, 5: 10 },
+      defender_units: { 2: 40 },
+    });
+    expect(row.attackerRemaining).toContain("步兵 80");
+    expect(row.attackerRemaining).toContain("民夫 10");
+    expect(row.defenderRemaining).toContain("骑兵 40");
+  });
+
+  it("reports wall defenses and wall attacks", () => {
+    const row = buildBattleRoundTableRow({
+      round: 2,
+      distance: 0,
+      defenses: { tower: 2 },
+      actions: [{ side: "defender", defense: "tower", kind: "attack", damage_hp: 40 }],
+    });
+    expect(row.defenses).toBe("tower 2");
+    expect(row.defenderAction).toContain("攻击 1");
+  });
+
   it("summarizes defender damage", () => {
     expect(
       formatBattleRoundActionSummary("defender", {

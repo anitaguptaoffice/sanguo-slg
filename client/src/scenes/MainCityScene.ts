@@ -1054,6 +1054,8 @@ export class MainCityScene implements Scene {
       (action, defenseType, unitId) => void this.wallAction(action, defenseType, unitId),
       (action, resourceType, amount, priceMilli, hours, offerId) =>
         void this.marketAction(action, resourceType, amount, priceMilli, hours, offerId),
+      (unitCfgId, targetType, hold) => void this.saveTactic(unitCfgId, targetType, hold),
+      () => void this.runDrill(),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -2187,6 +2189,7 @@ export class MainCityScene implements Scene {
     if (slotKey === "wall") void this.refreshWallDefenses();
     if (slotKey === "market") void this.refreshMarket();
     if (slotKey === "warehouse") void this.refreshStorehouse();
+    if (slotKey === "drill_ground") void this.refreshTactics();
   }
 
   private getCityOfficeContext() {
@@ -2273,6 +2276,62 @@ export class MainCityScene implements Scene {
         await this.refreshState();
         this.status = `伤兵已治疗 ${res.healed ?? 0} 人`;
       }
+      this.renderHud();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async refreshTactics(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const res = (await this.gateway.listTacticPresets(session.cityId)) as {
+        presets?: { unit_cfg_id?: number; target_type?: number; hold?: boolean }[];
+      };
+      if (this.session !== session) return;
+      this.buildingPanel.setTactics(res.presets ?? []);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async saveTactic(unitCfgId: number, targetType: number, hold: boolean): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const res = (await this.gateway.setTacticPreset(session.cityId, unitCfgId, targetType, hold)) as {
+        presets?: { unit_cfg_id?: number; target_type?: number; hold?: boolean }[];
+      };
+      if (this.session !== session) return;
+      this.buildingPanel.setTactics(res.presets ?? []);
+      this.status = "校场战术已保存";
+      this.renderHud();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async runDrill(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const res = (await this.gateway.runDrill(
+        session.cityId,
+        [{ unit_cfg_id: 1, count: 100 }],
+        [{ unit_cfg_id: 3, count: 100 }],
+      )) as { detail?: { result?: string; start_distance?: number; rounds?: unknown[]; final_defenses?: Record<string, number> } };
+      const detail = res.detail;
+      const rounds = detail?.rounds?.length ?? 0;
+      const walls = detail?.final_defenses && Object.keys(detail.final_defenses).length
+        ? Object.entries(detail.final_defenses).map(([code, n]) => `${code} ${n}`).join("、")
+        : "无";
+      this.buildingPanel.setDrillResult(
+        `沙盘结果：${detail?.result ?? "—"} · 开场距离 ${detail?.start_distance ?? 0} · ${rounds} 回合 · 城防 ${walls}`,
+      );
       this.renderHud();
     } catch (error) {
       this.status = formatPanelGatewayErrorFromUnknown("build", error);

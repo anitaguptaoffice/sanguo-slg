@@ -75,6 +75,9 @@ export const Routes = {
   ListWallDefenses: "domestic.v1.ListWallDefenses",
   BuildWallDefense: "domestic.v1.BuildWallDefense",
   HealWounded: "domestic.v1.HealWounded",
+  ListTacticPresets: "military.v1.ListTacticPresets",
+  SetTacticPreset: "military.v1.SetTacticPreset",
+  RunDrill: "military.v1.RunDrill",
   GetStorehouse: "domestic.v1.GetStorehouse",
   GetMarket: "domestic.v1.GetMarket",
   BuyFromMerchant: "domestic.v1.BuyFromMerchant",
@@ -207,6 +210,12 @@ export type ProtoTypes = {
   BuildWallDefenseResponse: protobuf.Type;
   HealWoundedRequest: protobuf.Type;
   HealWoundedResponse: protobuf.Type;
+  ListTacticPresetsRequest: protobuf.Type;
+  ListTacticPresetsResponse: protobuf.Type;
+  SetTacticPresetRequest: protobuf.Type;
+  SetTacticPresetResponse: protobuf.Type;
+  RunDrillRequest: protobuf.Type;
+  RunDrillResponse: protobuf.Type;
   GetStorehouseRequest: protobuf.Type;
   GetStorehouseResponse: protobuf.Type;
   GetMarketRequest: protobuf.Type;
@@ -392,6 +401,12 @@ export function getTypes(): ProtoTypes {
     BuildWallDefenseResponse: r.lookupType("sanguo.domestic.v1.BuildWallDefenseResponse"),
     HealWoundedRequest: r.lookupType("sanguo.domestic.v1.HealWoundedRequest"),
     HealWoundedResponse: r.lookupType("sanguo.domestic.v1.HealWoundedResponse"),
+    ListTacticPresetsRequest: r.lookupType("sanguo.military.v1.ListTacticPresetsRequest"),
+    ListTacticPresetsResponse: r.lookupType("sanguo.military.v1.ListTacticPresetsResponse"),
+    SetTacticPresetRequest: r.lookupType("sanguo.military.v1.SetTacticPresetRequest"),
+    SetTacticPresetResponse: r.lookupType("sanguo.military.v1.SetTacticPresetResponse"),
+    RunDrillRequest: r.lookupType("sanguo.military.v1.RunDrillRequest"),
+    RunDrillResponse: r.lookupType("sanguo.military.v1.RunDrillResponse"),
     GetStorehouseRequest: r.lookupType("sanguo.domestic.v1.GetStorehouseRequest"),
     GetStorehouseResponse: r.lookupType("sanguo.domestic.v1.GetStorehouseResponse"),
     GetMarketRequest: r.lookupType("sanguo.domestic.v1.GetMarketRequest"),

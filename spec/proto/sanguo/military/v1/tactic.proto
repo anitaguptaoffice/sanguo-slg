@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package sanguo.military.v1;
+
+import "sanguo/military/v1/military.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/military/v1;militaryv1";
+
+// 校场战术预设（R3-S1）。troop_type/target_type：
+// 0=步兵 1=骑兵 2=弓兵 3=器械；target_type=-1 表示默认目标。
+message TacticPresetView {
+  int32 troop_type = 1;
+  int32 target_type = 2;
+  bool hold = 3;
+  int32 unit_cfg_id = 4;
+}
+
+// route: military.v1.ListTacticPresets
+message ListTacticPresetsRequest { int64 city_id = 1; }
+message ListTacticPresetsResponse {
+  repeated TacticPresetView presets = 1;
+  int32 drill_level = 2;
+}
+
+// route: military.v1.SetTacticPreset
+message SetTacticPresetRequest {
+  int64 city_id = 1;
+  int32 troop_type = 2;
+  int32 target_type = 3;
+  bool hold = 4;
+  int32 unit_cfg_id = 5;
+}
+message SetTacticPresetResponse {
+  repeated TacticPresetView presets = 1;
+}
+
+message DrillTroop {
+  int32 unit_cfg_id = 1;
+  int32 count = 2;
+}
+
+// route: military.v1.RunDrill
+message RunDrillRequest {
+  int64 city_id = 1;
+  repeated DrillTroop attacker = 2;
+  repeated DrillTroop defender = 3;
+}
+message RunDrillResponse {
+  BattleReportDetail detail = 1;
+}

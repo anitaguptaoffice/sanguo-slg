@@ -56,3 +56,34 @@ func TestResolveAttackGarrisonStableOutcome(t *testing.T) {
 		t.Fatal("stored detail mismatch")
 	}
 }
+
+func TestResolveAttackUsesCityTactics(t *testing.T) {
+	ctx := context.Background()
+	svc := report.NewService(report.NewMemStore())
+	r := NewResolver(1, svc, garrisonFixture(), nil)
+	r.Tactics = func(context.Context, int32, int64) (map[int32]battle.Tactic, error) {
+		return map[int32]battle.Tactic{
+			2: {Target: battle.TroopArcher},
+		}, nil
+	}
+	ev := march.MarchArrivalEvent{
+		MarchID: 10, PlayerID: 1001,
+		Troops: []march.TroopStack{{UnitCfgID: 2, Count: 100}},
+		Order:  march.MarchOrder{OriginCityID: 1, ToX: 5, ToY: 5, Purpose: PurposeAttack},
+	}
+	res, err := r.ResolveAttackGarrison(ctx, ev)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, rr := range res.Report.Rounds {
+		for _, a := range rr.Actions {
+			if a.Side == "attacker" && a.UnitCfgID == 2 && a.Kind == "attack" {
+				if a.Target != battle.TroopArcher {
+					t.Fatalf("cavalry targeted %s", a.Target)
+				}
+				return
+			}
+		}
+	}
+	t.Fatal("cavalry never attacked with the preset target")
+}

@@ -221,6 +221,29 @@ message BattleReportDetail {
   int64 hero_exp_gained = 11;
   // R1-S5: 占领结果（"occupied" / "cap_reached" / 空）。
   string occupy_result = 12;
+  // R3-S1: 开场一维战场距离。
+  int32 start_distance = 13;
+  // R3-S1: 城防工事剩余数量。
+  map<string, int32> final_defenses = 14;
+  // R3-S1: 十二兵种终局/伤亡明细。
+  map<int32, int32> final_attacker_units = 15;
+  map<int32, int32> final_defender_units = 16;
+  map<int32, int32> attacker_casualties_units = 17;
+  map<int32, int32> defender_casualties_units = 18;
+}
+
+message BattleRoundAction {
+  // attacker / defender
+  string side = 1;
+  // infantry / cavalry / archer / siege
+  string troop = 2;
+  // move / attack
+  string kind = 3;
+  string target = 4;
+  int32 damage_hp = 5;
+  // R3-S1: 城防工事代码；普通兵种行动时为空。
+  string defense = 6;
+  int32 unit_cfg_id = 7;
 }
 
 message BattleRound {
@@ -229,6 +252,14 @@ message BattleRound {
   map<string, int32> defender_troops = 3;
   int32 attacker_to_def_hp = 4;
   int32 defender_to_att_hp = 5;
+  // R3-S1: 回合结束后的剩余距离。
+  int32 distance = 6;
+  // R3-S1: 本回合按速度排列的移动/攻击动作。
+  repeated BattleRoundAction actions = 7;
+  // R3-S1: 回合结束时城防工事剩余数量。
+  map<string, int32> defenses = 8;
+  map<int32, int32> attacker_units = 9;
+  map<int32, int32> defender_units = 10;
 }
 
 message BattleReportView {

@@ -26,6 +26,15 @@ type Army struct {
 	TechAttackPct  int32
 	TechDefensePct int32
 	Morale         float64
+	// Tactics is the optional drill-ground preset per troop role.
+	Tactics map[TroopType]Tactic
+	// Units is the optional twelve-unit breakdown. When present, R3-S1 fights
+	// per unit_cfg_id instead of aggregating into four roles.
+	Units map[int32]int
+	// UnitTactics is the optional drill-ground preset per unit_cfg_id.
+	UnitTactics map[int32]Tactic
+	// Defenses are city wall structures (R3-S1). They act last each round.
+	Defenses []WallGroup
 }
 
 // BattleInput is the pure-function input; IDs break speed ties (§6).
@@ -52,6 +61,14 @@ type RoundReport struct {
 	DefenderTroops  map[TroopType]int
 	AttackerToDefHP int
 	DefenderToAttHP int
+	// Distance is the remaining one-dimensional gap after the round (R3-S1).
+	Distance int
+	// Actions records group moves and attacks in action order (R3-S1).
+	Actions  []RoundAction
+	Defenses map[string]int
+	// AttackerUnits/DefenderUnits preserve the twelve-unit breakdown.
+	AttackerUnits map[int32]int
+	DefenderUnits map[int32]int
 }
 
 // HeroSummary is the player-facing hero card stored in a battle report.
@@ -77,7 +94,9 @@ type Loot struct {
 
 // BattleReport is the full deterministic output.
 type BattleReport struct {
-	Result             Result
+	Result Result
+	// StartDistance is the opening one-dimensional gap (R3-S1).
+	StartDistance      int
 	Rounds             []RoundReport
 	AttackerCasualties map[TroopType]int
 	DefenderCasualties map[TroopType]int
@@ -91,4 +110,11 @@ type BattleReport struct {
 	// OccupyResult is "occupied", "cap_reached" or empty when the march did
 	// not carry an occupation intent (R1-S5).
 	OccupyResult string
+	// FinalDefenses is the remaining wall structure count by code (R3-S1).
+	FinalDefenses map[string]int
+	// Twelve-unit final state and casualties (R3-S1).
+	FinalAttackerUnits      map[int32]int
+	FinalDefenderUnits      map[int32]int
+	AttackerCasualtiesUnits map[int32]int
+	DefenderCasualtiesUnits map[int32]int
 }
