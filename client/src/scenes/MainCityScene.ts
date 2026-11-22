@@ -1068,6 +1068,8 @@ export class MainCityScene implements Scene {
       (action, guildId, targetGuildId, cityId, unit, count) =>
         void this.diplomacyAction(action, guildId, targetGuildId, cityId, unit, count),
       (action, unit, count) => void this.specialCityAction(action, unit, count),
+      (action, stageId, unit, count) => void this.campaignAction(action, stageId, unit, count),
+      (action, opponentId, unit, count) => void this.arenaAction(action, opponentId, unit, count),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -2207,7 +2209,11 @@ export class MainCityScene implements Scene {
     if (slotKey === "wall") void this.refreshWallDefenses();
     if (slotKey === "market") void this.refreshMarket();
     if (slotKey === "warehouse") void this.refreshStorehouse();
-    if (slotKey === "drill_ground") void this.refreshTactics();
+    if (slotKey === "drill_ground") {
+      void this.refreshTactics();
+      void this.refreshCampaignStages();
+      void this.refreshArenaOpponents();
+    }
     if (slotKey === "smithy" || slotKey === "stable") void this.refreshEquipment();
     if (slotKey === "inn") void this.refreshHistorical();
   }
@@ -2369,6 +2375,82 @@ export class MainCityScene implements Scene {
       ])) as [{ relations?: Record<string, unknown>[] }, { troops?: Record<string, unknown>[] }];
       if (this.session !== session) return;
       this.buildingPanel.setDiplomacy((rel.relations ?? []) as never, (gar.troops ?? []) as never);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async refreshArenaOpponents(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const res = (await this.gateway.listArenaOpponents(session.cityId)) as { opponents?: Record<string, unknown>[] };
+      if (this.session !== session) return;
+      this.buildingPanel.setArenaOpponents((res.opponents ?? []) as never);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async arenaAction(_action: string, opponentId: number, unit: number, count: number): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId || !opponentId) return;
+    try {
+      const res = (await this.gateway.fightArenaOpponent(session.cityId, opponentId, [{ unit_cfg_id: unit, count }])) as {
+        result?: string;
+        first_win?: boolean;
+        reward_gold?: number | string;
+        reward_prestige?: number | string;
+        attacker_survived?: number;
+        attacker_initial?: number;
+      };
+      const won = res.result === "attacker_win";
+      const reward = res.first_win
+        ? ` · 首胜：金 ${res.reward_gold ?? 0} 声望 ${res.reward_prestige ?? 0}`
+        : won ? " · 今日首胜奖励已领取" : "";
+      this.status = `比武${won ? "胜利" : "失败"} · 存活 ${res.attacker_survived ?? 0}/${res.attacker_initial ?? 0}${reward}`;
+      this.renderHud();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async refreshCampaignStages(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const res = (await this.gateway.listCampaignStages(session.cityId)) as { stages?: Record<string, unknown>[] };
+      if (this.session !== session) return;
+      this.buildingPanel.setCampaignStages((res.stages ?? []) as never);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async campaignAction(_action: string, stageId: number, unit: number, count: number): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId || !stageId) return;
+    try {
+      const res = (await this.gateway.fightCampaignStage(session.cityId, stageId, [{ unit_cfg_id: unit, count }])) as {
+        result?: string;
+        stars?: number;
+        first_clear?: boolean;
+        reward_gold?: number | string;
+        reward_prestige?: number | string;
+        attacker_survived?: number;
+        attacker_initial?: number;
+      };
+      const won = res.result === "attacker_win";
+      const rewards = res.first_clear
+        ? ` · 首通奖励：金 ${res.reward_gold ?? 0} 声望 ${res.reward_prestige ?? 0}`
+        : "";
+      this.status = `战役${won ? "胜利" : "失败"} · ${res.stars ?? 0} 星 · 存活 ${res.attacker_survived ?? 0}/${res.attacker_initial ?? 0}${rewards}`;
+      await this.refreshCampaignStages();
+      this.renderHud();
     } catch (error) {
       this.status = formatPanelGatewayErrorFromUnknown("build", error);
       this.renderHud();

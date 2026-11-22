@@ -64,6 +64,8 @@ export type MarketView = {
 export type TacticPresetRow = { unit_cfg_id?: number; troop_type?: number; target_type?: number; hold?: boolean };
 export type ScoutReportRow = { report_id?: number; x?: number; y?: number; tier?: number; target_name?: string; detail?: string; created_at_ms?: number };
 export type BeaconWarningRow = { warning_id?: number; x?: number; y?: number; purpose?: number; arrive_at_ms?: number; beacon_level?: number; attacker_player_id?: number; attacker_troops?: number };
+export type ArenaOpponentRow = { opponent_id?: number; name?: string; troop_cap?: number; defender_total?: number; defender_hero?: string; reward_gold?: number | string; reward_prestige?: number | string; reward_item_cfg_id?: number; reward_item_count?: number };
+export type CampaignStageRow = { stage_id?: number; code?: string; name?: string; chapter?: number; stage_order?: number; troop_cap?: number; unlocked?: boolean; cleared?: boolean; stars?: number; defender_total?: number; defender_hero?: string; reward_gold?: number | string; reward_prestige?: number | string };
 export type SpecialCityRow = { city_cfg_id?: number; city_type?: number; name?: string; x?: number; y?: number; owner_guild_id?: number; owner_guild_name?: string; garrison?: number; wall_level?: number; hero_name?: string; hero_level?: number; unit_cfg_id?: number; unit_name?: string; next_recover_at_ms?: number | string };
 export type GuildRelationRow = { guild_id?: number; target_guild_id?: number; state?: number; effective_at_ms?: number; pending?: boolean };
 export type GuildGarrisonRow = { city_id?: number; player_id?: number; unit_cfg_id?: number; count?: number };
@@ -112,6 +114,8 @@ export class MainCityBuildingPanel {
   private beaconWarnings: BeaconWarningRow[] = [];
   private guildRelations: GuildRelationRow[] = [];
   private specialCities: SpecialCityRow[] = [];
+  private campaignStages: CampaignStageRow[] = [];
+  private arenaOpponents: ArenaOpponentRow[] = [];
   private unlockedUnits: number[] = [];
   private guildGarrison: GuildGarrisonRow[] = [];
   private focusTrap: CenterPanelFocusTrap | null = null;
@@ -137,6 +141,8 @@ export class MainCityBuildingPanel {
     private readonly onRankAction?: (action: "promote" | "found" | "transfer" | "truce", name: string, x: number, y: number) => void,
     private readonly onDiplomacyAction?: (action: string, guildId: number, targetGuildId: number, cityId: number, unit: number, count: number) => void,
     private readonly onSpecialAction?: (action: string, unit: number, count: number) => void,
+    private readonly onCampaignAction?: (action: string, stageId: number, unit: number, count: number) => void,
+    private readonly onArenaAction?: (action: string, opponentId: number, unit: number, count: number) => void,
   ) {}
 
   attach(): void {
@@ -211,6 +217,26 @@ export class MainCityBuildingPanel {
           <button type="button" data-action="save-tactic">保存战术</button>
           <button type="button" data-action="run-drill">沙盘演习（100 步 vs 100 弓）</button>
           <div data-role="tactic-list"></div>
+          <h4>历史战役</h4>
+          <p data-role="campaign-status">借调兵力闯关，不损耗城内真实部队；首通发放图纸、宝珠与声望。</p>
+          <label>关卡 <select data-field="campaign-stage"></select></label>
+          <label>兵种 <select data-field="campaign-unit">
+            <option value="1">步兵</option><option value="2">骑兵</option><option value="3">弓兵</option>
+            <option value="4">器械</option><option value="9">刀盾兵</option><option value="11">轻骑</option>
+          </select></label>
+          <label>借调兵力 <input type="number" data-field="campaign-count" value="3000"></label>
+          <button type="button" data-action="fight-campaign">出征战役</button>
+          <div data-role="campaign-stages"></div>
+          <h4>沙场比武</h4>
+          <p data-role="arena-status">每日首胜可得金币、声望与宝珠。</p>
+          <label>对手 <select data-field="arena-opponent"></select></label>
+          <label>兵种 <select data-field="arena-unit">
+            <option value="1">步兵</option><option value="2">骑兵</option><option value="3">弓兵</option>
+            <option value="11">轻骑</option><option value="12">铁骑</option>
+          </select></label>
+          <label>借调兵力 <input type="number" data-field="arena-count" value="3000"></label>
+          <button type="button" data-action="fight-arena">切磋</button>
+          <div data-role="arena-opponents"></div>
         </div>
         <div class="historical-section hidden" data-role="historical">
           <h4>历史名将传闻</h4>
@@ -445,7 +471,11 @@ export class MainCityBuildingPanel {
     if (slotKey === "market") this.renderMarket();
     const drillEl = this.panel.querySelector<HTMLElement>('[data-role="drill-tactics"]');
     drillEl?.classList.toggle("hidden", slotKey !== "drill_ground");
-    if (slotKey === "drill_ground") this.renderTactics();
+    if (slotKey === "drill_ground") {
+      this.renderTactics();
+      this.renderCampaignStages();
+      this.renderArenaOpponents();
+    }
     const historicalEl = this.panel.querySelector<HTMLElement>('[data-role="historical"]');
     historicalEl?.classList.toggle("hidden", slotKey !== "inn");
     if (slotKey === "inn") this.renderHistorical();
@@ -619,6 +649,69 @@ export class MainCityBuildingPanel {
     this.blacksmithLevel = blacksmith;
     this.stableLevel = stable;
     this.renderEquipment();
+  }
+
+  setCampaignStages(stages: CampaignStageRow[]): void {
+    this.campaignStages = stages;
+    this.renderCampaignStages();
+  }
+
+  private renderCampaignStages(): void {
+    const section = this.panel?.querySelector<HTMLElement>('[data-role="drill-tactics"]');
+    if (!section || section.classList.contains("hidden")) return;
+    const list = section.querySelector<HTMLElement>('[data-role="campaign-stages"]');
+    const select = section.querySelector<HTMLSelectElement>('[data-field="campaign-stage"]');
+    const status = section.querySelector<HTMLElement>('[data-role="campaign-status"]');
+    if (!list || !select || !status) return;
+    const labels = ["", "黄巾之乱", "讨伐董卓", "官渡之战", "赤壁之战"];
+    const selected = select.value;
+    select.textContent = "";
+    list.textContent = "";
+    for (const stage of this.campaignStages) {
+      const option = document.createElement("option");
+      option.value = String(stage.stage_id ?? 0);
+      option.textContent = `${stage.name ?? ""}${stage.unlocked ? "" : "（未解锁）"}`;
+      option.disabled = !stage.unlocked;
+      select.appendChild(option);
+      const line = document.createElement("div");
+      line.textContent = `${labels[stage.chapter ?? 0] ?? ""} ${stage.name ?? ""} · 守军 ${stage.defender_total ?? 0} · ${stage.unlocked ? (stage.cleared ? `已通关 ${stage.stars ?? 0} 星` : "可挑战") : "需先通关前置"} · 上限 ${stage.troop_cap ?? 0}`;
+      list.appendChild(line);
+    }
+    const firstUnlocked = this.campaignStages.find((stage) => stage.unlocked && !stage.cleared) ?? this.campaignStages.find((stage) => stage.unlocked);
+    if (firstUnlocked && !this.campaignStages.some((stage) => String(stage.stage_id) === selected)) {
+      select.value = String(firstUnlocked.stage_id ?? "");
+    } else if (selected) {
+      select.value = selected;
+    }
+    const cleared = this.campaignStages.filter((stage) => stage.cleared).length;
+    status.textContent = `战役 ${cleared}/${this.campaignStages.length} 通关 · 首通奖励：高阶装备图纸、宝珠匣与声望`;
+  }
+
+  setArenaOpponents(opponents: ArenaOpponentRow[]): void {
+    this.arenaOpponents = opponents;
+    this.renderArenaOpponents();
+  }
+
+  private renderArenaOpponents(): void {
+    const section = this.panel?.querySelector<HTMLElement>('[data-role="drill-tactics"]');
+    if (!section || section.classList.contains("hidden")) return;
+    const list = section.querySelector<HTMLElement>('[data-role="arena-opponents"]');
+    const select = section.querySelector<HTMLSelectElement>('[data-field="arena-opponent"]');
+    if (!list || !select) return;
+    const selected = select.value;
+    select.textContent = "";
+    list.textContent = "";
+    for (const o of this.arenaOpponents) {
+      const option = document.createElement("option");
+      option.value = String(o.opponent_id ?? 0);
+      option.textContent = o.name ?? "";
+      select.appendChild(option);
+      const line = document.createElement("div");
+      const item = o.reward_item_cfg_id ? ` · 宝珠 ${o.reward_item_count ?? 0}` : "";
+      line.textContent = `${o.name ?? ""} · 守军 ${o.defender_total ?? 0} · 上限 ${o.troop_cap ?? 0} · 金 ${o.reward_gold ?? 0} 声望 ${o.reward_prestige ?? 0}${item}`;
+      list.appendChild(line);
+    }
+    if (selected && this.arenaOpponents.some((o) => String(o.opponent_id) === selected)) select.value = selected;
   }
 
   setSpecialCities(cities: SpecialCityRow[], unlocked: number[]): void {
@@ -941,6 +1034,22 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    if (btn?.getAttribute("data-action") === "fight-arena") {
+      const section = this.panel.querySelector<HTMLElement>('[data-role="drill-tactics"]');
+      const opponent = Number(section?.querySelector<HTMLSelectElement>('[data-field="arena-opponent"]')?.value ?? 0);
+      const unit = Number(section?.querySelector<HTMLSelectElement>('[data-field="arena-unit"]')?.value ?? 0);
+      const count = Number(section?.querySelector<HTMLInputElement>('[data-field="arena-count"]')?.value ?? 0);
+      this.onArenaAction?.("fight", opponent, unit, count);
+      return;
+    }
+    if (btn?.getAttribute("data-action") === "fight-campaign") {
+      const section = this.panel.querySelector<HTMLElement>('[data-role="drill-tactics"]');
+      const stage = Number(section?.querySelector<HTMLSelectElement>('[data-field="campaign-stage"]')?.value ?? 0);
+      const unit = Number(section?.querySelector<HTMLSelectElement>('[data-field="campaign-unit"]')?.value ?? 0);
+      const count = Number(section?.querySelector<HTMLInputElement>('[data-field="campaign-count"]')?.value ?? 0);
+      this.onCampaignAction?.("fight", stage, unit, count);
+      return;
+    }
     const specialAction = btn?.getAttribute("data-action");
     if (specialAction && ["refresh-special", "claim-special-tax", "recruit-special"].includes(specialAction)) {
       const section = this.panel.querySelector<HTMLElement>('[data-role="rank"]');

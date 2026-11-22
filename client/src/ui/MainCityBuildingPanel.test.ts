@@ -298,3 +298,40 @@ describe("MainCityBuildingPanel special cities", () => {
     panel.detach();
   });
 });
+
+describe("MainCityBuildingPanel campaign", () => {
+  it("renders unlocked stages and rewards", () => {
+    const mount = document.createElement("div");
+    const panel = new MainCityBuildingPanel(mount, { drill_ground: "校场" }, () => null, () => {}, () => "idle");
+    panel.attach();
+    panel.selectSlot("drill_ground");
+    panel.setCampaignStages([
+      { stage_id: 1, name: "广宗黄巾", chapter: 1, troop_cap: 4000, unlocked: true, cleared: true, stars: 3, defender_total: 2500 },
+      { stage_id: 2, name: "宛城黄巾", chapter: 1, troop_cap: 6000, unlocked: false, cleared: false, stars: 0, defender_total: 3800 },
+    ]);
+    const section = mount.querySelector<HTMLElement>('[data-role="drill-tactics"]')!;
+    expect(section.textContent).toContain("已通关 3 星");
+    expect(section.textContent).toContain("宛城黄巾（未解锁）");
+    const select = section.querySelector<HTMLSelectElement>('[data-field="campaign-stage"]')!;
+    expect(select.value).toBe("1");
+    panel.detach();
+  });
+});
+
+describe("MainCityBuildingPanel arena", () => {
+  it("renders arena opponents and daily rewards", () => {
+    const mount = document.createElement("div");
+    const panel = new MainCityBuildingPanel(mount, { drill_ground: "校场" }, () => null, () => {}, () => "idle");
+    panel.attach();
+    panel.selectSlot("drill_ground");
+    panel.setArenaOpponents([
+      { opponent_id: 2, name: "西凉骁将", troop_cap: 8000, defender_total: 3800, reward_gold: 500, reward_prestige: 50, reward_item_cfg_id: 2061, reward_item_count: 1 },
+    ]);
+    const section = mount.querySelector<HTMLElement>('[data-role="drill-tactics"]')!;
+    expect(section.textContent).toContain("西凉骁将");
+    expect(section.textContent).toContain("上限 8000");
+    expect(section.textContent).toContain("宝珠 1");
+    expect(section.querySelector<HTMLSelectElement>('[data-field="arena-opponent"]')!.value).toBe("2");
+    panel.detach();
+  });
+});

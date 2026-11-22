@@ -85,6 +85,10 @@ export type GatewayPort = {
   listSpecialCities(): Promise<unknown>;
   claimSpecialCityTax(): Promise<unknown>;
   recruitSpecialTroops(cityId: number, unitCfgId: number, count: number): Promise<unknown>;
+  listCampaignStages(cityId: number): Promise<unknown>;
+  fightCampaignStage(cityId: number, stageId: number, attacker: { unit_cfg_id: number; count: number }[]): Promise<unknown>;
+  listArenaOpponents(cityId: number): Promise<unknown>;
+  fightArenaOpponent(cityId: number, opponentId: number, attacker: { unit_cfg_id: number; count: number }[]): Promise<unknown>;
   setGuildRelation(guildId: number, targetGuildId: number, state: number): Promise<unknown>;
   listGuildRelations(guildId: number): Promise<unknown>;
   stationGuildTroops(cityId: number, guildId: number, unitCfgId: number, count: number): Promise<unknown>;
@@ -804,6 +808,26 @@ export class GatewayClient implements GatewayPort {
   async claimSpecialCityTax() {
     const { ClaimSpecialCityTaxResponse } = getTypes();
     return this.rpc(Routes.ClaimSpecialCityTax, "ClaimSpecialCityTaxRequest", { server_id: 1 }, ClaimSpecialCityTaxResponse, true);
+  }
+
+  async listCampaignStages(cityId: number) {
+    const { ListCampaignStagesResponse } = getTypes();
+    return this.rpc(Routes.ListCampaignStages, "ListCampaignStagesRequest", { city_id: cityId }, ListCampaignStagesResponse, true);
+  }
+
+  async listArenaOpponents(cityId: number) {
+    const { ListArenaOpponentsResponse } = getTypes();
+    return this.rpc(Routes.ListArenaOpponents, "ListArenaOpponentsRequest", { city_id: cityId }, ListArenaOpponentsResponse, true);
+  }
+
+  async fightArenaOpponent(cityId: number, opponentId: number, attacker: { unit_cfg_id: number; count: number }[]) {
+    const { FightArenaOpponentResponse } = getTypes();
+    return this.rpc(Routes.FightArenaOpponent, "FightArenaOpponentRequest", { city_id: cityId, opponent_id: opponentId, attacker }, FightArenaOpponentResponse, true);
+  }
+
+  async fightCampaignStage(cityId: number, stageId: number, attacker: { unit_cfg_id: number; count: number }[]) {
+    const { FightCampaignStageResponse } = getTypes();
+    return this.rpc(Routes.FightCampaignStage, "FightCampaignStageRequest", { city_id: cityId, stage_id: stageId, attacker }, FightCampaignStageResponse, true);
   }
 
   async recruitSpecialTroops(cityId: number, unitCfgId: number, count: number) {

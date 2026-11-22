@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package sanguo.military.v1;
+
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1;militaryv1";
+
+message CampaignTroop {
+  int32 unit_cfg_id = 1;
+  int32 count = 2;
+}
+
+message CampaignItemView {
+  int32 item_cfg_id = 1;
+  int32 count = 2;
+}
+
+message CampaignStageView {
+  int32 stage_id = 1;
+  string code = 2;
+  string name = 3;
+  int32 chapter = 4;
+  int32 stage_order = 5;
+  int32 troop_cap = 6;
+  bool unlocked = 7;
+  bool cleared = 8;
+  int32 stars = 9;
+  int32 defender_total = 10;
+  string defender_hero = 11;
+  int32 wall_level = 12;
+  int64 reward_gold = 13;
+  int64 reward_prestige = 14;
+  repeated CampaignItemView reward_items = 15;
+}
+
+// route: military.v1.ListCampaignStages
+message ListCampaignStagesRequest { int64 city_id = 1; }
+message ListCampaignStagesResponse { repeated CampaignStageView stages = 1; }
+
+// route: military.v1.FightCampaignStage
+message FightCampaignStageRequest {
+  int64 city_id = 1;
+  int32 stage_id = 2;
+  repeated CampaignTroop attacker = 3;
+}
+message FightCampaignStageResponse {
+  string result = 1;
+  int32 rounds = 2;
+  int32 attacker_initial = 3;
+  int32 attacker_survived = 4;
+  int32 defender_initial = 5;
+  int32 defender_survived = 6;
+  int32 stars = 7;
+  bool first_clear = 8;
+  int64 reward_gold = 9;
+  int64 reward_prestige = 10;
+  repeated CampaignItemView reward_items = 11;
+}
+
+message ArenaOpponentView {
+  int32 opponent_id = 1;
+  string name = 2;
+  int32 troop_cap = 3;
+  int32 defender_total = 4;
+  string defender_hero = 5;
+  int32 wall_level = 6;
+  int64 reward_gold = 7;
+  int64 reward_prestige = 8;
+  int32 reward_item_cfg_id = 9;
+  int32 reward_item_count = 10;
+}
+
+// route: military.v1.ListArenaOpponents
+message ListArenaOpponentsRequest { int64 city_id = 1; }
+message ListArenaOpponentsResponse { repeated ArenaOpponentView opponents = 1; }
+
+// route: military.v1.FightArenaOpponent
+message FightArenaOpponentRequest {
+  int64 city_id = 1;
+  int32 opponent_id = 2;
+  repeated CampaignTroop attacker = 3;
+}
+message FightArenaOpponentResponse {
+  string result = 1;
+  int32 rounds = 2;
+  int32 attacker_initial = 3;
+  int32 attacker_survived = 4;
+  int32 defender_initial = 5;
+  int32 defender_survived = 6;
+  bool first_win = 7;
+  int64 reward_gold = 8;
+  int64 reward_prestige = 9;
+  int32 reward_item_cfg_id = 10;
+  int32 reward_item_count = 11;
+}
