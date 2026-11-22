@@ -94,7 +94,7 @@ export type GatewayPort = {
   getWorldProgress(): Promise<unknown>;
   setGuildRelation(guildId: number, targetGuildId: number, state: number): Promise<unknown>;
   listGuildRelations(guildId: number): Promise<unknown>;
-  stationGuildTroops(cityId: number, guildId: number, unitCfgId: number, count: number): Promise<unknown>;
+  stationGuildTroops(cityId: number, guildId: number, unitCfgId: number, count: number, fromCityId?: number): Promise<unknown>;
   listGuildGarrison(cityId: number): Promise<unknown>;
   castTrick(cityId: number, trickType: number, targetMarchId: number): Promise<unknown>;
   runDrill(cityId: number, attacker: { unit_cfg_id: number; count: number }[], defender: { unit_cfg_id: number; count: number }[]): Promise<unknown>;
@@ -793,9 +793,9 @@ export class GatewayClient implements GatewayPort {
     return this.rpc(Routes.ListGuildRelations, "ListGuildRelationsRequest", { server_id: 1, guild_id: guildId }, ListGuildRelationsResponse, true);
   }
 
-  async stationGuildTroops(cityId: number, guildId: number, unitCfgId: number, count: number) {
+  async stationGuildTroops(cityId: number, guildId: number, unitCfgId: number, count: number, fromCityId?: number) {
     const { StationGuildTroopsResponse } = getTypes();
-    return this.rpc(Routes.StationGuildTroops, "StationGuildTroopsRequest", { server_id: 1, city_id: cityId, guild_id: guildId, unit_cfg_id: unitCfgId, count }, StationGuildTroopsResponse, true);
+    return this.rpc(Routes.StationGuildTroops, "StationGuildTroopsRequest", { server_id: 1, city_id: cityId, guild_id: guildId, unit_cfg_id: unitCfgId, count, from_city_id: fromCityId ?? cityId }, StationGuildTroopsResponse, true);
   }
 
   async listGuildGarrison(cityId: number) {

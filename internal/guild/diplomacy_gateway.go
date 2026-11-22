@@ -71,7 +71,8 @@ func RegisterDiplomacy(m *assembly.M3, d *Diplomacy, sessions SessionResolver) {
 		if err := proto.Unmarshal(pkt.GetPayload(), &req); err != nil {
 			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 		}
-		rows, err := d.Station(ctx, a.ServerID, a.PlayerID, req.GetCityId(), req.GetGuildId(), req.GetUnitCfgId(), req.GetCount())
+		rows, err := d.Station(ctx, a.ServerID, a.PlayerID, req.GetFromCityId(), req.GetCityId(),
+			req.GetGuildId(), req.GetUnitCfgId(), req.GetCount())
 		if err != nil {
 			return guildErr(pkt.GetTraceId(), err), nil
 		}

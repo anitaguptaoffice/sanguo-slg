@@ -101,7 +101,7 @@ func (d *Diplomacy) ListRelations(ctx context.Context, serverID int32, guildID i
 	return out, rows.Err()
 }
 
-func (d *Diplomacy) Station(ctx context.Context, serverID int32, playerID, cityID, guildID int64, unit int32, count int32) ([]*guildv1.GuildGarrisonView, error) {
+func (d *Diplomacy) Station(ctx context.Context, serverID int32, playerID, fromCityID, cityID, guildID int64, unit int32, count int32) ([]*guildv1.GuildGarrisonView, error) {
 	if count <= 0 || unit < 1 || unit > 12 {
 		return nil, ErrGuildTroops
 	}
@@ -110,9 +110,9 @@ func (d *Diplomacy) Station(ctx context.Context, serverID int32, playerID, cityI
 		return nil, err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
-	var owner int64
+	var sourceOwner int64
 	if err := tx.QueryRow(ctx, `SELECT player_id FROM player_city WHERE server_id=$1 AND city_id=$2`,
-		serverID, cityID).Scan(&owner); err != nil || owner != playerID {
+		serverID, fromCityID).Scan(&sourceOwner); err != nil || sourceOwner != playerID {
 		return nil, ErrGuildTarget
 	}
 	var member bool
@@ -120,13 +120,22 @@ func (d *Diplomacy) Station(ctx context.Context, serverID int32, playerID, cityI
 		serverID, playerID, guildID).Scan(&member); err != nil || !member {
 		return nil, ErrGuildLeader
 	}
+	// The destination must belong to the same guild: self or an ally.
+	var ally bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS(
+		SELECT 1 FROM player_city c JOIN guild_member m
+		ON m.server_id=c.server_id AND m.player_id=c.player_id
+		WHERE c.server_id=$1 AND c.city_id=$2 AND m.guild_id=$3)`,
+		serverID, cityID, guildID).Scan(&ally); err != nil || !ally {
+		return nil, ErrGuildTarget
+	}
 	var honglu int32
 	if err := tx.QueryRow(ctx, `SELECT COALESCE(MAX(level),0) FROM city_building
 		WHERE server_id=$1 AND city_id=$2 AND building_cfg_id=$3`, serverID, cityID, hongluCfgID).Scan(&honglu); err != nil || honglu < 1 {
 		return nil, ErrHongluRequired
 	}
 	tag, err := tx.Exec(ctx, `UPDATE city_troop SET count=count-$4 WHERE server_id=$1 AND city_id=$2
-		AND unit_cfg_id=$3 AND count >= $4`, serverID, cityID, unit, count)
+		AND unit_cfg_id=$3 AND count >= $4`, serverID, fromCityID, unit, count)
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +155,11 @@ func (d *Diplomacy) Station(ctx context.Context, serverID int32, playerID, cityI
 }
 
 func (d *Diplomacy) ListGarrison(ctx context.Context, serverID int32, cityID int64) ([]*guildv1.GuildGarrisonView, error) {
-	rows, err := d.Pool.Query(ctx, `SELECT city_id,player_id,unit_cfg_id,count FROM guild_garrison
-		WHERE server_id=$1 AND city_id=$2 ORDER BY player_id,unit_cfg_id`, serverID, cityID)
+	rows, err := d.Pool.Query(ctx, `SELECT g.city_id,g.player_id,g.unit_cfg_id,g.count FROM guild_garrison g
+		JOIN player_city c ON c.server_id=g.server_id AND c.city_id=g.city_id
+		WHERE g.server_id=$1 AND g.city_id=$2 AND g.guild_id=COALESCE((
+			SELECT m.guild_id FROM guild_member m WHERE m.server_id=c.server_id AND m.player_id=c.player_id),0)
+		ORDER BY g.player_id,g.unit_cfg_id`, serverID, cityID)
 	if err != nil {
 		return nil, err
 	}
@@ -165,8 +177,11 @@ func (d *Diplomacy) ListGarrison(ctx context.Context, serverID int32, cityID int
 
 // GarrisonTroops returns ally troops for city defense.
 func (d *Diplomacy) GarrisonTroops(ctx context.Context, serverID int32, cityID int64) ([]march.TroopStack, error) {
-	rows, err := d.Pool.Query(ctx, `SELECT unit_cfg_id,sum(count)::int FROM guild_garrison
-		WHERE server_id=$1 AND city_id=$2 GROUP BY unit_cfg_id ORDER BY unit_cfg_id`, serverID, cityID)
+	rows, err := d.Pool.Query(ctx, `SELECT g.unit_cfg_id,sum(g.count)::int FROM guild_garrison g
+		JOIN player_city c ON c.server_id=g.server_id AND c.city_id=g.city_id
+		WHERE g.server_id=$1 AND g.city_id=$2 AND g.guild_id=COALESCE((
+			SELECT m.guild_id FROM guild_member m WHERE m.server_id=c.server_id AND m.player_id=c.player_id),0)
+		GROUP BY g.unit_cfg_id ORDER BY g.unit_cfg_id`, serverID, cityID)
 	if err != nil {
 		return nil, err
 	}

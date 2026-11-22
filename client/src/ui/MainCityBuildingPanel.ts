@@ -142,7 +142,7 @@ export class MainCityBuildingPanel {
     private readonly onHistoricalAction?: (action: string, npcCfgId: number) => void,
     private readonly onTrickAction?: (trickType: number, targetMarchId: number) => void,
     private readonly onRankAction?: (action: "promote" | "found" | "transfer" | "truce", name: string, x: number, y: number) => void,
-    private readonly onDiplomacyAction?: (action: string, guildId: number, targetGuildId: number, cityId: number, unit: number, count: number) => void,
+    private readonly onDiplomacyAction?: (action: string, guildId: number, targetGuildId: number, cityId: number, unit: number, count: number, fromCityId: number) => void,
     private readonly onSpecialAction?: (action: string, unit: number, count: number) => void,
     private readonly onCampaignAction?: (action: string, stageId: number, unit: number, count: number) => void,
     private readonly onArenaAction?: (action: string, opponentId: number, unit: number, count: number) => void,
@@ -270,7 +270,8 @@ export class MainCityBuildingPanel {
             <button type="button" data-action="guild-friendly">结友好</button>
             <button type="button" data-action="guild-hostile">宣战（8 小时生效）</button>
           </div>
-          <label>驻军城 ID <input type="number" data-field="garrison-city" value="1"></label>
+          <label>出发城 ID <input type="number" data-field="garrison-from" value="1"></label>
+          <label>驻军城 ID（可填盟友城） <input type="number" data-field="garrison-city" value="1"></label>
           <label>兵种 ID <input type="number" data-field="garrison-unit" value="1"></label>
           <label>数量 <input type="number" data-field="garrison-count" value="1"></label>
           <button type="button" data-action="station-garrison">派遣驻军</button>
@@ -1121,9 +1122,10 @@ export class MainCityBuildingPanel {
       const guild = Number(section?.querySelector<HTMLInputElement>('[data-field="guild-id"]')?.value ?? 0);
       const target = Number(section?.querySelector<HTMLInputElement>('[data-field="target-guild"]')?.value ?? 0);
       const city = Number(section?.querySelector<HTMLInputElement>('[data-field="garrison-city"]')?.value ?? 0);
+      const from = Number(section?.querySelector<HTMLInputElement>('[data-field="garrison-from"]')?.value ?? 0);
       const unit = Number(section?.querySelector<HTMLInputElement>('[data-field="garrison-unit"]')?.value ?? 0);
       const count = Number(section?.querySelector<HTMLInputElement>('[data-field="garrison-count"]')?.value ?? 0);
-      this.onDiplomacyAction?.(diplomacyAction, guild, target, city, unit, count);
+      this.onDiplomacyAction?.(diplomacyAction, guild, target, city, unit, count, from);
       return;
     }
     if (btn?.getAttribute("data-action") === "use-truce") {
