@@ -82,6 +82,9 @@ export type GatewayPort = {
   listScoutReports(limit?: number): Promise<unknown>;
   listBeaconWarnings(): Promise<unknown>;
   useTruceToken(cityId: number): Promise<unknown>;
+  listSpecialCities(): Promise<unknown>;
+  claimSpecialCityTax(): Promise<unknown>;
+  recruitSpecialTroops(cityId: number, unitCfgId: number, count: number): Promise<unknown>;
   setGuildRelation(guildId: number, targetGuildId: number, state: number): Promise<unknown>;
   listGuildRelations(guildId: number): Promise<unknown>;
   stationGuildTroops(cityId: number, guildId: number, unitCfgId: number, count: number): Promise<unknown>;
@@ -791,6 +794,21 @@ export class GatewayClient implements GatewayPort {
   async listGuildGarrison(cityId: number) {
     const { ListGuildGarrisonResponse } = getTypes();
     return this.rpc(Routes.ListGuildGarrison, "ListGuildGarrisonRequest", { server_id: 1, city_id: cityId }, ListGuildGarrisonResponse, true);
+  }
+
+  async listSpecialCities() {
+    const { ListSpecialCitiesResponse } = getTypes();
+    return this.rpc(Routes.ListSpecialCities, "ListSpecialCitiesRequest", { server_id: 1 }, ListSpecialCitiesResponse, true);
+  }
+
+  async claimSpecialCityTax() {
+    const { ClaimSpecialCityTaxResponse } = getTypes();
+    return this.rpc(Routes.ClaimSpecialCityTax, "ClaimSpecialCityTaxRequest", { server_id: 1 }, ClaimSpecialCityTaxResponse, true);
+  }
+
+  async recruitSpecialTroops(cityId: number, unitCfgId: number, count: number) {
+    const { RecruitSpecialTroopsResponse } = getTypes();
+    return this.rpc(Routes.RecruitSpecialTroops, "RecruitSpecialTroopsRequest", { server_id: 1, city_id: cityId, unit_cfg_id: unitCfgId, count }, RecruitSpecialTroopsResponse, true);
   }
 
   async useTruceToken(cityId: number) {

@@ -59,12 +59,12 @@ describe("selected existing unit march flow", () => {
     expect(s.scene.syncMilitaryPanel).toHaveBeenCalledTimes(1);
     expect(readMarchFormSnapshot(s.root)).toMatchObject({ unitCfgId: 2, toXRaw: "10", toYRaw: "20", marchCountRaw: "30" });
   });
-  it("actual production markup exposes all twelve units", () => {
+  it("actual production markup exposes all eighteen units", () => {
     const source = readFileSync("src/scenes/MainCityScene.ts", "utf8");
     const markup = source.match(/this\.militaryPanel\.innerHTML = `([\s\S]*?)`;/)![1];
     const root = document.createElement("div"); root.innerHTML = markup;
     const select = root.querySelector<HTMLSelectElement>('[data-field="march-unit"]')!;
-    expect([...select.options].map((o) => o.value)).toEqual(["1","2","3","4","5","6","7","8","9","10","11","12"]); expect(select.value).toBe("1");
+    expect([...select.options].map((o) => o.value)).toEqual(["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18"]); expect(select.value).toBe("1");
     expect(select.getAttribute("aria-label")).toBe("出征兵种");
   });
 

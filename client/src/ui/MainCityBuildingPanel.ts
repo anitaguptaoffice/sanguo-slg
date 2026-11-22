@@ -64,6 +64,7 @@ export type MarketView = {
 export type TacticPresetRow = { unit_cfg_id?: number; troop_type?: number; target_type?: number; hold?: boolean };
 export type ScoutReportRow = { report_id?: number; x?: number; y?: number; tier?: number; target_name?: string; detail?: string; created_at_ms?: number };
 export type BeaconWarningRow = { warning_id?: number; x?: number; y?: number; purpose?: number; arrive_at_ms?: number; beacon_level?: number; attacker_player_id?: number; attacker_troops?: number };
+export type SpecialCityRow = { city_cfg_id?: number; city_type?: number; name?: string; x?: number; y?: number; owner_guild_id?: number; owner_guild_name?: string; garrison?: number; wall_level?: number; hero_name?: string; hero_level?: number; unit_cfg_id?: number; unit_name?: string; next_recover_at_ms?: number | string };
 export type GuildRelationRow = { guild_id?: number; target_guild_id?: number; state?: number; effective_at_ms?: number; pending?: boolean };
 export type GuildGarrisonRow = { city_id?: number; player_id?: number; unit_cfg_id?: number; count?: number };
 export type RankView = {
@@ -110,6 +111,8 @@ export class MainCityBuildingPanel {
   private scoutReports: ScoutReportRow[] = [];
   private beaconWarnings: BeaconWarningRow[] = [];
   private guildRelations: GuildRelationRow[] = [];
+  private specialCities: SpecialCityRow[] = [];
+  private unlockedUnits: number[] = [];
   private guildGarrison: GuildGarrisonRow[] = [];
   private focusTrap: CenterPanelFocusTrap | null = null;
 
@@ -133,6 +136,7 @@ export class MainCityBuildingPanel {
     private readonly onTrickAction?: (trickType: number, targetMarchId: number) => void,
     private readonly onRankAction?: (action: "promote" | "found" | "transfer" | "truce", name: string, x: number, y: number) => void,
     private readonly onDiplomacyAction?: (action: string, guildId: number, targetGuildId: number, cityId: number, unit: number, count: number) => void,
+    private readonly onSpecialAction?: (action: string, unit: number, count: number) => void,
   ) {}
 
   attach(): void {
@@ -264,6 +268,20 @@ export class MainCityBuildingPanel {
           <label>兵种 ID <input type="number" data-field="transfer-unit" value="1"></label>
           <label>数量 <input type="number" data-field="transfer-count" value="10"></label>
           <button type="button" data-action="transfer-troops">调兵</button>
+          <h4>名城国战</h4>
+          <p data-role="special-status">攻占县城、郡城、州城与洛阳，可为联盟解锁地域精锐。</p>
+          <div data-role="special-cities"></div>
+          <button type="button" data-action="refresh-special">刷新名城</button>
+          <button type="button" data-action="claim-special-tax">领取名城税赋</button>
+          <label>精锐兵种
+            <select data-field="special-unit">
+              <option value="13">西凉铁骑</option><option value="14">虎豹骑</option>
+              <option value="15">青州兵</option><option value="16">南蛮象兵</option>
+              <option value="17">藤甲兵</option><option value="18">突骑兵</option>
+            </select>
+          </label>
+          <label>数量 <input type="number" data-field="special-count" value="10"></label>
+          <button type="button" data-action="recruit-special">招募精锐</button>
         </div>
         <div class="trick-section hidden" data-role="tricks">
           <h4>招贤馆计谋</h4>
@@ -410,7 +428,10 @@ export class MainCityBuildingPanel {
     if (slotKey === "beacon") this.renderBeacon();
     const rankEl = this.panel.querySelector<HTMLElement>('[data-role="rank"]');
     rankEl?.classList.toggle("hidden", slotKey !== "hall");
-    if (slotKey === "hall") this.renderRank();
+    if (slotKey === "hall") {
+      this.renderRank();
+      this.renderSpecialCities();
+    }
     const trickEl = this.panel.querySelector<HTMLElement>('[data-role="tricks"]');
     trickEl?.classList.toggle("hidden", slotKey !== "recruit_hall");
     const officesEl = this.panel.querySelector<HTMLElement>('[data-role="city-offices"]');
@@ -598,6 +619,29 @@ export class MainCityBuildingPanel {
     this.blacksmithLevel = blacksmith;
     this.stableLevel = stable;
     this.renderEquipment();
+  }
+
+  setSpecialCities(cities: SpecialCityRow[], unlocked: number[]): void {
+    this.specialCities = cities;
+    this.unlockedUnits = unlocked;
+    this.renderSpecialCities();
+  }
+
+  private renderSpecialCities(): void {
+    const section = this.panel?.querySelector<HTMLElement>('[data-role="rank"]');
+    const list = section?.querySelector<HTMLElement>('[data-role="special-cities"]');
+    const status = section?.querySelector<HTMLElement>('[data-role="special-status"]');
+    if (!list || !status || section?.classList.contains("hidden")) return;
+    const labels = ["", "县城", "郡城", "州城", "都城"];
+    list.textContent = "";
+    for (const city of this.specialCities) {
+      const line = document.createElement("div");
+      const owner = city.owner_guild_id ? city.owner_guild_name || `盟#${city.owner_guild_id}` : "中立";
+      const unit = city.unit_cfg_id ? ` · 精锐 ${city.unit_name || `#${city.unit_cfg_id}`}` : "";
+      line.textContent = `${labels[city.city_type ?? 0] ?? "名城"} ${city.name ?? ""} (${city.x ?? 0},${city.y ?? 0}) · ${owner} · 守军 ${city.garrison ?? 0}${unit}`;
+      list.appendChild(line);
+    }
+    status.textContent = `名城 ${this.specialCities.length} 座 · 已解锁精锐 ${this.unlockedUnits.join("/") || "无"}`;
   }
 
   setDiplomacy(relations: GuildRelationRow[], garrison: GuildGarrisonRow[]): void {
@@ -897,6 +941,14 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    const specialAction = btn?.getAttribute("data-action");
+    if (specialAction && ["refresh-special", "claim-special-tax", "recruit-special"].includes(specialAction)) {
+      const section = this.panel.querySelector<HTMLElement>('[data-role="rank"]');
+      const unit = Number(section?.querySelector<HTMLSelectElement>('[data-field="special-unit"]')?.value ?? 0);
+      const count = Number(section?.querySelector<HTMLInputElement>('[data-field="special-count"]')?.value ?? 0);
+      this.onSpecialAction?.(specialAction, unit, count);
+      return;
+    }
     const diplomacyAction = btn?.getAttribute("data-action");
     if (diplomacyAction && ["guild-friendly", "guild-hostile", "station-garrison"].includes(diplomacyAction)) {
       const section = this.panel.querySelector<HTMLElement>('[data-role="diplomacy"]');

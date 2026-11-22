@@ -279,3 +279,22 @@ describe("MainCityBuildingPanel diplomacy", () => {
     panel.detach();
   });
 });
+
+describe("MainCityBuildingPanel special cities", () => {
+  it("renders ownership and unlocked units", () => {
+    const mount = document.createElement("div");
+    const panel = new MainCityBuildingPanel(mount, { hall: "官府" }, () => null, () => {}, () => "idle");
+    panel.attach();
+    panel.selectSlot("hall");
+    panel.setSpecialCities(
+      [{ city_cfg_id: 8, city_type: 4, name: "洛阳", x: 250, y: 250, owner_guild_id: 1, owner_guild_name: "汉室盟", garrison: 22000, unit_cfg_id: 14, unit_name: "虎豹骑" }],
+      [14],
+    );
+    const section = mount.querySelector<HTMLElement>('[data-role="rank"]')!;
+    expect(section.textContent).toContain("都城 洛阳");
+    expect(section.textContent).toContain("汉室盟");
+    expect(section.textContent).toContain("守军 22000");
+    expect(section.textContent).toContain("已解锁精锐 14");
+    panel.detach();
+  });
+});

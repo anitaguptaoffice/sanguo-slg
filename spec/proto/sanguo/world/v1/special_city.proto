@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package sanguo.world.v1;
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1;worldv1";
+
+message SpecialCityView {
+  int32 city_cfg_id = 1;
+  int32 city_type = 2;
+  string name = 3;
+  int32 x = 4;
+  int32 y = 5;
+  int64 owner_guild_id = 6;
+  string owner_guild_name = 7;
+  int32 garrison = 8;
+  int32 wall_level = 9;
+  string hero_name = 10;
+  int32 hero_level = 11;
+  int32 unit_cfg_id = 12;
+  string unit_name = 13;
+  int64 next_recover_at_ms = 14;
+}
+
+// route: world.v1.ListSpecialCities
+message ListSpecialCitiesRequest { int32 server_id = 1; }
+message ListSpecialCitiesResponse {
+  repeated SpecialCityView cities = 1;
+  repeated int32 unlocked_units = 2;
+}
+
+// route: world.v1.ClaimSpecialCityTax
+message ClaimSpecialCityTaxRequest { int32 server_id = 1; }
+message ClaimSpecialCityTaxResponse {
+  int32 cities = 1;
+  int64 food = 2;
+  int64 wood = 3;
+  int64 stone = 4;
+  int64 iron = 5;
+  int64 gold = 6;
+}
+
+// route: world.v1.RecruitSpecialTroops
+message RecruitSpecialTroopsRequest {
+  int32 server_id = 1;
+  int64 city_id = 2;
+  int32 unit_cfg_id = 3;
+  int32 count = 4;
+}
+message RecruitSpecialTroopsResponse { int32 city_troop_count = 1; }
