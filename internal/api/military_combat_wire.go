@@ -8,6 +8,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/report"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/rank"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/specialcity"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -20,6 +21,7 @@ func WireM2Combat(shardID int32, pool *pgxpool.Pool, hub *march.Hub, garrisons c
 	resolver := combat.NewResolver(shardID, svc, garrisons, nil)
 	resolver.Tactics = combat.TacticsPG(pool)
 	resolver.ScoutSink = combat.ScoutSinkPG(pool, shardID)
+	wireSpecialCity(resolver, specialcity.New(pool, nil))
 	prestige := rank.NewPrestigeService(pool, nil)
 	resolver.Prestige = func(ctx context.Context, serverID int32, playerID int64, amount int64) error {
 		return prestige.Add(ctx, serverID, playerID, amount)

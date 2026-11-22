@@ -51,6 +51,12 @@ func DefaultUnitCatalog() map[int32]UnitSpec {
 		10: {UnitCfgID: 10, Code: "longbow", Speed: 65, RecruitCost: Resources{Food: 80, Wood: 90, Iron: 20}, SecPerUnit: 45, CombatType: "archer"},
 		11: {UnitCfgID: 11, Code: "light_cavalry", Speed: 110, RecruitCost: Resources{Food: 100, Wood: 40, Iron: 40}, SecPerUnit: 50, CombatType: "cavalry"},
 		12: {UnitCfgID: 12, Code: "heavy_cavalry", Speed: 85, RecruitCost: Resources{Food: 140, Wood: 60, Iron: 90}, SecPerUnit: 70, CombatType: "cavalry"},
+		13: {UnitCfgID: 13, Code: "xiliang_iron", Speed: 95, RecruitCost: Resources{Food: 300, Wood: 120, Iron: 100}, SecPerUnit: 90, CombatType: "cavalry"},
+		14: {UnitCfgID: 14, Code: "hubao", Speed: 105, RecruitCost: Resources{Food: 360, Wood: 150, Iron: 140}, SecPerUnit: 110, CombatType: "cavalry"},
+		15: {UnitCfgID: 15, Code: "qingzhou", Speed: 55, RecruitCost: Resources{Food: 240, Wood: 100, Iron: 60}, SecPerUnit: 80, CombatType: "infantry"},
+		16: {UnitCfgID: 16, Code: "nanman_elephant", Speed: 45, RecruitCost: Resources{Food: 400, Wood: 180, Iron: 80}, SecPerUnit: 130, CombatType: "infantry"},
+		17: {UnitCfgID: 17, Code: "rattan", Speed: 50, RecruitCost: Resources{Food: 220, Wood: 200, Iron: 50}, SecPerUnit: 75, CombatType: "infantry"},
+		18: {UnitCfgID: 18, Code: "tuji", Speed: 120, RecruitCost: Resources{Food: 280, Wood: 130, Iron: 90}, SecPerUnit: 85, CombatType: "cavalry"},
 	}
 }
 

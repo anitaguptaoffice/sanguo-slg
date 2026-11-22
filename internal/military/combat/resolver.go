@@ -14,16 +14,21 @@ import (
 
 // CityDefense is a player city garrison read for raid/occupy.
 type CityDefense struct {
-	CityID          int64
-	PlayerID        int64
-	Name            string
-	IsCapital       bool
-	Protected       bool
-	ProtectionUntil time.Time
-	Complaint       int32
-	Rule            int32
-	Troops          []march.TroopStack
-	Walls           []battle.WallGroup
+	CityID           int64
+	PlayerID         int64
+	Name             string
+	IsCapital        bool
+	Protected        bool
+	ProtectionUntil  time.Time
+	Complaint        int32
+	Rule             int32
+	Troops           []march.TroopStack
+	Walls            []battle.WallGroup
+	SpecialCityCfgID int32
+	HeroLevel        int
+	HeroForce        int32
+	HeroIntel        int32
+	Loot             battle.Loot
 }
 
 // Resolver runs battle simulation and archives reports on march arrival.
@@ -48,10 +53,14 @@ type Resolver struct {
 	// CityDefense loads a player city at the target tile.
 	CityDefense func(ctx context.Context, x, y int) (*CityDefense, error)
 	// CityRaid applies loot/complaint/rule changes after a won city battle.
-	CityRaid      func(ctx context.Context, ev march.MarchArrivalEvent, city *CityDefense) (*march.LootRecord, error)
-	nextReport    int64
-	beginArrival  func(context.Context, pgx.TxOptions) (pgx.Tx, error)
-	commitArrival func(context.Context, pgx.Tx, march.ArrivalCommit) (march.ArrivalCommitted, error)
+	CityRaid func(ctx context.Context, ev march.MarchArrivalEvent, city *CityDefense) (*march.LootRecord, error)
+	// SpecialCityDefense loads a county/commandery/state/capital garrison.
+	SpecialCityDefense func(ctx context.Context, x, y int) (*CityDefense, error)
+	// SpecialCityBattle persists special city defenders and ownership.
+	SpecialCityBattle func(ctx context.Context, ev march.MarchArrivalEvent, city *CityDefense, won bool, defenders []march.TroopStack) (*march.LootRecord, error)
+	nextReport        int64
+	beginArrival      func(context.Context, pgx.TxOptions) (pgx.Tx, error)
+	commitArrival     func(context.Context, pgx.Tx, march.ArrivalCommit) (march.ArrivalCommitted, error)
 }
 
 // NewResolver wires dependencies; catalog defaults to march.DefaultUnitCatalog when nil.
@@ -136,6 +145,13 @@ func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArri
 				g = &Garrison{Troops: cd.Troops, Name: cd.Name, Morale: 1, Walls: cd.Walls}
 			}
 		}
+		if cityTarget == nil && r.SpecialCityDefense != nil {
+			if cd, err := r.SpecialCityDefense(ctx, ev.Order.ToX, ev.Order.ToY); err == nil && cd != nil {
+				cityTarget = cd
+				g = &Garrison{Troops: cd.Troops, Name: cd.Name, HeroLevel: cd.HeroLevel, HeroForce: cd.HeroForce,
+					HeroIntel: cd.HeroIntel, Morale: 1, Walls: cd.Walls}
+			}
+		}
 	}
 	if ev.Order.Purpose == PurposeScout {
 		tier := scoutTier(ev.Troops)
@@ -211,7 +227,7 @@ func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArri
 		}
 	}
 
-	if cityTarget != nil && rep.Result == battle.ResultAttackerWin && r.CityRaid != nil {
+	if cityTarget != nil && rep.Result == battle.ResultAttackerWin && r.CityRaid != nil && cityTarget.SpecialCityCfgID == 0 {
 		if raid, err := r.CityRaid(ctx, ev, cityTarget); err == nil && raid != nil {
 			rep.Loot = battle.Loot{Food: raid.Food, Wood: raid.Wood, Stone: raid.Stone, Iron: raid.Iron, Gold: raid.Gold, HeroExp: raid.HeroExp}
 			loot = raid
@@ -222,6 +238,12 @@ func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArri
 	if len(rep.FinalAttackerUnits) == 0 && len(rep.FinalDefenderUnits) == 0 {
 		attRemain = StacksFromArmy(r.UnitCatalog, rep.FinalAttacker)
 		defRemain = StacksFromArmy(r.UnitCatalog, rep.FinalDefender)
+	}
+	if cityTarget != nil && cityTarget.SpecialCityCfgID > 0 && r.SpecialCityBattle != nil {
+		if raid, err := r.SpecialCityBattle(ctx, ev, cityTarget, rep.Result == battle.ResultAttackerWin, defRemain); err == nil && raid != nil {
+			rep.Loot = battle.Loot{Food: raid.Food, Wood: raid.Wood, Stone: raid.Stone, Iron: raid.Iron, Gold: raid.Gold, HeroExp: raid.HeroExp}
+			loot = raid
+		}
 	}
 	if r.commitArrival != nil {
 		return r.persistArrival(ctx, ev, ArrivalResult{Report: rep, AttackerRemaining: attRemain, DefenderRemaining: defRemain, Loot: loot, BattleRan: true})

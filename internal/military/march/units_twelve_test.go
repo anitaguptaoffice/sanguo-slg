@@ -4,10 +4,10 @@ import "testing"
 
 func TestUnitCatalogCoversTwelveTypes(t *testing.T) {
 	catalog := DefaultUnitCatalog()
-	if len(catalog) != 12 {
+	if len(catalog) != 18 {
 		t.Fatalf("units=%d", len(catalog))
 	}
-	for id := int32(1); id <= 12; id++ {
+	for id := int32(1); id <= 18; id++ {
 		spec, ok := catalog[id]
 		if !ok || spec.Code == "" || spec.Speed <= 0 || spec.RecruitCost.Food <= 0 {
 			t.Fatalf("unit %d: %+v", id, spec)

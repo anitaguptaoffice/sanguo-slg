@@ -50,12 +50,24 @@ func SkipFullSpecUnderShort(t *testing.T) {
 }
 
 func warmNeedsApply(ctx context.Context, pool *pgxpool.Pool) (bool, error) {
-	var n int
-	err := pool.QueryRow(ctx, `SELECT count(*)::int FROM schema_migrations`).Scan(&n)
+	rows, err := pool.Query(ctx, `SELECT name FROM schema_migrations`)
 	if err != nil {
 		return true, nil
 	}
-	if n < minRecordedMigrations {
+	recorded := make(map[string]bool)
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			rows.Close()
+			return true, nil
+		}
+		recorded[name] = true
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return true, nil
+	}
+	if len(recorded) < minRecordedMigrations {
 		return true, nil
 	}
 	specDir, err := SpecDir()
@@ -66,13 +78,12 @@ func warmNeedsApply(ctx context.Context, pool *pgxpool.Pool) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	expected := 0
 	for _, entry := range entries {
-		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".sql") {
-			expected++
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".sql") && !recorded[entry.Name()] {
+			return true, nil
 		}
 	}
-	return n < expected, nil
+	return false, nil
 }
 
 func initWarmFixture() {

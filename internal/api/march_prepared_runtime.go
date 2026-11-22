@@ -16,6 +16,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/freshsource"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/rank"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/specialcity"
 )
 
 type preparedMarchRuntime struct {
@@ -72,6 +73,7 @@ func (s *Server) WirePreparedMarch(ctx context.Context, profile freshsource.Prof
 	resolver.ScoutSink = combat.ScoutSinkPG(pool, profile.ServerID)
 	resolver.CityDefense = s.cityDefense
 	resolver.CityRaid = s.applyCityRaid
+	wireSpecialCity(resolver, specialcity.New(pool, nil))
 	prestige := rank.NewPrestigeService(pool, nil)
 	resolver.Prestige = func(ctx context.Context, serverID int32, playerID int64, amount int64) error {
 		return prestige.Add(ctx, serverID, playerID, amount)

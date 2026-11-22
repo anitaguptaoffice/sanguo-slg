@@ -53,6 +53,9 @@ const (
 	RouteListScoutReports     = "military.v1.ListScoutReports"
 	RouteListBeaconWarnings   = "military.v1.ListBeaconWarnings"
 	RouteUseTruceToken        = "world.v1.UseTruceToken"
+	RouteListSpecialCities    = "world.v1.ListSpecialCities"
+	RouteClaimSpecialCityTax  = "world.v1.ClaimSpecialCityTax"
+	RouteRecruitSpecialTroops = "world.v1.RecruitSpecialTroops"
 	RouteTransferCityTroops   = "world.v1.TransferCityTroops"
 	RouteGetPlayerRank        = "rank.v1.GetPlayerRank"
 	RoutePromoteRank          = "rank.v1.PromoteRank"
@@ -308,6 +311,9 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteListScoutReports] = s.handleListScoutReports
 	handlers[RouteListBeaconWarnings] = s.handleListBeaconWarnings
 	handlers[RouteUseTruceToken] = s.handleUseTruceToken
+	handlers[RouteListSpecialCities] = s.handleListSpecialCities
+	handlers[RouteClaimSpecialCityTax] = s.handleClaimSpecialCityTax
+	handlers[RouteRecruitSpecialTroops] = s.handleRecruitSpecialTroops
 	handlers[RouteTransferCityTroops] = s.handleTransferCityTroops
 	handlers[RouteGetPlayerRank] = s.handleGetPlayerRank
 	handlers[RoutePromoteRank] = s.handlePromoteRank

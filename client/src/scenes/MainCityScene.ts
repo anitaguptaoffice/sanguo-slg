@@ -614,6 +614,9 @@ export class MainCityScene implements Scene {
             <option value="7">斥候</option><option value="8">长枪兵</option>
             <option value="9">刀盾兵</option><option value="10">长弓手</option>
             <option value="11">轻骑</option><option value="12">铁骑</option>
+            <option value="13">西凉铁骑</option><option value="14">虎豹骑</option>
+            <option value="15">青州兵</option><option value="16">南蛮象兵</option>
+            <option value="17">藤甲兵</option><option value="18">突骑兵</option>
           </select>
         </label>
         <label>出征数量 <input type="number" data-field="march-count" min="1" value="50" /></label>
@@ -1064,6 +1067,7 @@ export class MainCityScene implements Scene {
       (action, name, x, y) => void this.rankAction(action, name, x, y),
       (action, guildId, targetGuildId, cityId, unit, count) =>
         void this.diplomacyAction(action, guildId, targetGuildId, cityId, unit, count),
+      (action, unit, count) => void this.specialCityAction(action, unit, count),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -2194,7 +2198,10 @@ export class MainCityScene implements Scene {
     }
     if (slotKey === "academy") void this.refreshTechnics();
     if (slotKey === "recruit_hall") void this.refreshCityOffices();
-    if (slotKey === "hall") void this.refreshRank();
+    if (slotKey === "hall") {
+      void this.refreshRank();
+      void this.refreshSpecialCities();
+    }
     if (slotKey === "beacon") void this.refreshIntel();
     if (slotKey === "diplomacy") void this.refreshDiplomacy();
     if (slotKey === "wall") void this.refreshWallDefenses();
@@ -2362,6 +2369,51 @@ export class MainCityScene implements Scene {
       ])) as [{ relations?: Record<string, unknown>[] }, { troops?: Record<string, unknown>[] }];
       if (this.session !== session) return;
       this.buildingPanel.setDiplomacy((rel.relations ?? []) as never, (gar.troops ?? []) as never);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async refreshSpecialCities(): Promise<void> {
+    const session = this.session;
+    try {
+      const res = (await this.gateway.listSpecialCities()) as {
+        cities?: Record<string, unknown>[];
+        unlocked_units?: number[];
+      };
+      if (this.session !== session) return;
+      this.buildingPanel.setSpecialCities((res.cities ?? []) as never, res.unlocked_units ?? []);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async specialCityAction(action: string, unit: number, count: number): Promise<void> {
+    const session = this.session;
+    if (!session) return;
+    try {
+      if (action === "refresh-special") {
+        await this.refreshSpecialCities();
+        this.status = "名城列表已刷新";
+      } else if (action === "claim-special-tax") {
+        const res = (await this.gateway.claimSpecialCityTax()) as {
+          cities?: number;
+          food?: number | string;
+          wood?: number | string;
+          stone?: number | string;
+          iron?: number | string;
+          gold?: number | string;
+        };
+        this.status = `名城税赋 ${res.cities ?? 0} 城：粮 ${res.food ?? 0} 木 ${res.wood ?? 0} 石 ${res.stone ?? 0} 铁 ${res.iron ?? 0} 金 ${res.gold ?? 0}`;
+      } else if (action === "recruit-special") {
+        const res = (await this.gateway.recruitSpecialTroops(session.cityId, unit, count)) as {
+          city_troop_count?: number;
+        };
+        this.status = `精锐招募完成，现有 ${res.city_troop_count ?? 0}`;
+      }
+      this.renderHud();
     } catch (error) {
       this.status = formatPanelGatewayErrorFromUnknown("build", error);
       this.renderHud();
