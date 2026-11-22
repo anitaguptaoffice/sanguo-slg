@@ -73,7 +73,9 @@ func (s *Server) WirePreparedMarch(ctx context.Context, profile freshsource.Prof
 	resolver.ScoutSink = combat.ScoutSinkPG(pool, profile.ServerID)
 	resolver.CityDefense = s.cityDefense
 	resolver.CityRaid = s.applyCityRaid
-	wireSpecialCity(resolver, specialcity.New(pool, nil))
+	wireSpecialCity(resolver, specialcity.New(pool, nil), func(ctx context.Context) {
+		_, _, _ = s.metaService().AdvancePhase(ctx, defaultServerID)
+	})
 	prestige := rank.NewPrestigeService(pool, nil)
 	resolver.Prestige = func(ctx context.Context, serverID int32, playerID int64, amount int64) error {
 		return prestige.Add(ctx, serverID, playerID, amount)

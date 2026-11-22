@@ -335,3 +335,22 @@ describe("MainCityBuildingPanel arena", () => {
     panel.detach();
   });
 });
+
+describe("MainCityBuildingPanel achievements", () => {
+  it("renders world phase and claimable milestones", () => {
+    const mount = document.createElement("div");
+    const panel = new MainCityBuildingPanel(mount, { hall: "官府" }, () => null, () => {}, () => "idle");
+    panel.attach();
+    panel.selectSlot("hall");
+    panel.setAchievements(
+      [{ achievement_id: 1, name: "初露锋芒", description: "声望达到 100。", threshold: 100, progress: 120, can_claim: true, reward_gold: 300, reward_prestige: 50 }],
+      { phase: 2, name: "群雄割据", next: "占领洛阳", owned_cities: 1, campaign_clears: 5 },
+    );
+    const section = mount.querySelector<HTMLElement>('[data-role="rank"]')!;
+    expect(section.textContent).toContain("世界阶段 2 · 群雄割据");
+    expect(section.textContent).toContain("初露锋芒");
+    expect(section.textContent).toContain("可领取");
+    expect(section.querySelector('[data-action="claim-achievement"]')).toBeTruthy();
+    panel.detach();
+  });
+});

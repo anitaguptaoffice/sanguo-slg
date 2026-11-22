@@ -28,7 +28,9 @@ func (s *Server) wireM3(pool *pgxpool.Pool) {
 
 	s.rankSvc = rank.NewService(rank.NewPGStore(pool), newPGRankSource(pool))
 	s.rankSch = rank.NewScheduler(s.rankSvc, rank.DefaultRefreshInterval)
-	s.rankSch.Configure([]int32{defaultServerID}, []rank.RankType{rank.RankPlayerPower, rank.RankPlayerResource})
+	s.rankSch.Configure([]int32{defaultServerID}, []rank.RankType{rank.RankPlayerPower, rank.RankPlayerResource,
+		rank.RankPlayerPrestige, rank.RankHeroForce, rank.RankHeroIntel, rank.RankHeroPolitics, rank.RankHeroCommand,
+		rank.RankGuildPower, rank.RankSpecialCities})
 	for route, h := range rankGatewayHandlers(s.rankSvc, s.sessions) {
 		s.m3.Register(route, h)
 	}

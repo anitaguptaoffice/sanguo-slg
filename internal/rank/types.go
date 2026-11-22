@@ -11,7 +11,19 @@ type RankType int16
 const (
 	RankPlayerPower    RankType = 1
 	RankPlayerResource RankType = 2
+	RankGuildPower     RankType = 3
+	RankPlayerPrestige RankType = 4
+	RankHeroForce      RankType = 5
+	RankHeroIntel      RankType = 6
+	RankHeroPolitics   RankType = 7
+	RankHeroCommand    RankType = 8
+	RankSpecialCities  RankType = 9
 )
+
+// Supported reports whether the type has a snapshot source.
+func Supported(t RankType) bool {
+	return t >= RankPlayerPower && t <= RankSpecialCities
+}
 
 var (
 	ErrUnknownRankType = errors.New("rank: unknown leaderboard type")

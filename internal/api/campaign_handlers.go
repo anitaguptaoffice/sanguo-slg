@@ -175,6 +175,7 @@ func (s *Server) handleFightCampaignStage(ctx context.Context, pkt *commonv1.Cli
 		if err != nil && !errors.Is(err, campaign.ErrStageNotFound) {
 			return nil, err
 		}
+		_, _, _ = s.metaService().AdvancePhase(ctx, pc.ServerID)
 		if progress != nil {
 			out.FirstClear = progress.FirstClear
 			out.RewardGold = progress.Rewards.Gold

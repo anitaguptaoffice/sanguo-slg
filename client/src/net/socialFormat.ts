@@ -361,7 +361,19 @@ export function leaderboardTypeLabel(type?: number): string {
     case 2:
       return "玩家资源";
     case 3:
-      return "军团战力";
+      return "联盟实力";
+    case 4:
+      return "君主声望";
+    case 5:
+      return "名将武力";
+    case 6:
+      return "名将智力";
+    case 7:
+      return "名将政治";
+    case 8:
+      return "名将统率";
+    case 9:
+      return "名城占领";
     default:
       return "排行榜";
   }

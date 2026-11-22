@@ -1070,6 +1070,7 @@ export class MainCityScene implements Scene {
       (action, unit, count) => void this.specialCityAction(action, unit, count),
       (action, stageId, unit, count) => void this.campaignAction(action, stageId, unit, count),
       (action, opponentId, unit, count) => void this.arenaAction(action, opponentId, unit, count),
+      (achievementId) => void this.claimAchievement(achievementId),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -2203,6 +2204,7 @@ export class MainCityScene implements Scene {
     if (slotKey === "hall") {
       void this.refreshRank();
       void this.refreshSpecialCities();
+      void this.refreshMeta();
     }
     if (slotKey === "beacon") void this.refreshIntel();
     if (slotKey === "diplomacy") void this.refreshDiplomacy();
@@ -2375,6 +2377,38 @@ export class MainCityScene implements Scene {
       ])) as [{ relations?: Record<string, unknown>[] }, { troops?: Record<string, unknown>[] }];
       if (this.session !== session) return;
       this.buildingPanel.setDiplomacy((rel.relations ?? []) as never, (gar.troops ?? []) as never);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async refreshMeta(): Promise<void> {
+    const session = this.session;
+    try {
+      const [ach, world] = (await Promise.all([this.gateway.listAchievements(), this.gateway.getWorldProgress()])) as [
+        { achievements?: Record<string, unknown>[] },
+        { phase?: number; name?: string; next?: string; owned_cities?: number | string; campaign_clears?: number | string },
+      ];
+      if (this.session !== session) return;
+      this.buildingPanel.setAchievements((ach.achievements ?? []) as never, world);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async claimAchievement(achievementId: number): Promise<void> {
+    if (!achievementId) return;
+    try {
+      const res = (await this.gateway.claimAchievement(achievementId)) as {
+        achievement?: { name?: string };
+        gold?: number | string;
+        prestige?: number | string;
+      };
+      this.status = `成就「${res.achievement?.name ?? achievementId}」已领取：金 ${res.gold ?? 0} 声望 ${res.prestige ?? 0}`;
+      await this.refreshMeta();
+      this.renderHud();
     } catch (error) {
       this.status = formatPanelGatewayErrorFromUnknown("build", error);
       this.renderHud();

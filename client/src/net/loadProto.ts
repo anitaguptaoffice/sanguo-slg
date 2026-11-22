@@ -99,6 +99,9 @@ export const Routes = {
   FightCampaignStage: "military.v1.FightCampaignStage",
   ListArenaOpponents: "military.v1.ListArenaOpponents",
   FightArenaOpponent: "military.v1.FightArenaOpponent",
+  ListAchievements: "meta.v1.ListAchievements",
+  ClaimAchievement: "meta.v1.ClaimAchievement",
+  GetWorldProgress: "meta.v1.GetWorldProgress",
   SetGuildRelation: "guild.v1.SetGuildRelation",
   ListGuildRelations: "guild.v1.ListGuildRelations",
   StationGuildTroops: "guild.v1.StationGuildTroops",
@@ -286,6 +289,12 @@ export type ProtoTypes = {
   ListArenaOpponentsResponse: protobuf.Type;
   FightArenaOpponentRequest: protobuf.Type;
   FightArenaOpponentResponse: protobuf.Type;
+  ListAchievementsRequest: protobuf.Type;
+  ListAchievementsResponse: protobuf.Type;
+  ClaimAchievementRequest: protobuf.Type;
+  ClaimAchievementResponse: protobuf.Type;
+  GetWorldProgressRequest: protobuf.Type;
+  GetWorldProgressResponse: protobuf.Type;
   SetGuildRelationRequest: protobuf.Type;
   SetGuildRelationResponse: protobuf.Type;
   ListGuildRelationsRequest: protobuf.Type;
@@ -538,6 +547,12 @@ export function getTypes(): ProtoTypes {
     ListArenaOpponentsResponse: r.lookupType("sanguo.military.v1.ListArenaOpponentsResponse"),
     FightArenaOpponentRequest: r.lookupType("sanguo.military.v1.FightArenaOpponentRequest"),
     FightArenaOpponentResponse: r.lookupType("sanguo.military.v1.FightArenaOpponentResponse"),
+    ListAchievementsRequest: r.lookupType("sanguo.meta.v1.ListAchievementsRequest"),
+    ListAchievementsResponse: r.lookupType("sanguo.meta.v1.ListAchievementsResponse"),
+    ClaimAchievementRequest: r.lookupType("sanguo.meta.v1.ClaimAchievementRequest"),
+    ClaimAchievementResponse: r.lookupType("sanguo.meta.v1.ClaimAchievementResponse"),
+    GetWorldProgressRequest: r.lookupType("sanguo.meta.v1.GetWorldProgressRequest"),
+    GetWorldProgressResponse: r.lookupType("sanguo.meta.v1.GetWorldProgressResponse"),
     ListBeaconWarningsResponse: r.lookupType("sanguo.military.v1.ListBeaconWarningsResponse"),
     TransferCityTroopsRequest: r.lookupType("sanguo.world.v1.TransferCityTroopsRequest"),
     TransferCityTroopsResponse: r.lookupType("sanguo.world.v1.TransferCityTroopsResponse"),
