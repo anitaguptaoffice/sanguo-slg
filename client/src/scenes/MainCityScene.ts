@@ -330,6 +330,14 @@ const MINIMAP_ETA_TICK_S = MARCH_LIST_REMAINING_TICK_MS / 1000;
 /** 小地图单击与拖拽区分阈值（layout px）。 */
 const MINIMAP_TAP_MOVE_THRESHOLD = 8;
 
+/** buildingTier maps a building level to its original-art tier. */
+export function buildingTier(level: number): number {
+  if (level >= 10) return 10;
+  if (level >= 7) return 7;
+  if (level >= 4) return 4;
+  return 1;
+}
+
 export class MainCityScene implements Scene {
   readonly name = "mainCity";
   private session: MainCitySession | null = null;
@@ -558,6 +566,7 @@ export class MainCityScene implements Scene {
       </div>
       <button type="button" class="march-form-troop-reserve-line hidden" data-role="march-form-troop-reserve-line" data-action="${MARCH_FORM_RESERVE_JUMP_INTEL_ACTION}" aria-live="polite"></button>
       <p class="military-troops" data-role="troops"></p>
+      <div class="unit-art-strip" data-role="unit-art-strip" style="display:flex;flex-wrap:wrap;gap:3px;margin:4px 0"></div>
       <div class="panel-scroll-body" data-role="military-scroll">
         <div class="military-recruit-section" data-role="military-recruit-section">
         <label>募兵兵种
@@ -640,6 +649,7 @@ export class MainCityScene implements Scene {
     this.domesticSlotStrip.attach();
     parent.appendChild(this.toolbar);
     parent.appendChild(this.militaryPanel);
+    this.mountUnitArtStrip();
     this.worldMap = new WorldMapScene(parent, {
       gateway: () => this.gateway,
       getSession: () => this.session,
@@ -2415,6 +2425,23 @@ export class MainCityScene implements Scene {
     }
   }
 
+  private mountUnitArtStrip(): void {
+    const strip = this.militaryPanel.querySelector<HTMLElement>('[data-role="unit-art-strip"]');
+    if (!strip) return;
+    strip.textContent = "";
+    for (let id = 1; id <= 18; id++) {
+      const pack = this.assets.getImageForAsset(`unit.icon.${id}.v1`);
+      if (!pack) continue;
+      const img = document.createElement("img");
+      img.src = pack.img.src;
+      img.width = 24;
+      img.height = 24;
+      img.alt = "";
+      img.title = `兵种 ${id}`;
+      strip.appendChild(img);
+    }
+  }
+
   private async refreshArenaOpponents(): Promise<void> {
     const session = this.session;
     if (!session?.cityId) return;
@@ -4005,7 +4032,10 @@ export class MainCityScene implements Scene {
     building?: CityBuilding,
   ): void {
     const assetId = slot.asset_id ?? `mc.building.${slot.slot_key}.v1`;
-    const pack = this.assets.getImageForAsset(assetId);
+    const tier = buildingTier(building?.level ?? 0);
+    const pack = building
+      ? this.assets.getImageForAsset(`${assetId}.lv${tier}`) ?? this.assets.getImageForAsset(assetId)
+      : undefined;
     const { display, ground_anchor: ga } = slot;
     if (pack) {
       const anchor = pack.meta.anchor;
