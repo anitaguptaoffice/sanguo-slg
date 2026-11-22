@@ -19,10 +19,10 @@ function loadManifest(): ArtManifestV1 {
 }
 
 describe("ART-UI-PANEL-STATE-009 manifest mount", () => {
-  it("lists three nine_slice asset ids (255 non-item manifest entries)", () => {
+  it("lists three nine_slice asset ids (276 non-item manifest entries)", () => {
     const manifest = loadManifest();
     expect(ART_UI_PANEL_STATE_009_ASSET_IDS).toHaveLength(3);
-    expect(manifest.assets.filter((asset) => !asset.id.startsWith("item.icon."))).toHaveLength(255);
+    expect(manifest.assets.filter((asset) => !asset.id.startsWith("item.icon."))).toHaveLength(276);
     for (const id of ART_UI_PANEL_STATE_009_ASSET_IDS) {
       const meta = manifest.assets.find((a) => a.id === id);
       expect(meta).toBeTruthy();

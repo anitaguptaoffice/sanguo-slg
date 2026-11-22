@@ -8497,6 +8497,552 @@
       "tags": [
         "unit-icon"
       ]
+    },
+    {
+      "id": "equip.icon.101.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_101.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_101.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.102.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_102.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_102.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.103.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_103.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_103.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.201.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_201.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_201.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.202.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_202.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_202.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.203.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_203.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_203.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.301.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_301.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_301.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.302.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_302.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_302.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.303.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_303.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_303.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.401.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_401.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_401.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.402.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_402.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_402.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.403.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_403.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_403.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.501.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_501.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_501.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.502.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_502.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_502.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.503.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_503.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_503.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.601.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_601.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_601.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.602.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_602.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_602.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.603.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_603.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_603.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.604.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_604.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_604.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.605.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_605.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_605.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
+    },
+    {
+      "id": "equip.icon.606.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/equipment/equip_606.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/equipment/equip_606.png"
+        }
+      ],
+      "tags": [
+        "equipment-icon"
+      ]
     }
   ]
 }

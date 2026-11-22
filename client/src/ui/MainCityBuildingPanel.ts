@@ -147,6 +147,7 @@ export class MainCityBuildingPanel {
     private readonly onCampaignAction?: (action: string, stageId: number, unit: number, count: number) => void,
     private readonly onArenaAction?: (action: string, opponentId: number, unit: number, count: number) => void,
     private readonly onAchievementAction?: (achievementId: number) => void,
+    private readonly equipmentIcon?: (cfgId?: number) => string | undefined,
   ) {}
 
   attach(): void {
@@ -966,10 +967,21 @@ export class MainCityBuildingPanel {
       const el = document.createElement("div");
       el.className = "market-offer-row";
       const a = item.attrs ?? {};
-      el.textContent = `${item.name ?? "装备"} Lv${item.enhance_level ?? 0}/${item.max_enhance ?? 0}` +
+      const icon = this.equipmentIcon?.(item.cfg_id);
+      if (icon) {
+        const img = document.createElement("img");
+        img.src = icon;
+        img.width = 28;
+        img.height = 28;
+        img.alt = "";
+        img.style.verticalAlign = "middle";
+        img.style.marginRight = "6px";
+        el.appendChild(img);
+      }
+      el.append(`${item.name ?? "装备"} Lv${item.enhance_level ?? 0}/${item.max_enhance ?? 0}` +
         ` · 力${a.force ?? 0} 智${a.intel ?? 0} 政${a.politics ?? 0} 统${a.command ?? 0}` +
         (item.speed_pct ? ` · 速${item.speed_pct}%` : "") +
-        (item.gems?.length ? ` · 宝珠${item.gems.join(",")}` : "") + " ";
+        (item.gems?.length ? ` · 宝珠${item.gems.join(",")}` : "") + " ");
       for (const action of actions) {
         const b = document.createElement("button");
         b.type = "button";

@@ -1081,6 +1081,7 @@ export class MainCityScene implements Scene {
       (action, stageId, unit, count) => void this.campaignAction(action, stageId, unit, count),
       (action, opponentId, unit, count) => void this.arenaAction(action, opponentId, unit, count),
       (achievementId) => void this.claimAchievement(achievementId),
+      (cfgId) => (cfgId ? this.assets.getImageForAsset(`equip.icon.${cfgId}.v1`)?.img.src : undefined),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
