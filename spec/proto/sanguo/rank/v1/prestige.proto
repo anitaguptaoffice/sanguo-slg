@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package sanguo.rank.v1;
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/rank/v1;rankv1";
+
+message PrestigeView {
+  int64 prestige = 1;
+  int32 rank_level = 2;
+  int32 city_cap = 3;
+  int64 next_prestige = 4;
+  int32 next_cap = 5;
+}
+
+// route: rank.v1.GetPlayerRank
+message GetPlayerRankRequest { int32 server_id = 1; }
+message GetPlayerRankResponse { PrestigeView rank = 1; }
+
+// route: rank.v1.PromoteRank
+message PromoteRankRequest { int32 server_id = 1; int64 city_id = 2; }
+message PromoteRankResponse {
+  PrestigeView rank = 1;
+  int64 gold = 2;
+}

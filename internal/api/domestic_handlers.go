@@ -54,6 +54,7 @@ func (s *Server) handleStartBuildingUpgrade(ctx context.Context, pkt *commonv1.C
 	if !res.FinishAt.IsZero() {
 		finishMS = res.FinishAt.UnixMilli()
 	}
+	_ = s.prestigeService().Add(ctx, pc.ServerID, pc.PlayerID, 10)
 	data, err := marshal(&domesticv1.StartBuildingUpgradeResponse{
 		Building: &apicommon.CityBuilding{
 			SlotKey:           req.GetSlotKey(),

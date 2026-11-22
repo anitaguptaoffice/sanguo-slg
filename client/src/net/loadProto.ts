@@ -89,6 +89,8 @@ export const Routes = {
   SetTacticPreset: "military.v1.SetTacticPreset",
   RunDrill: "military.v1.RunDrill",
   CastTrick: "military.v1.CastTrick",
+  GetPlayerRank: "rank.v1.GetPlayerRank",
+  PromoteRank: "rank.v1.PromoteRank",
   GetStorehouse: "domestic.v1.GetStorehouse",
   GetMarket: "domestic.v1.GetMarket",
   BuyFromMerchant: "domestic.v1.BuyFromMerchant",
@@ -249,6 +251,10 @@ export type ProtoTypes = {
   RunDrillResponse: protobuf.Type;
   CastTrickRequest: protobuf.Type;
   CastTrickResponse: protobuf.Type;
+  GetPlayerRankRequest: protobuf.Type;
+  GetPlayerRankResponse: protobuf.Type;
+  PromoteRankRequest: protobuf.Type;
+  PromoteRankResponse: protobuf.Type;
   GetStorehouseRequest: protobuf.Type;
   GetStorehouseResponse: protobuf.Type;
   GetMarketRequest: protobuf.Type;
@@ -460,6 +466,10 @@ export function getTypes(): ProtoTypes {
     SetTacticPresetResponse: r.lookupType("sanguo.military.v1.SetTacticPresetResponse"),
     RunDrillRequest: r.lookupType("sanguo.military.v1.RunDrillRequest"),
     CastTrickRequest: r.lookupType("sanguo.military.v1.CastTrickRequest"),
+    GetPlayerRankRequest: r.lookupType("sanguo.rank.v1.GetPlayerRankRequest"),
+    GetPlayerRankResponse: r.lookupType("sanguo.rank.v1.GetPlayerRankResponse"),
+    PromoteRankRequest: r.lookupType("sanguo.rank.v1.PromoteRankRequest"),
+    PromoteRankResponse: r.lookupType("sanguo.rank.v1.PromoteRankResponse"),
     CastTrickResponse: r.lookupType("sanguo.military.v1.CastTrickResponse"),
     RunDrillResponse: r.lookupType("sanguo.military.v1.RunDrillResponse"),
     GetStorehouseRequest: r.lookupType("sanguo.domestic.v1.GetStorehouseRequest"),

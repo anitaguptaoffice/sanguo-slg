@@ -15,6 +15,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/report"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/freshsource"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/rank"
 )
 
 type preparedMarchRuntime struct {
@@ -68,6 +69,10 @@ func (s *Server) WirePreparedMarch(ctx context.Context, profile freshsource.Prof
 	}
 	resolver := combat.NewResolver(profile.ServerID, reports, NewWorldGarrisons(s.world, profile.ServerID), nil)
 	resolver.Tactics = combat.TacticsPG(pool)
+	prestige := rank.NewPrestigeService(pool, nil)
+	resolver.Prestige = func(ctx context.Context, serverID int32, playerID int64, amount int64) error {
+		return prestige.Add(ctx, serverID, playerID, amount)
+	}
 	historical := hero.NewHistorical(pool, hero.NewPGStore(pool), nil)
 	resolver.HistoricalCapture = func(ctx context.Context, serverID int32, playerID, cityID int64, x, y int32, roll int) error {
 		_, err := historical.Capture(ctx, serverID, playerID, cityID, x, y, roll)

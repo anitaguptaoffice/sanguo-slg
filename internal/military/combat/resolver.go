@@ -27,9 +27,11 @@ type Resolver struct {
 	// HistoricalCapture rolls battlefield capture of a historical hero at the
 	// defeated tile. roll is deterministic in 0..99.
 	HistoricalCapture func(ctx context.Context, serverID int32, playerID, cityID int64, x, y int32, roll int) error
-	nextReport        int64
-	beginArrival      func(context.Context, pgx.TxOptions) (pgx.Tx, error)
-	commitArrival     func(context.Context, pgx.Tx, march.ArrivalCommit) (march.ArrivalCommitted, error)
+	// Prestige awards the attacker after a won battle.
+	Prestige      func(ctx context.Context, serverID int32, playerID int64, amount int64) error
+	nextReport    int64
+	beginArrival  func(context.Context, pgx.TxOptions) (pgx.Tx, error)
+	commitArrival func(context.Context, pgx.Tx, march.ArrivalCommit) (march.ArrivalCommitted, error)
 }
 
 // NewResolver wires dependencies; catalog defaults to march.DefaultUnitCatalog when nil.
@@ -134,6 +136,9 @@ func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArri
 		Defender:   ArmyFromStacksWithHero(r.UnitCatalog, g.Troops, g.HeroLevel, g.HeroForce, g.HeroIntel, g.Morale),
 	}
 	rep := battle.Simulate(bin)
+	if r.Prestige != nil && rep.Result == battle.ResultAttackerWin {
+		_ = r.Prestige(ctx, r.ServerID, ev.PlayerID, 50)
+	}
 	if r.HistoricalCapture != nil && rep.Result == battle.ResultAttackerWin {
 		h := fnv.New32a()
 		_, _ = h.Write([]byte(fmt.Sprintf("march-%d", ev.MarchID)))

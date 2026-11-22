@@ -216,3 +216,29 @@ describe("MainCityBuildingPanel tricks", () => {
     panel.detach();
   });
 });
+
+describe("MainCityBuildingPanel rank and founding", () => {
+  it("shows prestige and dispatches promote/found", () => {
+    const mount = document.createElement("div");
+    const calls: unknown[][] = [];
+    const panel = new MainCityBuildingPanel(
+      mount, { hall: "官府" }, () => null, () => {}, () => "idle",
+      undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+      undefined,
+      (...args: unknown[]) => calls.push(args),
+    );
+    panel.attach();
+    panel.selectSlot("hall");
+    panel.setRank({ prestige: 120, rank_level: 1, city_cap: 2, next_prestige: 300, next_cap: 3 });
+    const section = mount.querySelector<HTMLElement>('[data-role="rank"]')!;
+    expect(section.textContent).toContain("声望 120");
+    expect(section.textContent).toContain("城市上限 2");
+    (section.querySelector('[data-action="promote-rank"]') as HTMLButtonElement).click();
+    (section.querySelector('[data-field="found-name"]') as HTMLInputElement).value = "新野";
+    (section.querySelector('[data-field="found-x"]') as HTMLInputElement).value = "70";
+    (section.querySelector('[data-field="found-y"]') as HTMLInputElement).value = "71";
+    (section.querySelector('[data-action="found-city"]') as HTMLButtonElement).click();
+    expect(calls).toEqual([["promote", "", 0, 0], ["found", "新野", 70, 71]]);
+    panel.detach();
+  });
+});
