@@ -215,6 +215,10 @@ func (s *Server) createPlayerCity(ctx context.Context, pc PlayerContext, name st
 		if err := initializeMonarch(ctx, tx, serverID, pc.PlayerID); err != nil {
 			return 0, err
 		}
+		if _, err := tx.Exec(ctx, `UPDATE player_city SET protection_until=now()+interval '7 days' WHERE server_id=$1 AND city_id=$2`,
+			serverID, staged.CityID); err != nil {
+			return 0, err
+		}
 		if !c.IsCapital {
 			tag, err := tx.Exec(ctx, `UPDATE player_wallet SET food=food-2000,wood=wood-2000,stone=stone-2000,iron=iron-2000
 				WHERE server_id=$1 AND player_id=$2 AND food>=2000 AND wood>=2000 AND stone>=2000 AND iron>=2000`,
