@@ -10,6 +10,7 @@ import (
 )
 
 func TestPGSpecialCityCaptureRecoverTaxRecruit(t *testing.T) {
+	t.Setenv(pgfixture.EnvReuseSpec, "0")
 	pool := pgfixture.OpenFullSpecDB(t)
 	ctx := context.Background()
 	if _, err := pool.Exec(ctx, `
