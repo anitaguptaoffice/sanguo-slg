@@ -601,6 +601,7 @@ export class MainCityScene implements Scene {
         <label>出征目的
           <select data-field="march-purpose" aria-label="出征目的">
             <option value="1">攻击</option>
+            <option value="2">侦察</option>
             <option value="3">掠夺</option>
             <option value="4">占领</option>
           </select>
@@ -2192,6 +2193,7 @@ export class MainCityScene implements Scene {
     if (slotKey === "academy") void this.refreshTechnics();
     if (slotKey === "recruit_hall") void this.refreshCityOffices();
     if (slotKey === "hall") void this.refreshRank();
+    if (slotKey === "beacon") void this.refreshIntel();
     if (slotKey === "wall") void this.refreshWallDefenses();
     if (slotKey === "market") void this.refreshMarket();
     if (slotKey === "warehouse") void this.refreshStorehouse();
@@ -2341,6 +2343,25 @@ export class MainCityScene implements Scene {
         `沙盘结果：${detail?.result ?? "—"} · 开场距离 ${detail?.start_distance ?? 0} · ${rounds} 回合 · 城防 ${walls}`,
       );
       this.renderHud();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async refreshIntel(): Promise<void> {
+    const session = this.session;
+    if (!session) return;
+    try {
+      const [warn, reports] = (await Promise.all([
+        this.gateway.listBeaconWarnings(),
+        this.gateway.listScoutReports(20),
+      ])) as [
+        { warnings?: Record<string, unknown>[] },
+        { reports?: Record<string, unknown>[] },
+      ];
+      if (this.session !== session) return;
+      this.buildingPanel.setIntel((warn.warnings ?? []) as never, (reports.reports ?? []) as never);
     } catch (error) {
       this.status = formatPanelGatewayErrorFromUnknown("build", error);
       this.renderHud();
@@ -3644,7 +3665,7 @@ export class MainCityScene implements Scene {
     }
     const { toX, toY, marchCount, heroId } = validated;
     const purposeRaw = Number((this.field("march-purpose") as HTMLSelectElement)?.value ?? PURPOSE_ATTACK);
-    const purpose = [PURPOSE_ATTACK, 3, 4].includes(purposeRaw) ? purposeRaw : PURPOSE_ATTACK;
+    const purpose = [PURPOSE_ATTACK, 2, 3, 4].includes(purposeRaw) ? purposeRaw : PURPOSE_ATTACK;
     const session = this.session;
     const actor = captureActor(this.gateway, () => this.session);
     const generation = this.marchSnapshotGeneration;

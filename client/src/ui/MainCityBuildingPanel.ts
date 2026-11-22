@@ -62,6 +62,8 @@ export type MarketView = {
   own_offers?: MarketOfferRow[]; deliveries?: MarketDeliveryRow[];
 };
 export type TacticPresetRow = { unit_cfg_id?: number; troop_type?: number; target_type?: number; hold?: boolean };
+export type ScoutReportRow = { report_id?: number; x?: number; y?: number; tier?: number; target_name?: string; detail?: string; created_at_ms?: number };
+export type BeaconWarningRow = { warning_id?: number; x?: number; y?: number; purpose?: number; arrive_at_ms?: number; beacon_level?: number; attacker_player_id?: number; attacker_troops?: number };
 export type RankView = {
   prestige?: number; rank_level?: number; city_cap?: number;
   next_prestige?: number; next_cap?: number;
@@ -103,6 +105,8 @@ export class MainCityBuildingPanel {
   private stableLevel = 0;
   private historical: HistoricalHeroRow[] = [];
   private rank: RankView | null = null;
+  private scoutReports: ScoutReportRow[] = [];
+  private beaconWarnings: BeaconWarningRow[] = [];
   private focusTrap: CenterPanelFocusTrap | null = null;
 
   constructor(
@@ -216,6 +220,13 @@ export class MainCityBuildingPanel {
         <div class="storehouse-section hidden" data-role="storehouse">
           <h4>仓库</h4>
           <p data-role="storehouse-status"></p>
+        </div>
+        <div class="beacon-section hidden" data-role="beacon">
+          <h4>军情与烽火</h4>
+          <p data-role="beacon-status"></p>
+          <div data-role="beacon-warnings"></div>
+          <h4>侦察报告</h4>
+          <div data-role="scout-reports"></div>
         </div>
         <div class="rank-section hidden" data-role="rank">
           <h4>声望与爵位</h4>
@@ -369,6 +380,9 @@ export class MainCityBuildingPanel {
     const academy = this.panel.querySelector<HTMLElement>('[data-role="academy-technics"]');
     academy?.classList.toggle("hidden", slotKey !== "academy");
     if (slotKey === "academy") this.renderTechnics();
+    const beaconEl = this.panel.querySelector<HTMLElement>('[data-role="beacon"]');
+    beaconEl?.classList.toggle("hidden", slotKey !== "beacon");
+    if (slotKey === "beacon") this.renderBeacon();
     const rankEl = this.panel.querySelector<HTMLElement>('[data-role="rank"]');
     rankEl?.classList.toggle("hidden", slotKey !== "hall");
     if (slotKey === "hall") this.renderRank();
@@ -559,6 +573,35 @@ export class MainCityBuildingPanel {
     this.blacksmithLevel = blacksmith;
     this.stableLevel = stable;
     this.renderEquipment();
+  }
+
+  setIntel(warnings: BeaconWarningRow[], reports: ScoutReportRow[]): void {
+    this.beaconWarnings = warnings;
+    this.scoutReports = reports;
+    this.renderBeacon();
+  }
+
+  private renderBeacon(): void {
+    const section = this.panel?.querySelector<HTMLElement>('[data-role="beacon"]');
+    if (!section || section.classList.contains("hidden")) return;
+    const status = section.querySelector<HTMLElement>('[data-role="beacon-status"]');
+    const warnings = section.querySelector<HTMLElement>('[data-role="beacon-warnings"]');
+    const reports = section.querySelector<HTMLElement>('[data-role="scout-reports"]');
+    if (!status || !warnings || !reports) return;
+    status.textContent = `烽火预警 ${this.beaconWarnings.length} 条 · 侦察报告 ${this.scoutReports.length} 条`;
+    warnings.textContent = "";
+    for (const w of this.beaconWarnings) {
+      const line = document.createElement("div");
+      line.textContent = `敌袭：玩家#${w.attacker_player_id ?? 0} 目标(${w.x ?? 0},${w.y ?? 0})` +
+        ` · 烽火 Lv${w.beacon_level ?? 0} · 兵力 ${w.attacker_troops ?? 0} · ETA ${new Date(w.arrive_at_ms ?? 0).toLocaleTimeString()}`;
+      warnings.appendChild(line);
+    }
+    reports.textContent = "";
+    for (const r of this.scoutReports) {
+      const line = document.createElement("div");
+      line.textContent = `侦察(${r.x ?? 0},${r.y ?? 0}) ${r.target_name ?? ""} · 情报 T${r.tier ?? 1}`;
+      reports.appendChild(line);
+    }
   }
 
   setRank(view: RankView | null): void {

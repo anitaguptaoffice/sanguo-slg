@@ -50,6 +50,8 @@ const (
 	RouteSetTacticPreset      = "military.v1.SetTacticPreset"
 	RouteRunDrill             = "military.v1.RunDrill"
 	RouteCastTrick            = "military.v1.CastTrick"
+	RouteListScoutReports     = "military.v1.ListScoutReports"
+	RouteListBeaconWarnings   = "military.v1.ListBeaconWarnings"
 	RouteTransferCityTroops   = "world.v1.TransferCityTroops"
 	RouteGetPlayerRank        = "rank.v1.GetPlayerRank"
 	RoutePromoteRank          = "rank.v1.PromoteRank"
@@ -302,6 +304,8 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteSetTacticPreset] = s.handleSetTacticPreset
 	handlers[RouteRunDrill] = s.handleRunDrill
 	handlers[RouteCastTrick] = s.handleCastTrick
+	handlers[RouteListScoutReports] = s.handleListScoutReports
+	handlers[RouteListBeaconWarnings] = s.handleListBeaconWarnings
 	handlers[RouteTransferCityTroops] = s.handleTransferCityTroops
 	handlers[RouteGetPlayerRank] = s.handleGetPlayerRank
 	handlers[RoutePromoteRank] = s.handlePromoteRank

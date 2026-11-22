@@ -69,6 +69,7 @@ func (s *Server) WirePreparedMarch(ctx context.Context, profile freshsource.Prof
 	}
 	resolver := combat.NewResolver(profile.ServerID, reports, NewWorldGarrisons(s.world, profile.ServerID), nil)
 	resolver.Tactics = combat.TacticsPG(pool)
+	resolver.ScoutSink = combat.ScoutSinkPG(pool, profile.ServerID)
 	prestige := rank.NewPrestigeService(pool, nil)
 	resolver.Prestige = func(ctx context.Context, serverID int32, playerID int64, amount int64) error {
 		return prestige.Add(ctx, serverID, playerID, amount)

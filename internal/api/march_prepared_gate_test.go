@@ -21,7 +21,7 @@ func TestPreparedMarchGate(t *testing.T) {
 	}{
 		{"missing origin before gate", false, false, 1, 50005, 0},
 		{"unavailable writer", true, false, 1, 10003, 0},
-		{"unsupported purpose", true, true, 2, 10003, 0},
+		{"unsupported purpose", true, true, 5, 10003, 0},
 		{"oversized attack alias", true, true, 65537, 10003, 0},
 		{"ready writer receives validated attack", true, true, 1, 0, 1},
 	} {

@@ -117,7 +117,7 @@ func (s *Server) startMarch(ctx context.Context, pkt *commonv1.ClientPacket, pre
 	}
 	if prepared {
 		purpose := req.GetPurpose()
-		if write == nil || (purpose != combat.PurposeAttack && purpose != combat.PurposeLoot && purpose != combat.PurposeOccupy) {
+		if write == nil || (purpose != combat.PurposeAttack && purpose != combat.PurposeScout && purpose != combat.PurposeLoot && purpose != combat.PurposeOccupy) {
 			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "prepared march unavailable"), nil
 		}
 		return write(ctx, pc, &req, coord, stacks, pkt.GetTraceId())
@@ -156,6 +156,7 @@ func (s *Server) startMarch(ctx context.Context, pkt *commonv1.ClientPacket, pre
 		}
 		return s.mapMarchCreateErr(pkt.GetTraceId(), err), nil
 	}
+	s.recordBeaconWarning(ctx, pc, req.GetToX(), req.GetToY(), req.GetPurpose(), req.GetHeroId(), order.ArriveAt, stacks)
 	s.registerStartedMarch(pc, req.GetCityId(), order.ID, req.GetHeroId(), stacks)
 	data, err := marshal(&militaryv1.StartMarchResponse{
 		March:      marchSummaryProto(req.GetCityId(), order, stacks),

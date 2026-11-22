@@ -242,3 +242,21 @@ describe("MainCityBuildingPanel rank and founding", () => {
     panel.detach();
   });
 });
+
+describe("MainCityBuildingPanel beacon", () => {
+  it("renders warnings and scout reports", () => {
+    const mount = document.createElement("div");
+    const panel = new MainCityBuildingPanel(mount, { beacon: "烽火台" }, () => null, () => {}, () => "idle");
+    panel.attach();
+    panel.selectSlot("beacon");
+    panel.setIntel(
+      [{ warning_id: 1, x: 70, y: 70, attacker_player_id: 9, attacker_troops: 500, beacon_level: 3, arrive_at_ms: Date.now() + 60000 }],
+      [{ report_id: 2, x: 61, y: 60, tier: 3, target_name: "平地 Lv7" }],
+    );
+    const section = mount.querySelector<HTMLElement>('[data-role="beacon"]')!;
+    expect(section.textContent).toContain("烽火预警 1 条");
+    expect(section.textContent).toContain("敌袭");
+    expect(section.textContent).toContain("平地 Lv7");
+    panel.detach();
+  });
+});

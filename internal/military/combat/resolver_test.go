@@ -113,3 +113,26 @@ func TestResolveAttackCallsHistoricalCaptureOnWin(t *testing.T) {
 		t.Fatalf("capture coords = %d,%d", gotX, gotY)
 	}
 }
+
+func TestResolveScoutProducesTieredReport(t *testing.T) {
+	ctx := context.Background()
+	svc := report.NewService(report.NewMemStore())
+	r := NewResolver(1, svc, garrisonFixture(), nil)
+	var got ScoutObservation
+	r.ScoutSink = func(_ context.Context, obs ScoutObservation) error {
+		got = obs
+		return nil
+	}
+	ev := march.MarchArrivalEvent{
+		MarchID: 13, PlayerID: 1001,
+		Troops: []march.TroopStack{{UnitCfgID: 7, Count: 25}},
+		Order:  march.MarchOrder{OriginCityID: 1, ToX: 5, ToY: 5, Purpose: PurposeScout},
+	}
+	res, err := r.ResolveAttackGarrison(ctx, ev)
+	if err != nil || res.BattleRan || len(res.AttackerRemaining) != 1 {
+		t.Fatalf("scout result=%+v err=%v", res, err)
+	}
+	if got.Tier != 3 || got.X != 5 || got.Y != 5 || got.TargetName == "" {
+		t.Fatalf("observation = %+v", got)
+	}
+}
