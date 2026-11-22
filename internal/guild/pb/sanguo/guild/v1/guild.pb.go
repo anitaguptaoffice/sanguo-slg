@@ -1235,6 +1235,137 @@ func (x *StationGuildTroopsResponse) GetTroops() []*GuildGarrisonView {
 	return nil
 }
 
+// route: guild.v1.WithdrawGuildGarrison
+type WithdrawGuildGarrisonRequest struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	ServerId int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	// 驻军所在城。
+	CityId  int64 `protobuf:"varint,2,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	GuildId int64 `protobuf:"varint,3,opt,name=guild_id,json=guildId,proto3" json:"guild_id,omitempty"`
+	// 撤回目标城，必须属于操作者。
+	ToCityId      int64 `protobuf:"varint,4,opt,name=to_city_id,json=toCityId,proto3" json:"to_city_id,omitempty"`
+	UnitCfgId     int32 `protobuf:"varint,5,opt,name=unit_cfg_id,json=unitCfgId,proto3" json:"unit_cfg_id,omitempty"`
+	Count         int32 `protobuf:"varint,6,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WithdrawGuildGarrisonRequest) Reset() {
+	*x = WithdrawGuildGarrisonRequest{}
+	mi := &file_sanguo_guild_v1_guild_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WithdrawGuildGarrisonRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WithdrawGuildGarrisonRequest) ProtoMessage() {}
+
+func (x *WithdrawGuildGarrisonRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_guild_v1_guild_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WithdrawGuildGarrisonRequest.ProtoReflect.Descriptor instead.
+func (*WithdrawGuildGarrisonRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_guild_v1_guild_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *WithdrawGuildGarrisonRequest) GetServerId() int32 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+func (x *WithdrawGuildGarrisonRequest) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+func (x *WithdrawGuildGarrisonRequest) GetGuildId() int64 {
+	if x != nil {
+		return x.GuildId
+	}
+	return 0
+}
+
+func (x *WithdrawGuildGarrisonRequest) GetToCityId() int64 {
+	if x != nil {
+		return x.ToCityId
+	}
+	return 0
+}
+
+func (x *WithdrawGuildGarrisonRequest) GetUnitCfgId() int32 {
+	if x != nil {
+		return x.UnitCfgId
+	}
+	return 0
+}
+
+func (x *WithdrawGuildGarrisonRequest) GetCount() int32 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+type WithdrawGuildGarrisonResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Troops        []*GuildGarrisonView   `protobuf:"bytes,1,rep,name=troops,proto3" json:"troops,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WithdrawGuildGarrisonResponse) Reset() {
+	*x = WithdrawGuildGarrisonResponse{}
+	mi := &file_sanguo_guild_v1_guild_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WithdrawGuildGarrisonResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WithdrawGuildGarrisonResponse) ProtoMessage() {}
+
+func (x *WithdrawGuildGarrisonResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_guild_v1_guild_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WithdrawGuildGarrisonResponse.ProtoReflect.Descriptor instead.
+func (*WithdrawGuildGarrisonResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_guild_v1_guild_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *WithdrawGuildGarrisonResponse) GetTroops() []*GuildGarrisonView {
+	if x != nil {
+		return x.Troops
+	}
+	return nil
+}
+
 var File_sanguo_guild_v1_guild_proto protoreflect.FileDescriptor
 
 const file_sanguo_guild_v1_guild_proto_rawDesc = "" +
@@ -1315,6 +1446,16 @@ const file_sanguo_guild_v1_guild_proto_rawDesc = "" +
 	"\ffrom_city_id\x18\x06 \x01(\x03R\n" +
 	"fromCityId\"X\n" +
 	"\x1aStationGuildTroopsResponse\x12:\n" +
+	"\x06troops\x18\x01 \x03(\v2\".sanguo.guild.v1.GuildGarrisonViewR\x06troops\"\xc3\x01\n" +
+	"\x1cWithdrawGuildGarrisonRequest\x12\x1b\n" +
+	"\tserver_id\x18\x01 \x01(\x05R\bserverId\x12\x17\n" +
+	"\acity_id\x18\x02 \x01(\x03R\x06cityId\x12\x19\n" +
+	"\bguild_id\x18\x03 \x01(\x03R\aguildId\x12\x1c\n" +
+	"\n" +
+	"to_city_id\x18\x04 \x01(\x03R\btoCityId\x12\x1e\n" +
+	"\vunit_cfg_id\x18\x05 \x01(\x05R\tunitCfgId\x12\x14\n" +
+	"\x05count\x18\x06 \x01(\x05R\x05count\"[\n" +
+	"\x1dWithdrawGuildGarrisonResponse\x12:\n" +
 	"\x06troops\x18\x01 \x03(\v2\".sanguo.guild.v1.GuildGarrisonViewR\x06troops*\x8f\x01\n" +
 	"\x0fGuildMemberRole\x12!\n" +
 	"\x1dGUILD_MEMBER_ROLE_UNSPECIFIED\x10\x00\x12\x1c\n" +
@@ -1335,29 +1476,31 @@ func file_sanguo_guild_v1_guild_proto_rawDescGZIP() []byte {
 }
 
 var file_sanguo_guild_v1_guild_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_sanguo_guild_v1_guild_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_sanguo_guild_v1_guild_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_sanguo_guild_v1_guild_proto_goTypes = []any{
-	(GuildMemberRole)(0),               // 0: sanguo.guild.v1.GuildMemberRole
-	(*GuildSummary)(nil),               // 1: sanguo.guild.v1.GuildSummary
-	(*GuildMember)(nil),                // 2: sanguo.guild.v1.GuildMember
-	(*CreateGuildRequest)(nil),         // 3: sanguo.guild.v1.CreateGuildRequest
-	(*CreateGuildResponse)(nil),        // 4: sanguo.guild.v1.CreateGuildResponse
-	(*JoinGuildRequest)(nil),           // 5: sanguo.guild.v1.JoinGuildRequest
-	(*JoinGuildResponse)(nil),          // 6: sanguo.guild.v1.JoinGuildResponse
-	(*LeaveGuildRequest)(nil),          // 7: sanguo.guild.v1.LeaveGuildRequest
-	(*LeaveGuildResponse)(nil),         // 8: sanguo.guild.v1.LeaveGuildResponse
-	(*ListGuildMembersRequest)(nil),    // 9: sanguo.guild.v1.ListGuildMembersRequest
-	(*ListGuildMembersResponse)(nil),   // 10: sanguo.guild.v1.ListGuildMembersResponse
-	(*GuildRelationView)(nil),          // 11: sanguo.guild.v1.GuildRelationView
-	(*ListGuildRelationsRequest)(nil),  // 12: sanguo.guild.v1.ListGuildRelationsRequest
-	(*ListGuildRelationsResponse)(nil), // 13: sanguo.guild.v1.ListGuildRelationsResponse
-	(*SetGuildRelationRequest)(nil),    // 14: sanguo.guild.v1.SetGuildRelationRequest
-	(*SetGuildRelationResponse)(nil),   // 15: sanguo.guild.v1.SetGuildRelationResponse
-	(*GuildGarrisonView)(nil),          // 16: sanguo.guild.v1.GuildGarrisonView
-	(*ListGuildGarrisonRequest)(nil),   // 17: sanguo.guild.v1.ListGuildGarrisonRequest
-	(*ListGuildGarrisonResponse)(nil),  // 18: sanguo.guild.v1.ListGuildGarrisonResponse
-	(*StationGuildTroopsRequest)(nil),  // 19: sanguo.guild.v1.StationGuildTroopsRequest
-	(*StationGuildTroopsResponse)(nil), // 20: sanguo.guild.v1.StationGuildTroopsResponse
+	(GuildMemberRole)(0),                  // 0: sanguo.guild.v1.GuildMemberRole
+	(*GuildSummary)(nil),                  // 1: sanguo.guild.v1.GuildSummary
+	(*GuildMember)(nil),                   // 2: sanguo.guild.v1.GuildMember
+	(*CreateGuildRequest)(nil),            // 3: sanguo.guild.v1.CreateGuildRequest
+	(*CreateGuildResponse)(nil),           // 4: sanguo.guild.v1.CreateGuildResponse
+	(*JoinGuildRequest)(nil),              // 5: sanguo.guild.v1.JoinGuildRequest
+	(*JoinGuildResponse)(nil),             // 6: sanguo.guild.v1.JoinGuildResponse
+	(*LeaveGuildRequest)(nil),             // 7: sanguo.guild.v1.LeaveGuildRequest
+	(*LeaveGuildResponse)(nil),            // 8: sanguo.guild.v1.LeaveGuildResponse
+	(*ListGuildMembersRequest)(nil),       // 9: sanguo.guild.v1.ListGuildMembersRequest
+	(*ListGuildMembersResponse)(nil),      // 10: sanguo.guild.v1.ListGuildMembersResponse
+	(*GuildRelationView)(nil),             // 11: sanguo.guild.v1.GuildRelationView
+	(*ListGuildRelationsRequest)(nil),     // 12: sanguo.guild.v1.ListGuildRelationsRequest
+	(*ListGuildRelationsResponse)(nil),    // 13: sanguo.guild.v1.ListGuildRelationsResponse
+	(*SetGuildRelationRequest)(nil),       // 14: sanguo.guild.v1.SetGuildRelationRequest
+	(*SetGuildRelationResponse)(nil),      // 15: sanguo.guild.v1.SetGuildRelationResponse
+	(*GuildGarrisonView)(nil),             // 16: sanguo.guild.v1.GuildGarrisonView
+	(*ListGuildGarrisonRequest)(nil),      // 17: sanguo.guild.v1.ListGuildGarrisonRequest
+	(*ListGuildGarrisonResponse)(nil),     // 18: sanguo.guild.v1.ListGuildGarrisonResponse
+	(*StationGuildTroopsRequest)(nil),     // 19: sanguo.guild.v1.StationGuildTroopsRequest
+	(*StationGuildTroopsResponse)(nil),    // 20: sanguo.guild.v1.StationGuildTroopsResponse
+	(*WithdrawGuildGarrisonRequest)(nil),  // 21: sanguo.guild.v1.WithdrawGuildGarrisonRequest
+	(*WithdrawGuildGarrisonResponse)(nil), // 22: sanguo.guild.v1.WithdrawGuildGarrisonResponse
 }
 var file_sanguo_guild_v1_guild_proto_depIdxs = []int32{
 	0,  // 0: sanguo.guild.v1.GuildMember.role:type_name -> sanguo.guild.v1.GuildMemberRole
@@ -1369,11 +1512,12 @@ var file_sanguo_guild_v1_guild_proto_depIdxs = []int32{
 	11, // 6: sanguo.guild.v1.SetGuildRelationResponse.relation:type_name -> sanguo.guild.v1.GuildRelationView
 	16, // 7: sanguo.guild.v1.ListGuildGarrisonResponse.troops:type_name -> sanguo.guild.v1.GuildGarrisonView
 	16, // 8: sanguo.guild.v1.StationGuildTroopsResponse.troops:type_name -> sanguo.guild.v1.GuildGarrisonView
-	9,  // [9:9] is the sub-list for method output_type
-	9,  // [9:9] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	16, // 9: sanguo.guild.v1.WithdrawGuildGarrisonResponse.troops:type_name -> sanguo.guild.v1.GuildGarrisonView
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_sanguo_guild_v1_guild_proto_init() }
@@ -1387,7 +1531,7 @@ func file_sanguo_guild_v1_guild_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sanguo_guild_v1_guild_proto_rawDesc), len(file_sanguo_guild_v1_guild_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   20,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

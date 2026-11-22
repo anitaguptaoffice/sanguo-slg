@@ -106,6 +106,7 @@ export const Routes = {
   ListGuildRelations: "guild.v1.ListGuildRelations",
   StationGuildTroops: "guild.v1.StationGuildTroops",
   ListGuildGarrison: "guild.v1.ListGuildGarrison",
+  WithdrawGuildGarrison: "guild.v1.WithdrawGuildGarrison",
   TransferCityTroops: "world.v1.TransferCityTroops",
   GetPlayerRank: "rank.v1.GetPlayerRank",
   PromoteRank: "rank.v1.PromoteRank",
@@ -303,6 +304,8 @@ export type ProtoTypes = {
   StationGuildTroopsResponse: protobuf.Type;
   ListGuildGarrisonRequest: protobuf.Type;
   ListGuildGarrisonResponse: protobuf.Type;
+  WithdrawGuildGarrisonRequest: protobuf.Type;
+  WithdrawGuildGarrisonResponse: protobuf.Type;
   TransferCityTroopsRequest: protobuf.Type;
   TransferCityTroopsResponse: protobuf.Type;
   GetPlayerRankRequest: protobuf.Type;
@@ -532,6 +535,8 @@ export function getTypes(): ProtoTypes {
     StationGuildTroopsResponse: r.lookupType("sanguo.guild.v1.StationGuildTroopsResponse"),
     ListGuildGarrisonRequest: r.lookupType("sanguo.guild.v1.ListGuildGarrisonRequest"),
     ListGuildGarrisonResponse: r.lookupType("sanguo.guild.v1.ListGuildGarrisonResponse"),
+    WithdrawGuildGarrisonRequest: r.lookupType("sanguo.guild.v1.WithdrawGuildGarrisonRequest"),
+    WithdrawGuildGarrisonResponse: r.lookupType("sanguo.guild.v1.WithdrawGuildGarrisonResponse"),
     UseTruceTokenResponse: r.lookupType("sanguo.world.v1.UseTruceTokenResponse"),
     ListSpecialCitiesRequest: r.lookupType("sanguo.world.v1.ListSpecialCitiesRequest"),
     ListSpecialCitiesResponse: r.lookupType("sanguo.world.v1.ListSpecialCitiesResponse"),

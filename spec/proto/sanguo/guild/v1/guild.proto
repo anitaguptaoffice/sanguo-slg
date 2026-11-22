@@ -120,3 +120,16 @@ message StationGuildTroopsRequest {
   int64 from_city_id = 6;
 }
 message StationGuildTroopsResponse { repeated GuildGarrisonView troops = 1; }
+
+// route: guild.v1.WithdrawGuildGarrison
+message WithdrawGuildGarrisonRequest {
+  int32 server_id = 1;
+  // 驻军所在城。
+  int64 city_id = 2;
+  int64 guild_id = 3;
+  // 撤回目标城，必须属于操作者。
+  int64 to_city_id = 4;
+  int32 unit_cfg_id = 5;
+  int32 count = 6;
+}
+message WithdrawGuildGarrisonResponse { repeated GuildGarrisonView troops = 1; }

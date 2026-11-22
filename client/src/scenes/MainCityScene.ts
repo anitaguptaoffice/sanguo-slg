@@ -2574,6 +2574,8 @@ export class MainCityScene implements Scene {
         await this.gateway.setGuildRelation(guildId, targetGuildId, 3);
       } else if (action === "station-garrison") {
         await this.gateway.stationGuildTroops(cityId, guildId, unit, count, fromCityId || cityId);
+      } else if (action === "withdraw-garrison") {
+        await this.gateway.withdrawGuildGarrison(cityId, guildId, fromCityId || cityId, unit, count);
       }
       await this.refreshDiplomacy();
       this.status = "外交操作完成";
