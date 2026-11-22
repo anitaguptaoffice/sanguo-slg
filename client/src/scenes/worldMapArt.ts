@@ -32,6 +32,13 @@ export function worldCityAssetId(level: number): string {
   return "world.obj.city.village.v1";
 }
 
+/** Landmark sprite for a special city type: county/commandery/state/capital. */
+export function worldSpecialCityAssetId(cityType: number): string {
+  if (cityType >= 4) return worldCityAssetId(8);
+  if (cityType >= 2) return worldCityAssetId(6);
+  return worldCityAssetId(1);
+}
+
 /** Resource landmark for wild tiles; undefined keeps only the tile texture. */
 export function worldResourceAssetId(terrain: number): string | undefined {
   if (terrain === 1 || terrain === 4 || terrain === 6) return "world.obj.resource.farm.v1";

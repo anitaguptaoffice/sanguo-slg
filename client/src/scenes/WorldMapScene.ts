@@ -13,10 +13,12 @@ import {
   MAX_ZOOM,
   MIN_ZOOM,
   type Camera,
+  type ViewportSize,
 } from "./worldMapMath";
 import {
   worldCityAssetId,
   worldFlagAssetId,
+  worldSpecialCityAssetId,
   worldMarchAssetId,
   worldResourceAssetId,
   worldTileAssetId,
@@ -28,6 +30,19 @@ export type WorldMapDeps = {
   onMarchTarget: (x: number, y: number) => void;
   /** Optional R1-S6 art; procedural shapes remain the fallback. */
   assets?: AssetLoader;
+};
+
+type SpecialCityMarker = {
+  city_cfg_id: number;
+  city_type: number;
+  name: string;
+  x: number;
+  y: number;
+  owner_guild_id: number;
+  owner_guild_name: string;
+  garrison: number;
+  hero_name: string;
+  unit_name: string;
 };
 
 type Tile = {
@@ -86,6 +101,7 @@ export class WorldMapScene {
   private marches: MarchLine[] = [];
   private provinces: Province[] = [];
   private selected: { x: number; y: number } | null = null;
+  private specialCities: SpecialCityMarker[] = [];
   private fetchTimer: number | null = null;
   private fetchGeneration = 0;
   private renderQueued = false;
@@ -172,6 +188,7 @@ export class WorldMapScene {
     this.resizeCanvas();
     this.requestRender();
     this.scheduleFetch(0);
+    void this.refreshSpecialCities();
     this.setStatus("拖拽平移，滚轮或按钮缩放；点击格点查看详情。");
   }
 
@@ -403,9 +420,41 @@ export class WorldMapScene {
     this.provinceSelect.addEventListener("change", this.onProvinceChange);
   }
 
+  private async refreshSpecialCities(): Promise<void> {
+    const gateway = this.deps.gateway();
+    if (!gateway) return;
+    try {
+      const res = (await gateway.listSpecialCities()) as { cities?: Record<string, unknown>[] };
+      this.specialCities = (res.cities ?? []).map((row) => ({
+        city_cfg_id: Number(row.city_cfg_id ?? 0),
+        city_type: Number(row.city_type ?? 1),
+        name: String(row.name ?? "名城"),
+        x: Number(row.x ?? 0),
+        y: Number(row.y ?? 0),
+        owner_guild_id: Number(row.owner_guild_id ?? 0),
+        owner_guild_name: String(row.owner_guild_name ?? ""),
+        garrison: Number(row.garrison ?? 0),
+        hero_name: String(row.hero_name ?? ""),
+        unit_name: String(row.unit_name ?? ""),
+      }));
+      this.requestRender();
+    } catch {
+      /* markers are optional; the hall panel remains authoritative */
+    }
+  }
+
+  private specialCityAt(x: number, y: number): SpecialCityMarker | undefined {
+    return this.specialCities.find((city) => city.x === x && city.y === y);
+  }
+
   private async selectTile(x: number, y: number): Promise<void> {
     this.selected = { x, y };
     this.requestRender();
+    const special = this.specialCityAt(x, y);
+    if (special) {
+      this.showSpecialCityDetail(special);
+      return;
+    }
     const gateway = this.deps.gateway();
     if (!gateway) return;
     try {
@@ -415,6 +464,25 @@ export class WorldMapScene {
     } catch (error) {
       this.setStatus(`格点详情加载失败：${error instanceof Error ? error.message : String(error)}`);
     }
+  }
+
+  private showSpecialCityDetail(city: SpecialCityMarker): void {
+    const types = ["", "县城", "郡城", "州城", "都城"];
+    const owner = city.owner_guild_id > 0 ? (city.owner_guild_name || `盟#${city.owner_guild_id}`) : "中立";
+    const elite = city.unit_name ? ` · 精锐 ${city.unit_name}` : "";
+    this.detail.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+        <strong style="color:#ffe1a0">${types[city.city_type] ?? "名城"} · ${city.name}</strong>
+        <button type="button" data-action="world-map-detail-close" style="background:none;border:none;color:#c8b795;cursor:pointer;">×</button>
+      </div>
+      <p>坐标 (${city.x}, ${city.y}) · 归属：${owner}</p>
+      <p>守军 ${city.garrison} · 守将 ${city.hero_name || "未知"}${elite}</p>
+      <p style="color:#e8a87c">名城国战：胜利后由攻方联盟占领并解锁地域精锐。</p>
+      <button type="button" data-action="world-map-march" style="width:100%;margin-top:6px;background:#6a4f2a;color:#f4e6c8;border:1px solid #a07c46;border-radius:4px;padding:4px;">出征名城 (${city.x}, ${city.y})</button>
+    `;
+    this.detail.classList.remove("hidden");
+    const close = this.detail.querySelector('[data-action="world-map-detail-close"]');
+    close?.addEventListener("click", () => this.hideDetail());
   }
 
   private showDetail(detail: TileDetail): void {
@@ -529,7 +597,41 @@ export class WorldMapScene {
       }
     }
 
+    this.drawSpecialCities(ctx, size);
     this.drawMarches(ctx, size);
+  }
+
+  private drawSpecialCities(ctx: CanvasRenderingContext2D, size: ViewportSize): void {
+    if (this.specialCities.length === 0) return;
+    ctx.textAlign = "center";
+    for (const city of this.specialCities) {
+      if (city.x < 0 || city.y < 0 || city.x >= MAP_SIZE || city.y >= MAP_SIZE) continue;
+      const point = projectTile(city.x, city.y, this.camera, size);
+      if (point.x < -80 || point.x > size.width + 80 || point.y < -80 || point.y > size.height + 80) continue;
+      const drawn = this.drawAssetAt(ctx, worldSpecialCityAssetId(city.city_type), point.x, point.y, this.camera.zoom * 0.62);
+      if (!drawn) {
+        ctx.fillStyle = "#e0b34a";
+        ctx.beginPath();
+        ctx.arc(point.x, point.y - 8, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      const label = city.name.slice(0, 6);
+      ctx.font = "bold 11px system-ui, sans-serif";
+      const width = (ctx.measureText?.(label).width ?? label.length * 8) + 10;
+      ctx.fillStyle = "rgba(26,16,8,0.88)";
+      ctx.fillRect(point.x - width / 2, point.y - 44, width, 15);
+      ctx.fillStyle = "#ffe1a0";
+      ctx.fillText(label, point.x, point.y - 33);
+      if (city.owner_guild_id > 0) {
+        const owner = city.owner_guild_name || `盟#${city.owner_guild_id}`;
+        ctx.font = "9px system-ui, sans-serif";
+        const ow = (ctx.measureText?.(owner).width ?? owner.length * 6) + 8;
+        ctx.fillStyle = "rgba(60,20,18,0.88)";
+        ctx.fillRect(point.x - ow / 2, point.y - 27, ow, 12);
+        ctx.fillStyle = "#ffc7a8";
+        ctx.fillText(owner, point.x, point.y - 18);
+      }
+    }
   }
 
   private decorateTile(

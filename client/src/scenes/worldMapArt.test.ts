@@ -7,6 +7,7 @@ import {
   worldMarchAssetId,
   worldResourceAssetId,
   worldTileAssetId,
+  worldSpecialCityAssetId,
 } from "./worldMapArt";
 
 describe("world map art mapping", () => {
@@ -33,6 +34,13 @@ describe("world map art mapping", () => {
     expect(worldFlagAssetId(0, 7)).toBe("world.flag.neutral.v1");
     expect(worldFlagAssetId(7, 7)).toBe("world.flag.self.v1");
     expect(worldFlagAssetId(8, 7)).toBe("world.flag.enemy.v1");
+  });
+
+  it("picks special city landmarks by city type", () => {
+    expect(worldSpecialCityAssetId(1)).toBe("world.obj.city.village.v1");
+    expect(worldSpecialCityAssetId(2)).toBe("world.obj.city.town.v1");
+    expect(worldSpecialCityAssetId(3)).toBe("world.obj.city.town.v1");
+    expect(worldSpecialCityAssetId(4)).toBe("world.obj.city.capital.v1");
   });
 
   it("keeps resource landmarks and march markers deterministic", () => {
