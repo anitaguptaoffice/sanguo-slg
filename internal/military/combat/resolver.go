@@ -28,7 +28,9 @@ type Resolver struct {
 	// defeated tile. roll is deterministic in 0..99.
 	HistoricalCapture func(ctx context.Context, serverID int32, playerID, cityID int64, x, y int32, roll int) error
 	// Prestige awards the attacker after a won battle.
-	Prestige      func(ctx context.Context, serverID int32, playerID int64, amount int64) error
+	Prestige func(ctx context.Context, serverID int32, playerID int64, amount int64) error
+	// ScoutSink archives a scout observation instead of running combat.
+	ScoutSink     func(ctx context.Context, obs ScoutObservation) error
 	nextReport    int64
 	beginArrival  func(context.Context, pgx.TxOptions) (pgx.Tx, error)
 	commitArrival func(context.Context, pgx.Tx, march.ArrivalCommit) (march.ArrivalCommitted, error)
@@ -102,6 +104,21 @@ func (r *Resolver) allocReportID() int64 {
 // ResolveAttackGarrison handles PurposeAttack against a fixed garrison tile.
 func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArrivalEvent) (ArrivalResult, error) {
 	g := r.Garrisons.Get(ctx, ev.Order.ToX, ev.Order.ToY)
+	if ev.Order.Purpose == PurposeScout {
+		tier := scoutTier(ev.Troops)
+		name := "未知目标"
+		if g != nil && g.Name != "" {
+			name = g.Name
+		}
+		if r.ScoutSink != nil {
+			_ = r.ScoutSink(ctx, ScoutObservation{PlayerID: ev.PlayerID, X: ev.Order.ToX, Y: ev.Order.ToY,
+				Tier: tier, TargetName: name, Detail: scoutDetail(tier, g, scoutCount(ev.Troops))})
+		}
+		if r.commitArrival != nil {
+			return r.persistArrival(ctx, ev, ArrivalResult{AttackerRemaining: append([]march.TroopStack(nil), ev.Troops...)})
+		}
+		return ArrivalResult{AttackerRemaining: append([]march.TroopStack(nil), ev.Troops...)}, nil
+	}
 	if (ev.Order.Purpose != PurposeAttack && ev.Order.Purpose != PurposeLoot && ev.Order.Purpose != PurposeOccupy) || g == nil {
 		if r.commitArrival != nil {
 			return r.persistArrival(ctx, ev, ArrivalResult{AttackerRemaining: append([]march.TroopStack(nil), ev.Troops...)})

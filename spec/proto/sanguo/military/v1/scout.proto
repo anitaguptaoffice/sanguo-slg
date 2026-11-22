@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package sanguo.military.v1;
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/military/v1;militaryv1";
+
+message ScoutReportView {
+  int64 report_id = 1;
+  int32 x = 2;
+  int32 y = 3;
+  int32 tier = 4;
+  string target_name = 5;
+  string detail = 6;
+  int64 created_at_ms = 7;
+}
+message ListScoutReportsRequest { int32 server_id = 1; int32 limit = 2; }
+message ListScoutReportsResponse { repeated ScoutReportView reports = 1; }
+
+message BeaconWarningView {
+  int64 warning_id = 1;
+  int32 x = 2;
+  int32 y = 3;
+  int32 purpose = 4;
+  int64 arrive_at_ms = 5;
+  int32 beacon_level = 6;
+  int64 attacker_player_id = 7;
+  int32 attacker_troops = 8;
+  int64 hero_id = 9;
+}
+message ListBeaconWarningsRequest { int32 server_id = 1; }
+message ListBeaconWarningsResponse { repeated BeaconWarningView warnings = 1; }

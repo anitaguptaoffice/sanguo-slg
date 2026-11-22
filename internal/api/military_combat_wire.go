@@ -19,6 +19,7 @@ func WireM2Combat(shardID int32, pool *pgxpool.Pool, hub *march.Hub, garrisons c
 	svc := report.NewService(report.NewPGStore(pool))
 	resolver := combat.NewResolver(shardID, svc, garrisons, nil)
 	resolver.Tactics = combat.TacticsPG(pool)
+	resolver.ScoutSink = combat.ScoutSinkPG(pool, shardID)
 	prestige := rank.NewPrestigeService(pool, nil)
 	resolver.Prestige = func(ctx context.Context, serverID int32, playerID int64, amount int64) error {
 		return prestige.Add(ctx, serverID, playerID, amount)

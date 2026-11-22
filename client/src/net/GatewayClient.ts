@@ -79,6 +79,8 @@ export type GatewayPort = {
   transferCityTroops(fromCityId: number, toCityId: number, unitCfgId: number, count: number): Promise<unknown>;
   getPlayerRank(): Promise<unknown>;
   promoteRank(cityId: number): Promise<unknown>;
+  listScoutReports(limit?: number): Promise<unknown>;
+  listBeaconWarnings(): Promise<unknown>;
   castTrick(cityId: number, trickType: number, targetMarchId: number): Promise<unknown>;
   runDrill(cityId: number, attacker: { unit_cfg_id: number; count: number }[], defender: { unit_cfg_id: number; count: number }[]): Promise<unknown>;
   getStorehouse(cityId: number): Promise<unknown>;
@@ -759,6 +761,16 @@ export class GatewayClient implements GatewayPort {
   async promoteRank(cityId: number) {
     const { PromoteRankResponse } = getTypes();
     return this.rpc(Routes.PromoteRank, "PromoteRankRequest", { server_id: 1, city_id: cityId }, PromoteRankResponse, true);
+  }
+
+  async listScoutReports(limit = 20) {
+    const { ListScoutReportsResponse } = getTypes();
+    return this.rpc(Routes.ListScoutReports, "ListScoutReportsRequest", { server_id: 1, limit }, ListScoutReportsResponse, true);
+  }
+
+  async listBeaconWarnings() {
+    const { ListBeaconWarningsResponse } = getTypes();
+    return this.rpc(Routes.ListBeaconWarnings, "ListBeaconWarningsRequest", { server_id: 1 }, ListBeaconWarningsResponse, true);
   }
 
   async castTrick(cityId: number, trickType: number, targetMarchId: number) {
