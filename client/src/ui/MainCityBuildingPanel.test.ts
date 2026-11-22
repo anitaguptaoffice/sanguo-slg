@@ -260,3 +260,22 @@ describe("MainCityBuildingPanel beacon", () => {
     panel.detach();
   });
 });
+
+describe("MainCityBuildingPanel diplomacy", () => {
+  it("renders guild relations and ally garrison", () => {
+    const mount = document.createElement("div");
+    const panel = new MainCityBuildingPanel(mount, { diplomacy: "鸿胪寺" }, () => null, () => {}, () => "idle");
+    panel.attach();
+    panel.selectSlot("diplomacy");
+    panel.setDiplomacy(
+      [{ guild_id: 1, target_guild_id: 2, state: 3, effective_at_ms: Date.now() + 8 * 3600_000, pending: true }],
+      [{ city_id: 1, player_id: 1001, unit_cfg_id: 1, count: 4 }],
+    );
+    const section = mount.querySelector<HTMLElement>('[data-role="diplomacy"]')!;
+    expect(section.textContent).toContain("外交 1 条");
+    expect(section.textContent).toContain("敌对");
+    expect(section.textContent).toContain("待生效");
+    expect(section.textContent).toContain("兵种#1 ×4");
+    panel.detach();
+  });
+});

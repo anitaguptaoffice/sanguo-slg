@@ -1062,6 +1062,8 @@ export class MainCityScene implements Scene {
       (action, npcCfgId) => void this.historicalAction(action, npcCfgId),
       (trickType, targetMarchId) => void this.castTrick(trickType, targetMarchId),
       (action, name, x, y) => void this.rankAction(action, name, x, y),
+      (action, guildId, targetGuildId, cityId, unit, count) =>
+        void this.diplomacyAction(action, guildId, targetGuildId, cityId, unit, count),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -2194,6 +2196,7 @@ export class MainCityScene implements Scene {
     if (slotKey === "recruit_hall") void this.refreshCityOffices();
     if (slotKey === "hall") void this.refreshRank();
     if (slotKey === "beacon") void this.refreshIntel();
+    if (slotKey === "diplomacy") void this.refreshDiplomacy();
     if (slotKey === "wall") void this.refreshWallDefenses();
     if (slotKey === "market") void this.refreshMarket();
     if (slotKey === "warehouse") void this.refreshStorehouse();
@@ -2342,6 +2345,42 @@ export class MainCityScene implements Scene {
       this.buildingPanel.setDrillResult(
         `沙盘结果：${detail?.result ?? "—"} · 开场距离 ${detail?.start_distance ?? 0} · ${rounds} 回合 · 城防 ${walls}`,
       );
+      this.renderHud();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async refreshDiplomacy(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      const [rel, gar] = (await Promise.all([
+        this.gateway.listGuildRelations(1),
+        this.gateway.listGuildGarrison(session.cityId),
+      ])) as [{ relations?: Record<string, unknown>[] }, { troops?: Record<string, unknown>[] }];
+      if (this.session !== session) return;
+      this.buildingPanel.setDiplomacy((rel.relations ?? []) as never, (gar.troops ?? []) as never);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async diplomacyAction(action: string, guildId: number, targetGuildId: number, cityId: number, unit: number, count: number): Promise<void> {
+    const session = this.session;
+    if (!session) return;
+    try {
+      if (action === "guild-friendly") {
+        await this.gateway.setGuildRelation(guildId, targetGuildId, 1);
+      } else if (action === "guild-hostile") {
+        await this.gateway.setGuildRelation(guildId, targetGuildId, 3);
+      } else if (action === "station-garrison") {
+        await this.gateway.stationGuildTroops(cityId, guildId, unit, count);
+      }
+      await this.refreshDiplomacy();
+      this.status = "外交操作完成";
       this.renderHud();
     } catch (error) {
       this.status = formatPanelGatewayErrorFromUnknown("build", error);

@@ -82,3 +82,39 @@ message ListGuildMembersResponse {
   repeated GuildMember members = 2;
   int32 total_count = 3;
 }
+
+message GuildRelationView {
+  int64 guild_id = 1;
+  int64 target_guild_id = 2;
+  int32 state = 3;
+  int64 effective_at_ms = 4;
+  bool pending = 5;
+}
+message ListGuildRelationsRequest { int32 server_id = 1; int64 guild_id = 2; }
+message ListGuildRelationsResponse { repeated GuildRelationView relations = 1; }
+
+message SetGuildRelationRequest {
+  int32 server_id = 1;
+  int64 guild_id = 2;
+  int64 target_guild_id = 3;
+  int32 state = 4;
+}
+message SetGuildRelationResponse { GuildRelationView relation = 1; }
+
+message GuildGarrisonView {
+  int64 city_id = 1;
+  int64 player_id = 2;
+  int32 unit_cfg_id = 3;
+  int32 count = 4;
+}
+message ListGuildGarrisonRequest { int32 server_id = 1; int64 city_id = 2; }
+message ListGuildGarrisonResponse { repeated GuildGarrisonView troops = 1; }
+
+message StationGuildTroopsRequest {
+  int32 server_id = 1;
+  int64 city_id = 2;
+  int64 guild_id = 3;
+  int32 unit_cfg_id = 4;
+  int32 count = 5;
+}
+message StationGuildTroopsResponse { repeated GuildGarrisonView troops = 1; }

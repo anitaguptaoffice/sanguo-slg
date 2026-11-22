@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/guild"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/battle"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/combat"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
@@ -42,6 +43,9 @@ func (s *Server) cityDefense(ctx context.Context, x, y int) (*combat.CityDefense
 		out.Troops = append(out.Troops, st)
 	}
 	rows.Close()
+	if allies, aerr := guild.NewDiplomacy(s.PlayersPool(), nil).GarrisonTroops(ctx, defaultServerID, out.CityID); aerr == nil {
+		out.Troops = append(out.Troops, allies...)
+	}
 	var wallLevel int32
 	var trap, stakes, tower, log, rock int32
 	err = s.PlayersPool().QueryRow(ctx, `SELECT COALESCE((SELECT MAX(level) FROM city_building WHERE server_id=$1 AND city_id=$2 AND building_cfg_id=7),0),
