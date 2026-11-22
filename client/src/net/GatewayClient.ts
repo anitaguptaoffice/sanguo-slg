@@ -82,6 +82,10 @@ export type GatewayPort = {
   listScoutReports(limit?: number): Promise<unknown>;
   listBeaconWarnings(): Promise<unknown>;
   useTruceToken(cityId: number): Promise<unknown>;
+  setGuildRelation(guildId: number, targetGuildId: number, state: number): Promise<unknown>;
+  listGuildRelations(guildId: number): Promise<unknown>;
+  stationGuildTroops(cityId: number, guildId: number, unitCfgId: number, count: number): Promise<unknown>;
+  listGuildGarrison(cityId: number): Promise<unknown>;
   castTrick(cityId: number, trickType: number, targetMarchId: number): Promise<unknown>;
   runDrill(cityId: number, attacker: { unit_cfg_id: number; count: number }[], defender: { unit_cfg_id: number; count: number }[]): Promise<unknown>;
   getStorehouse(cityId: number): Promise<unknown>;
@@ -767,6 +771,26 @@ export class GatewayClient implements GatewayPort {
   async listScoutReports(limit = 20) {
     const { ListScoutReportsResponse } = getTypes();
     return this.rpc(Routes.ListScoutReports, "ListScoutReportsRequest", { server_id: 1, limit }, ListScoutReportsResponse, true);
+  }
+
+  async setGuildRelation(guildId: number, targetGuildId: number, state: number) {
+    const { SetGuildRelationResponse } = getTypes();
+    return this.rpc(Routes.SetGuildRelation, "SetGuildRelationRequest", { server_id: 1, guild_id: guildId, target_guild_id: targetGuildId, state }, SetGuildRelationResponse, true);
+  }
+
+  async listGuildRelations(guildId: number) {
+    const { ListGuildRelationsResponse } = getTypes();
+    return this.rpc(Routes.ListGuildRelations, "ListGuildRelationsRequest", { server_id: 1, guild_id: guildId }, ListGuildRelationsResponse, true);
+  }
+
+  async stationGuildTroops(cityId: number, guildId: number, unitCfgId: number, count: number) {
+    const { StationGuildTroopsResponse } = getTypes();
+    return this.rpc(Routes.StationGuildTroops, "StationGuildTroopsRequest", { server_id: 1, city_id: cityId, guild_id: guildId, unit_cfg_id: unitCfgId, count }, StationGuildTroopsResponse, true);
+  }
+
+  async listGuildGarrison(cityId: number) {
+    const { ListGuildGarrisonResponse } = getTypes();
+    return this.rpc(Routes.ListGuildGarrison, "ListGuildGarrisonRequest", { server_id: 1, city_id: cityId }, ListGuildGarrisonResponse, true);
   }
 
   async useTruceToken(cityId: number) {

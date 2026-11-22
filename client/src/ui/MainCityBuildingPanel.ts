@@ -64,6 +64,8 @@ export type MarketView = {
 export type TacticPresetRow = { unit_cfg_id?: number; troop_type?: number; target_type?: number; hold?: boolean };
 export type ScoutReportRow = { report_id?: number; x?: number; y?: number; tier?: number; target_name?: string; detail?: string; created_at_ms?: number };
 export type BeaconWarningRow = { warning_id?: number; x?: number; y?: number; purpose?: number; arrive_at_ms?: number; beacon_level?: number; attacker_player_id?: number; attacker_troops?: number };
+export type GuildRelationRow = { guild_id?: number; target_guild_id?: number; state?: number; effective_at_ms?: number; pending?: boolean };
+export type GuildGarrisonRow = { city_id?: number; player_id?: number; unit_cfg_id?: number; count?: number };
 export type RankView = {
   prestige?: number; rank_level?: number; city_cap?: number;
   next_prestige?: number; next_cap?: number;
@@ -107,6 +109,8 @@ export class MainCityBuildingPanel {
   private rank: RankView | null = null;
   private scoutReports: ScoutReportRow[] = [];
   private beaconWarnings: BeaconWarningRow[] = [];
+  private guildRelations: GuildRelationRow[] = [];
+  private guildGarrison: GuildGarrisonRow[] = [];
   private focusTrap: CenterPanelFocusTrap | null = null;
 
   constructor(
@@ -128,6 +132,7 @@ export class MainCityBuildingPanel {
     private readonly onHistoricalAction?: (action: string, npcCfgId: number) => void,
     private readonly onTrickAction?: (trickType: number, targetMarchId: number) => void,
     private readonly onRankAction?: (action: "promote" | "found" | "transfer" | "truce", name: string, x: number, y: number) => void,
+    private readonly onDiplomacyAction?: (action: string, guildId: number, targetGuildId: number, cityId: number, unit: number, count: number) => void,
   ) {}
 
   attach(): void {
@@ -220,6 +225,22 @@ export class MainCityBuildingPanel {
         <div class="storehouse-section hidden" data-role="storehouse">
           <h4>仓库</h4>
           <p data-role="storehouse-status"></p>
+        </div>
+        <div class="diplomacy-section hidden" data-role="diplomacy">
+          <h4>联盟外交与驻军</h4>
+          <p data-role="diplomacy-status"></p>
+          <label>本盟 ID <input type="number" data-field="guild-id" value="1"></label>
+          <label>目标盟 ID <input type="number" data-field="target-guild" value="2"></label>
+          <div class="city-civic-actions">
+            <button type="button" data-action="guild-friendly">结友好</button>
+            <button type="button" data-action="guild-hostile">宣战（8 小时生效）</button>
+          </div>
+          <label>驻军城 ID <input type="number" data-field="garrison-city" value="1"></label>
+          <label>兵种 ID <input type="number" data-field="garrison-unit" value="1"></label>
+          <label>数量 <input type="number" data-field="garrison-count" value="1"></label>
+          <button type="button" data-action="station-garrison">派遣驻军</button>
+          <div data-role="guild-relations"></div>
+          <div data-role="guild-garrison"></div>
         </div>
         <div class="beacon-section hidden" data-role="beacon">
           <h4>军情与烽火</h4>
@@ -381,6 +402,9 @@ export class MainCityBuildingPanel {
     const academy = this.panel.querySelector<HTMLElement>('[data-role="academy-technics"]');
     academy?.classList.toggle("hidden", slotKey !== "academy");
     if (slotKey === "academy") this.renderTechnics();
+    const diplomacyEl = this.panel.querySelector<HTMLElement>('[data-role="diplomacy"]');
+    diplomacyEl?.classList.toggle("hidden", slotKey !== "diplomacy");
+    if (slotKey === "diplomacy") this.renderDiplomacy();
     const beaconEl = this.panel.querySelector<HTMLElement>('[data-role="beacon"]');
     beaconEl?.classList.toggle("hidden", slotKey !== "beacon");
     if (slotKey === "beacon") this.renderBeacon();
@@ -574,6 +598,35 @@ export class MainCityBuildingPanel {
     this.blacksmithLevel = blacksmith;
     this.stableLevel = stable;
     this.renderEquipment();
+  }
+
+  setDiplomacy(relations: GuildRelationRow[], garrison: GuildGarrisonRow[]): void {
+    this.guildRelations = relations;
+    this.guildGarrison = garrison;
+    this.renderDiplomacy();
+  }
+
+  private renderDiplomacy(): void {
+    const section = this.panel?.querySelector<HTMLElement>('[data-role="diplomacy"]');
+    if (!section || section.classList.contains("hidden")) return;
+    const status = section.querySelector<HTMLElement>('[data-role="diplomacy-status"]');
+    const relations = section.querySelector<HTMLElement>('[data-role="guild-relations"]');
+    const garrison = section.querySelector<HTMLElement>('[data-role="guild-garrison"]');
+    if (!status || !relations || !garrison) return;
+    const labels = ["", "友好", "中立", "敌对"];
+    status.textContent = `外交 ${this.guildRelations.length} 条 · 驻军 ${this.guildGarrison.length} 条`;
+    relations.textContent = "";
+    for (const r of this.guildRelations) {
+      const line = document.createElement("div");
+      line.textContent = `盟#${r.guild_id ?? 0} → 盟#${r.target_guild_id ?? 0} · ${labels[r.state ?? 0] ?? "?"}${r.pending ? " · 待生效" : ""}`;
+      relations.appendChild(line);
+    }
+    garrison.textContent = "";
+    for (const g of this.guildGarrison) {
+      const line = document.createElement("div");
+      line.textContent = `驻军 城#${g.city_id ?? 0} · 玩家#${g.player_id ?? 0} · 兵种#${g.unit_cfg_id ?? 0} ×${g.count ?? 0}`;
+      garrison.appendChild(line);
+    }
   }
 
   setIntel(warnings: BeaconWarningRow[], reports: ScoutReportRow[]): void {
@@ -844,6 +897,17 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    const diplomacyAction = btn?.getAttribute("data-action");
+    if (diplomacyAction && ["guild-friendly", "guild-hostile", "station-garrison"].includes(diplomacyAction)) {
+      const section = this.panel.querySelector<HTMLElement>('[data-role="diplomacy"]');
+      const guild = Number(section?.querySelector<HTMLInputElement>('[data-field="guild-id"]')?.value ?? 0);
+      const target = Number(section?.querySelector<HTMLInputElement>('[data-field="target-guild"]')?.value ?? 0);
+      const city = Number(section?.querySelector<HTMLInputElement>('[data-field="garrison-city"]')?.value ?? 0);
+      const unit = Number(section?.querySelector<HTMLInputElement>('[data-field="garrison-unit"]')?.value ?? 0);
+      const count = Number(section?.querySelector<HTMLInputElement>('[data-field="garrison-count"]')?.value ?? 0);
+      this.onDiplomacyAction?.(diplomacyAction, guild, target, city, unit, count);
+      return;
+    }
     if (btn?.getAttribute("data-action") === "use-truce") {
       this.onRankAction?.("truce", "", 0, 0);
       return;

@@ -22,6 +22,7 @@ func (s *Server) wireM3(pool *pgxpool.Pool) {
 
 	guild.RegisterM3Chat(s.m3, coord, chatSessionBridge{resolver})
 	guild.RegisterM3(s.m3, guildSvc, guildSessionBridge{resolver})
+	guild.RegisterDiplomacy(s.m3, guild.NewDiplomacy(pool, nil), guildSessionBridge{resolver})
 
 	s.wireHeroService(pool)
 

@@ -92,6 +92,10 @@ export const Routes = {
   ListScoutReports: "military.v1.ListScoutReports",
   ListBeaconWarnings: "military.v1.ListBeaconWarnings",
   UseTruceToken: "world.v1.UseTruceToken",
+  SetGuildRelation: "guild.v1.SetGuildRelation",
+  ListGuildRelations: "guild.v1.ListGuildRelations",
+  StationGuildTroops: "guild.v1.StationGuildTroops",
+  ListGuildGarrison: "guild.v1.ListGuildGarrison",
   TransferCityTroops: "world.v1.TransferCityTroops",
   GetPlayerRank: "rank.v1.GetPlayerRank",
   PromoteRank: "rank.v1.PromoteRank",
@@ -261,6 +265,14 @@ export type ProtoTypes = {
   ListBeaconWarningsResponse: protobuf.Type;
   UseTruceTokenRequest: protobuf.Type;
   UseTruceTokenResponse: protobuf.Type;
+  SetGuildRelationRequest: protobuf.Type;
+  SetGuildRelationResponse: protobuf.Type;
+  ListGuildRelationsRequest: protobuf.Type;
+  ListGuildRelationsResponse: protobuf.Type;
+  StationGuildTroopsRequest: protobuf.Type;
+  StationGuildTroopsResponse: protobuf.Type;
+  ListGuildGarrisonRequest: protobuf.Type;
+  ListGuildGarrisonResponse: protobuf.Type;
   TransferCityTroopsRequest: protobuf.Type;
   TransferCityTroopsResponse: protobuf.Type;
   GetPlayerRankRequest: protobuf.Type;
@@ -482,6 +494,14 @@ export function getTypes(): ProtoTypes {
     ListScoutReportsResponse: r.lookupType("sanguo.military.v1.ListScoutReportsResponse"),
     ListBeaconWarningsRequest: r.lookupType("sanguo.military.v1.ListBeaconWarningsRequest"),
     UseTruceTokenRequest: r.lookupType("sanguo.world.v1.UseTruceTokenRequest"),
+    SetGuildRelationRequest: r.lookupType("sanguo.guild.v1.SetGuildRelationRequest"),
+    SetGuildRelationResponse: r.lookupType("sanguo.guild.v1.SetGuildRelationResponse"),
+    ListGuildRelationsRequest: r.lookupType("sanguo.guild.v1.ListGuildRelationsRequest"),
+    ListGuildRelationsResponse: r.lookupType("sanguo.guild.v1.ListGuildRelationsResponse"),
+    StationGuildTroopsRequest: r.lookupType("sanguo.guild.v1.StationGuildTroopsRequest"),
+    StationGuildTroopsResponse: r.lookupType("sanguo.guild.v1.StationGuildTroopsResponse"),
+    ListGuildGarrisonRequest: r.lookupType("sanguo.guild.v1.ListGuildGarrisonRequest"),
+    ListGuildGarrisonResponse: r.lookupType("sanguo.guild.v1.ListGuildGarrisonResponse"),
     UseTruceTokenResponse: r.lookupType("sanguo.world.v1.UseTruceTokenResponse"),
     ListBeaconWarningsResponse: r.lookupType("sanguo.military.v1.ListBeaconWarningsResponse"),
     TransferCityTroopsRequest: r.lookupType("sanguo.world.v1.TransferCityTroopsRequest"),
