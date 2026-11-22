@@ -62,4 +62,15 @@ func TestPGDiplomacyAndGarrison(t *testing.T) {
 	if _, err := d.Station(ctx, 1, 98, 98, 99, 1, 1, 1); err != ErrGuildTarget {
 		t.Fatalf("enemy station err=%v", err)
 	}
+	rows, err = d.Withdraw(ctx, 1, 98, 100, 98, 1, 1, 2)
+	if err != nil || len(rows) != 1 || rows[0].Count != 2 {
+		t.Fatalf("withdraw = %+v err=%v", rows, err)
+	}
+	if err := pool.QueryRow(ctx, `SELECT count FROM city_troop WHERE server_id=1 AND city_id=98 AND unit_cfg_id=1`).Scan(&source); err != nil || source != 8 {
+		t.Fatalf("withdraw source = %d err=%v", source, err)
+	}
+	troops, err = d.GarrisonTroops(ctx, 1, 100)
+	if err != nil || len(troops) != 1 || troops[0].Count != 2 {
+		t.Fatalf("withdraw defense = %+v err=%v", troops, err)
+	}
 }

@@ -154,6 +154,56 @@ func (d *Diplomacy) Station(ctx context.Context, serverID int32, playerID, fromC
 	return d.ListGarrison(ctx, serverID, cityID)
 }
 
+// Withdraw returns stationed troops from a guild city to the player's own city.
+func (d *Diplomacy) Withdraw(ctx context.Context, serverID int32, playerID, cityID, toCityID, guildID int64, unit int32, count int32) ([]*guildv1.GuildGarrisonView, error) {
+	if count <= 0 || unit < 1 || unit > 12 {
+		return nil, ErrGuildTroops
+	}
+	tx, err := d.Pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	var owner int64
+	if err := tx.QueryRow(ctx, `SELECT player_id FROM player_city WHERE server_id=$1 AND city_id=$2`,
+		serverID, toCityID).Scan(&owner); err != nil || owner != playerID {
+		return nil, ErrGuildTarget
+	}
+	var ally bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS(
+		SELECT 1 FROM player_city c JOIN guild_member m
+		ON m.server_id=c.server_id AND m.player_id=c.player_id
+		WHERE c.server_id=$1 AND c.city_id=$2 AND m.guild_id=$3)`,
+		serverID, cityID, guildID).Scan(&ally); err != nil || !ally {
+		return nil, ErrGuildTarget
+	}
+	tag, err := tx.Exec(ctx, `UPDATE guild_garrison SET count=count-$5, updated_at=$6
+		WHERE server_id=$1 AND city_id=$2 AND guild_id=$3 AND player_id=$4
+		AND unit_cfg_id=$7 AND count >= $5`,
+		serverID, cityID, guildID, playerID, count, d.Now(), unit)
+	if err != nil {
+		return nil, err
+	}
+	if tag.RowsAffected() != 1 {
+		return nil, ErrGuildTroops
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM guild_garrison WHERE server_id=$1 AND city_id=$2
+		AND guild_id=$3 AND player_id=$4 AND unit_cfg_id=$5 AND count<=0`,
+		serverID, cityID, guildID, playerID, unit); err != nil {
+		return nil, err
+	}
+	if _, err := tx.Exec(ctx, `INSERT INTO city_troop(server_id,city_id,unit_cfg_id,count,wounded)
+		VALUES($1,$2,$3,$4,0) ON CONFLICT (server_id,city_id,unit_cfg_id)
+		DO UPDATE SET count=city_troop.count+EXCLUDED.count`,
+		serverID, toCityID, unit, count); err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return d.ListGarrison(ctx, serverID, cityID)
+}
+
 func (d *Diplomacy) ListGarrison(ctx context.Context, serverID int32, cityID int64) ([]*guildv1.GuildGarrisonView, error) {
 	rows, err := d.Pool.Query(ctx, `SELECT g.city_id,g.player_id,g.unit_cfg_id,g.count FROM guild_garrison g
 		JOIN player_city c ON c.server_id=g.server_id AND c.city_id=g.city_id

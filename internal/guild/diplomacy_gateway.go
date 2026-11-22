@@ -10,10 +10,11 @@ import (
 )
 
 const (
-	RouteSetGuildRelation   = "guild.v1.SetGuildRelation"
-	RouteListGuildRelations = "guild.v1.ListGuildRelations"
-	RouteStationGuildTroops = "guild.v1.StationGuildTroops"
-	RouteListGuildGarrison  = "guild.v1.ListGuildGarrison"
+	RouteSetGuildRelation      = "guild.v1.SetGuildRelation"
+	RouteListGuildRelations    = "guild.v1.ListGuildRelations"
+	RouteStationGuildTroops    = "guild.v1.StationGuildTroops"
+	RouteListGuildGarrison     = "guild.v1.ListGuildGarrison"
+	RouteWithdrawGuildGarrison = "guild.v1.WithdrawGuildGarrison"
 )
 
 func RegisterDiplomacy(m *assembly.M3, d *Diplomacy, sessions SessionResolver) {
@@ -77,6 +78,26 @@ func RegisterDiplomacy(m *assembly.M3, d *Diplomacy, sessions SessionResolver) {
 			return guildErr(pkt.GetTraceId(), err), nil
 		}
 		data, err := proto.Marshal(&guildv1.StationGuildTroopsResponse{Troops: rows})
+		if err != nil {
+			return nil, err
+		}
+		return okResp(pkt.GetTraceId(), data), nil
+	})
+	m.Register(RouteWithdrawGuildGarrison, func(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+		a, errPkt, err := actor(ctx, pkt)
+		if err != nil {
+			return errPkt, nil
+		}
+		var req guildv1.WithdrawGuildGarrisonRequest
+		if err := proto.Unmarshal(pkt.GetPayload(), &req); err != nil {
+			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
+		}
+		rows, err := d.Withdraw(ctx, a.ServerID, a.PlayerID, req.GetCityId(), req.GetToCityId(),
+			req.GetGuildId(), req.GetUnitCfgId(), req.GetCount())
+		if err != nil {
+			return guildErr(pkt.GetTraceId(), err), nil
+		}
+		data, err := proto.Marshal(&guildv1.WithdrawGuildGarrisonResponse{Troops: rows})
 		if err != nil {
 			return nil, err
 		}

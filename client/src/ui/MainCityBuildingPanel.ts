@@ -270,11 +270,12 @@ export class MainCityBuildingPanel {
             <button type="button" data-action="guild-friendly">结友好</button>
             <button type="button" data-action="guild-hostile">宣战（8 小时生效）</button>
           </div>
-          <label>出发城 ID <input type="number" data-field="garrison-from" value="1"></label>
+          <label>出发/撤回城 ID <input type="number" data-field="garrison-from" value="1"></label>
           <label>驻军城 ID（可填盟友城） <input type="number" data-field="garrison-city" value="1"></label>
           <label>兵种 ID <input type="number" data-field="garrison-unit" value="1"></label>
           <label>数量 <input type="number" data-field="garrison-count" value="1"></label>
           <button type="button" data-action="station-garrison">派遣驻军</button>
+          <button type="button" data-action="withdraw-garrison">撤回驻军</button>
           <div data-role="guild-relations"></div>
           <div data-role="guild-garrison"></div>
         </div>
@@ -1117,7 +1118,7 @@ export class MainCityBuildingPanel {
       return;
     }
     const diplomacyAction = btn?.getAttribute("data-action");
-    if (diplomacyAction && ["guild-friendly", "guild-hostile", "station-garrison"].includes(diplomacyAction)) {
+    if (diplomacyAction && ["guild-friendly", "guild-hostile", "station-garrison", "withdraw-garrison"].includes(diplomacyAction)) {
       const section = this.panel.querySelector<HTMLElement>('[data-role="diplomacy"]');
       const guild = Number(section?.querySelector<HTMLInputElement>('[data-field="guild-id"]')?.value ?? 0);
       const target = Number(section?.querySelector<HTMLInputElement>('[data-field="target-guild"]')?.value ?? 0);
