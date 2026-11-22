@@ -43,8 +43,12 @@ func (s *Server) handleCreateCity(ctx context.Context, pkt *commonv1.ClientPacke
 		if errors.Is(err, world.ErrOccupied) {
 			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "coordinate occupied"), nil
 		}
-		if errors.Is(err, world.ErrBadTerrain) || errors.Is(err, world.ErrOutOfBounds) {
+		if errors.Is(err, world.ErrBadTerrain) || errors.Is(err, world.ErrOutOfBounds) ||
+			errors.Is(err, errCityCap) || errors.Is(err, errCityTerrain) {
 			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error()), nil
+		}
+		if errors.Is(err, errCityCost) {
+			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_DOMESTIC_INSUFFICIENT_RESOURCE, "insufficient founding cost"), nil
 		}
 		// Commit transport errors may be unknown. Do not leak SQL details or
 		// encourage retry before checking for an already committed complete city.

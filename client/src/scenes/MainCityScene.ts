@@ -1060,6 +1060,7 @@ export class MainCityScene implements Scene {
         void this.equipmentAction(action, slotType, tier, equipmentId, gemCfgId),
       (action, npcCfgId) => void this.historicalAction(action, npcCfgId),
       (trickType, targetMarchId) => void this.castTrick(trickType, targetMarchId),
+      (action, name, x, y) => void this.rankAction(action, name, x, y),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -2190,6 +2191,7 @@ export class MainCityScene implements Scene {
     }
     if (slotKey === "academy") void this.refreshTechnics();
     if (slotKey === "recruit_hall") void this.refreshCityOffices();
+    if (slotKey === "hall") void this.refreshRank();
     if (slotKey === "wall") void this.refreshWallDefenses();
     if (slotKey === "market") void this.refreshMarket();
     if (slotKey === "warehouse") void this.refreshStorehouse();
@@ -2338,6 +2340,46 @@ export class MainCityScene implements Scene {
       this.buildingPanel.setDrillResult(
         `沙盘结果：${detail?.result ?? "—"} · 开场距离 ${detail?.start_distance ?? 0} · ${rounds} 回合 · 城防 ${walls}`,
       );
+      this.renderHud();
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async refreshRank(): Promise<void> {
+    const session = this.session;
+    if (!session) return;
+    try {
+      const res = (await this.gateway.getPlayerRank()) as { rank?: Record<string, unknown> };
+      if (this.session !== session) return;
+      this.buildingPanel.setRank(res.rank ?? null);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async rankAction(action: "promote" | "found" | "transfer", name: string, x: number, y: number): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId) return;
+    try {
+      if (action === "promote") {
+        const res = (await this.gateway.promoteRank(session.cityId)) as { rank?: Record<string, unknown>; gold?: number };
+        this.buildingPanel.setRank(res.rank ?? null);
+        this.status = `爵位已晋升，余金 ${res.gold ?? 0}`;
+      } else if (action === "transfer") {
+        const unit = Number(name);
+        const res = (await this.gateway.transferCityTroops(session.cityId, x, unit, y)) as {
+          from_count?: number; to_count?: number;
+        };
+        this.status = `调兵完成：来源 ${res.from_count ?? 0}，目标 ${res.to_count ?? 0}`;
+        await this.refreshState();
+      } else {
+        await this.gateway.createCity(session.serverId, name, x, y);
+        this.status = `已在 (${x},${y}) 筑城`;
+        await this.refreshState();
+      }
       this.renderHud();
     } catch (error) {
       this.status = formatPanelGatewayErrorFromUnknown("build", error);

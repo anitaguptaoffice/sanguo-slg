@@ -62,6 +62,10 @@ export type MarketView = {
   own_offers?: MarketOfferRow[]; deliveries?: MarketDeliveryRow[];
 };
 export type TacticPresetRow = { unit_cfg_id?: number; troop_type?: number; target_type?: number; hold?: boolean };
+export type RankView = {
+  prestige?: number; rank_level?: number; city_cap?: number;
+  next_prestige?: number; next_cap?: number;
+};
 export type HistoricalHeroRow = {
   npc_cfg_id?: number; template_cfg_id?: number; display_name?: string; level?: number;
   force?: number; intel?: number; politics?: number; command?: number;
@@ -98,6 +102,7 @@ export class MainCityBuildingPanel {
   private blacksmithLevel = 0;
   private stableLevel = 0;
   private historical: HistoricalHeroRow[] = [];
+  private rank: RankView | null = null;
   private focusTrap: CenterPanelFocusTrap | null = null;
 
   constructor(
@@ -118,6 +123,7 @@ export class MainCityBuildingPanel {
     private readonly onEquipmentAction?: (action: string, slotType: number, tier: number, equipmentId: number, gemCfgId: number) => void,
     private readonly onHistoricalAction?: (action: string, npcCfgId: number) => void,
     private readonly onTrickAction?: (trickType: number, targetMarchId: number) => void,
+    private readonly onRankAction?: (action: "promote" | "found" | "transfer", name: string, x: number, y: number) => void,
   ) {}
 
   attach(): void {
@@ -210,6 +216,21 @@ export class MainCityBuildingPanel {
         <div class="storehouse-section hidden" data-role="storehouse">
           <h4>仓库</h4>
           <p data-role="storehouse-status"></p>
+        </div>
+        <div class="rank-section hidden" data-role="rank">
+          <h4>声望与爵位</h4>
+          <p data-role="rank-status"></p>
+          <button type="button" data-action="promote-rank">晋升爵位</button>
+          <h4>平地筑城</h4>
+          <label>城名 <input type="text" data-field="found-name" value="新城"></label>
+          <label>坐标 X <input type="number" data-field="found-x" value="61"></label>
+          <label>坐标 Y <input type="number" data-field="found-y" value="61"></label>
+          <button type="button" data-action="found-city">筑城</button>
+          <h4>城间调兵</h4>
+          <label>目标城 ID <input type="number" data-field="transfer-city" value="2"></label>
+          <label>兵种 ID <input type="number" data-field="transfer-unit" value="1"></label>
+          <label>数量 <input type="number" data-field="transfer-count" value="10"></label>
+          <button type="button" data-action="transfer-troops">调兵</button>
         </div>
         <div class="trick-section hidden" data-role="tricks">
           <h4>招贤馆计谋</h4>
@@ -348,6 +369,9 @@ export class MainCityBuildingPanel {
     const academy = this.panel.querySelector<HTMLElement>('[data-role="academy-technics"]');
     academy?.classList.toggle("hidden", slotKey !== "academy");
     if (slotKey === "academy") this.renderTechnics();
+    const rankEl = this.panel.querySelector<HTMLElement>('[data-role="rank"]');
+    rankEl?.classList.toggle("hidden", slotKey !== "hall");
+    if (slotKey === "hall") this.renderRank();
     const trickEl = this.panel.querySelector<HTMLElement>('[data-role="tricks"]');
     trickEl?.classList.toggle("hidden", slotKey !== "recruit_hall");
     const officesEl = this.panel.querySelector<HTMLElement>('[data-role="city-offices"]');
@@ -535,6 +559,23 @@ export class MainCityBuildingPanel {
     this.blacksmithLevel = blacksmith;
     this.stableLevel = stable;
     this.renderEquipment();
+  }
+
+  setRank(view: RankView | null): void {
+    this.rank = view;
+    this.renderRank();
+  }
+
+  private renderRank(): void {
+    const status = this.panel?.querySelector<HTMLElement>('[data-role="rank-status"]');
+    if (!status) return;
+    const r = this.rank;
+    if (!r) {
+      status.textContent = "声望数据加载中";
+      return;
+    }
+    status.textContent = `声望 ${r.prestige ?? 0} · 爵位 ${r.rank_level ?? 0} · 城市上限 ${r.city_cap ?? 1}` +
+      ((r.next_prestige ?? 0) > 0 ? ` · 下一级需 ${r.next_prestige} 声望 / 上限 ${r.next_cap}` : " · 已满级");
   }
 
   setTrickResult(text: string): void {
@@ -759,6 +800,26 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    if (btn?.getAttribute("data-action") === "promote-rank") {
+      this.onRankAction?.("promote", "", 0, 0);
+      return;
+    }
+    if (btn?.getAttribute("data-action") === "transfer-troops") {
+      const section = this.panel.querySelector<HTMLElement>('[data-role="rank"]');
+      const target = Number(section?.querySelector<HTMLInputElement>('[data-field="transfer-city"]')?.value ?? 0);
+      const unit = Number(section?.querySelector<HTMLInputElement>('[data-field="transfer-unit"]')?.value ?? 0);
+      const count = Number(section?.querySelector<HTMLInputElement>('[data-field="transfer-count"]')?.value ?? 0);
+      this.onRankAction?.("transfer", String(unit), target, count);
+      return;
+    }
+    if (btn?.getAttribute("data-action") === "found-city") {
+      const section = this.panel.querySelector<HTMLElement>('[data-role="rank"]');
+      const name = section?.querySelector<HTMLInputElement>('[data-field="found-name"]')?.value?.trim() || "新城";
+      const x = Number(section?.querySelector<HTMLInputElement>('[data-field="found-x"]')?.value ?? 0);
+      const y = Number(section?.querySelector<HTMLInputElement>('[data-field="found-y"]')?.value ?? 0);
+      this.onRankAction?.("found", name, x, y);
+      return;
+    }
     if (btn?.getAttribute("data-action") === "cast-trick") {
       const trickType = Number(btn?.dataset.trickType ?? 0);
       const target = Number(this.panel.querySelector<HTMLInputElement>('[data-field="trick-march"]')?.value ?? 0);

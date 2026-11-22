@@ -101,6 +101,9 @@ func smokeValidWorldTileCoord(v int32) bool {
 // smokeStartMarchListMarchesGateway starts a march and asserts ListMarches contains it with destination coords.
 func smokeStartMarchListMarchesGateway(t *testing.T, c *websocket.Conn, apiSrv *api.Server, sid string, playerID int64) (marchID int64, cityID int64, toX int32, toY int32, departAtMs int64, arriveAtMs int64) {
 	t.Helper()
+	_, _ = apiSrv.PlayersPool().Exec(context.Background(), `INSERT INTO player_rank(server_id,player_id,prestige,rank_level)
+		VALUES($1,$2,100,1) ON CONFLICT (server_id,player_id) DO UPDATE SET rank_level=1,prestige=GREATEST(player_rank.prestige,100)`, intg006ServerID, playerID)
+	_, _ = apiSrv.PlayersPool().Exec(context.Background(), `UPDATE player_wallet SET food=8000,wood=8000,stone=8000,iron=8000 WHERE server_id=$1 AND player_id=$2`, intg006ServerID, playerID)
 	tile := smokeBuildableCityTile(t)
 	cityX, cityY := tile.X, tile.Y
 	smokeStep(t, fmt.Sprintf("MIL: gateway CreateCity x=%d y=%d for march smoke", cityX, cityY))

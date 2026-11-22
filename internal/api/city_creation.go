@@ -7,12 +7,18 @@ import (
 
 	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/rank"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/jackc/pgx/v5"
 )
 
 // errCityCreationUnavailable reports a composition that cannot place a city atomically.
-var errCityCreationUnavailable = errors.New("api: city creation unavailable")
+var (
+	errCityCreationUnavailable = errors.New("api: city creation unavailable")
+	errCityCap                 = errors.New("api: city cap reached")
+	errCityTerrain             = errors.New("api: new city requires plain terrain")
+	errCityCost                = errors.New("api: insufficient city founding cost")
+)
 
 // firstCityStarterWallet and firstCityStarterBuildings are the immutable starter
 // content for a player's first city. They are shared by the legacy
@@ -163,13 +169,37 @@ func (s *Server) createPlayerCity(ctx context.Context, pc PlayerContext, name st
 	if x == 0 && y == 0 {
 		x, y = 50, 50
 	}
+	var existing int64
+	if err := s.players.Pool.QueryRow(ctx, `SELECT city_id FROM player_city WHERE server_id=$1 AND player_id=$2 AND x=$3 AND y=$4`,
+		serverID, pc.PlayerID, x, y).Scan(&existing); err == nil {
+		return world.City{}, world.ErrOccupied
+	}
+	var cityCount int
+	if err := s.players.Pool.QueryRow(ctx, `SELECT count(*) FROM player_city WHERE server_id=$1 AND player_id=$2`,
+		serverID, pc.PlayerID).Scan(&cityCount); err != nil {
+		return world.City{}, err
+	}
+	prestige, err := rank.NewPrestigeService(s.players.Pool, s.now).Get(ctx, serverID, pc.PlayerID)
+	if err != nil {
+		return world.City{}, err
+	}
+	if int32(cityCount) >= prestige.CityCap {
+		return world.City{}, errCityCap
+	}
+	if cityCount > 0 {
+		var terrain int16
+		if err := s.players.Pool.QueryRow(ctx, `SELECT terrain FROM map_cell WHERE server_id=$1 AND x=$2 AND y=$3`,
+			serverID, x, y).Scan(&terrain); err != nil || terrain != 1 {
+			return world.City{}, errCityTerrain
+		}
+	}
 	c := world.City{
 		ServerID:  serverID,
 		PlayerID:  pc.PlayerID,
 		Name:      name,
 		X:         x,
 		Y:         y,
-		IsCapital: true,
+		IsCapital: cityCount == 0,
 		WallLevel: 1,
 		Morale:    100,
 	}
@@ -184,6 +214,17 @@ func (s *Server) createPlayerCity(ctx context.Context, pc PlayerContext, name st
 		}
 		if err := initializeMonarch(ctx, tx, serverID, pc.PlayerID); err != nil {
 			return 0, err
+		}
+		if !c.IsCapital {
+			tag, err := tx.Exec(ctx, `UPDATE player_wallet SET food=food-2000,wood=wood-2000,stone=stone-2000,iron=iron-2000
+				WHERE server_id=$1 AND player_id=$2 AND food>=2000 AND wood>=2000 AND stone>=2000 AND iron>=2000`,
+				serverID, pc.PlayerID)
+			if err != nil {
+				return 0, err
+			}
+			if tag.RowsAffected() != 1 {
+				return 0, errCityCost
+			}
 		}
 		return staged.CityID, nil
 	})
