@@ -123,7 +123,7 @@ export class MainCityBuildingPanel {
     private readonly onEquipmentAction?: (action: string, slotType: number, tier: number, equipmentId: number, gemCfgId: number) => void,
     private readonly onHistoricalAction?: (action: string, npcCfgId: number) => void,
     private readonly onTrickAction?: (trickType: number, targetMarchId: number) => void,
-    private readonly onRankAction?: (action: "promote" | "found", name: string, x: number, y: number) => void,
+    private readonly onRankAction?: (action: "promote" | "found" | "transfer", name: string, x: number, y: number) => void,
   ) {}
 
   attach(): void {
@@ -226,6 +226,11 @@ export class MainCityBuildingPanel {
           <label>坐标 X <input type="number" data-field="found-x" value="61"></label>
           <label>坐标 Y <input type="number" data-field="found-y" value="61"></label>
           <button type="button" data-action="found-city">筑城</button>
+          <h4>城间调兵</h4>
+          <label>目标城 ID <input type="number" data-field="transfer-city" value="2"></label>
+          <label>兵种 ID <input type="number" data-field="transfer-unit" value="1"></label>
+          <label>数量 <input type="number" data-field="transfer-count" value="10"></label>
+          <button type="button" data-action="transfer-troops">调兵</button>
         </div>
         <div class="trick-section hidden" data-role="tricks">
           <h4>招贤馆计谋</h4>
@@ -797,6 +802,14 @@ export class MainCityBuildingPanel {
     const btn = (ev.target as HTMLElement).closest("button");
     if (btn?.getAttribute("data-action") === "promote-rank") {
       this.onRankAction?.("promote", "", 0, 0);
+      return;
+    }
+    if (btn?.getAttribute("data-action") === "transfer-troops") {
+      const section = this.panel.querySelector<HTMLElement>('[data-role="rank"]');
+      const target = Number(section?.querySelector<HTMLInputElement>('[data-field="transfer-city"]')?.value ?? 0);
+      const unit = Number(section?.querySelector<HTMLInputElement>('[data-field="transfer-unit"]')?.value ?? 0);
+      const count = Number(section?.querySelector<HTMLInputElement>('[data-field="transfer-count"]')?.value ?? 0);
+      this.onRankAction?.("transfer", String(unit), target, count);
       return;
     }
     if (btn?.getAttribute("data-action") === "found-city") {

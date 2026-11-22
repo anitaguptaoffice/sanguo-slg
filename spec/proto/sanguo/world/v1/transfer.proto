@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package sanguo.world.v1;
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/world/v1;worldv1";
+
+// route: world.v1.TransferCityTroops
+message TransferCityTroopsRequest {
+  int32 server_id = 1;
+  int64 from_city_id = 2;
+  int64 to_city_id = 3;
+  int32 unit_cfg_id = 4;
+  int32 count = 5;
+}
+message TransferCityTroopsResponse {
+  int32 from_count = 1;
+  int32 to_count = 2;
+}

@@ -2360,7 +2360,7 @@ export class MainCityScene implements Scene {
     }
   }
 
-  private async rankAction(action: "promote" | "found", name: string, x: number, y: number): Promise<void> {
+  private async rankAction(action: "promote" | "found" | "transfer", name: string, x: number, y: number): Promise<void> {
     const session = this.session;
     if (!session?.cityId) return;
     try {
@@ -2368,6 +2368,13 @@ export class MainCityScene implements Scene {
         const res = (await this.gateway.promoteRank(session.cityId)) as { rank?: Record<string, unknown>; gold?: number };
         this.buildingPanel.setRank(res.rank ?? null);
         this.status = `爵位已晋升，余金 ${res.gold ?? 0}`;
+      } else if (action === "transfer") {
+        const unit = Number(name);
+        const res = (await this.gateway.transferCityTroops(session.cityId, x, unit, y)) as {
+          from_count?: number; to_count?: number;
+        };
+        this.status = `调兵完成：来源 ${res.from_count ?? 0}，目标 ${res.to_count ?? 0}`;
+        await this.refreshState();
       } else {
         await this.gateway.createCity(session.serverId, name, x, y);
         this.status = `已在 (${x},${y}) 筑城`;

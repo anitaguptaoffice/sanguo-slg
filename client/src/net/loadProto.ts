@@ -89,6 +89,7 @@ export const Routes = {
   SetTacticPreset: "military.v1.SetTacticPreset",
   RunDrill: "military.v1.RunDrill",
   CastTrick: "military.v1.CastTrick",
+  TransferCityTroops: "world.v1.TransferCityTroops",
   GetPlayerRank: "rank.v1.GetPlayerRank",
   PromoteRank: "rank.v1.PromoteRank",
   GetStorehouse: "domestic.v1.GetStorehouse",
@@ -251,6 +252,8 @@ export type ProtoTypes = {
   RunDrillResponse: protobuf.Type;
   CastTrickRequest: protobuf.Type;
   CastTrickResponse: protobuf.Type;
+  TransferCityTroopsRequest: protobuf.Type;
+  TransferCityTroopsResponse: protobuf.Type;
   GetPlayerRankRequest: protobuf.Type;
   GetPlayerRankResponse: protobuf.Type;
   PromoteRankRequest: protobuf.Type;
@@ -466,6 +469,8 @@ export function getTypes(): ProtoTypes {
     SetTacticPresetResponse: r.lookupType("sanguo.military.v1.SetTacticPresetResponse"),
     RunDrillRequest: r.lookupType("sanguo.military.v1.RunDrillRequest"),
     CastTrickRequest: r.lookupType("sanguo.military.v1.CastTrickRequest"),
+    TransferCityTroopsRequest: r.lookupType("sanguo.world.v1.TransferCityTroopsRequest"),
+    TransferCityTroopsResponse: r.lookupType("sanguo.world.v1.TransferCityTroopsResponse"),
     GetPlayerRankRequest: r.lookupType("sanguo.rank.v1.GetPlayerRankRequest"),
     GetPlayerRankResponse: r.lookupType("sanguo.rank.v1.GetPlayerRankResponse"),
     PromoteRankRequest: r.lookupType("sanguo.rank.v1.PromoteRankRequest"),

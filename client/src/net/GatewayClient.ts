@@ -76,6 +76,7 @@ export type GatewayPort = {
   trainMount(cityId: number, equipmentId: number): Promise<unknown>;
   listTacticPresets(cityId: number): Promise<unknown>;
   setTacticPreset(cityId: number, unitCfgId: number, targetType: number, hold: boolean): Promise<unknown>;
+  transferCityTroops(fromCityId: number, toCityId: number, unitCfgId: number, count: number): Promise<unknown>;
   getPlayerRank(): Promise<unknown>;
   promoteRank(cityId: number): Promise<unknown>;
   castTrick(cityId: number, trickType: number, targetMarchId: number): Promise<unknown>;
@@ -741,6 +742,13 @@ export class GatewayClient implements GatewayPort {
     return this.rpc(Routes.SetTacticPreset, "SetTacticPresetRequest", {
       city_id: cityId, unit_cfg_id: unitCfgId, target_type: targetType, hold,
     }, SetTacticPresetResponse, true);
+  }
+
+  async transferCityTroops(fromCityId: number, toCityId: number, unitCfgId: number, count: number) {
+    const { TransferCityTroopsResponse } = getTypes();
+    return this.rpc(Routes.TransferCityTroops, "TransferCityTroopsRequest", {
+      server_id: 1, from_city_id: fromCityId, to_city_id: toCityId, unit_cfg_id: unitCfgId, count,
+    }, TransferCityTroopsResponse, true);
   }
 
   async getPlayerRank() {
