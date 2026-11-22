@@ -81,6 +81,7 @@ export type GatewayPort = {
   promoteRank(cityId: number): Promise<unknown>;
   listScoutReports(limit?: number): Promise<unknown>;
   listBeaconWarnings(): Promise<unknown>;
+  useTruceToken(cityId: number): Promise<unknown>;
   castTrick(cityId: number, trickType: number, targetMarchId: number): Promise<unknown>;
   runDrill(cityId: number, attacker: { unit_cfg_id: number; count: number }[], defender: { unit_cfg_id: number; count: number }[]): Promise<unknown>;
   getStorehouse(cityId: number): Promise<unknown>;
@@ -766,6 +767,11 @@ export class GatewayClient implements GatewayPort {
   async listScoutReports(limit = 20) {
     const { ListScoutReportsResponse } = getTypes();
     return this.rpc(Routes.ListScoutReports, "ListScoutReportsRequest", { server_id: 1, limit }, ListScoutReportsResponse, true);
+  }
+
+  async useTruceToken(cityId: number) {
+    const { UseTruceTokenResponse } = getTypes();
+    return this.rpc(Routes.UseTruceToken, "UseTruceTokenRequest", { server_id: 1, city_id: cityId }, UseTruceTokenResponse, true);
   }
 
   async listBeaconWarnings() {

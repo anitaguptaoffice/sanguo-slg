@@ -127,7 +127,7 @@ export class MainCityBuildingPanel {
     private readonly onEquipmentAction?: (action: string, slotType: number, tier: number, equipmentId: number, gemCfgId: number) => void,
     private readonly onHistoricalAction?: (action: string, npcCfgId: number) => void,
     private readonly onTrickAction?: (trickType: number, targetMarchId: number) => void,
-    private readonly onRankAction?: (action: "promote" | "found" | "transfer", name: string, x: number, y: number) => void,
+    private readonly onRankAction?: (action: "promote" | "found" | "transfer" | "truce", name: string, x: number, y: number) => void,
   ) {}
 
   attach(): void {
@@ -232,6 +232,7 @@ export class MainCityBuildingPanel {
           <h4>声望与爵位</h4>
           <p data-role="rank-status"></p>
           <button type="button" data-action="promote-rank">晋升爵位</button>
+          <button type="button" data-action="use-truce">使用免战牌（8 小时）</button>
           <h4>平地筑城</h4>
           <label>城名 <input type="text" data-field="found-name" value="新城"></label>
           <label>坐标 X <input type="number" data-field="found-x" value="61"></label>
@@ -843,6 +844,10 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    if (btn?.getAttribute("data-action") === "use-truce") {
+      this.onRankAction?.("truce", "", 0, 0);
+      return;
+    }
     if (btn?.getAttribute("data-action") === "promote-rank") {
       this.onRankAction?.("promote", "", 0, 0);
       return;

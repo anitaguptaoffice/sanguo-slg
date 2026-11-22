@@ -91,6 +91,7 @@ export const Routes = {
   CastTrick: "military.v1.CastTrick",
   ListScoutReports: "military.v1.ListScoutReports",
   ListBeaconWarnings: "military.v1.ListBeaconWarnings",
+  UseTruceToken: "world.v1.UseTruceToken",
   TransferCityTroops: "world.v1.TransferCityTroops",
   GetPlayerRank: "rank.v1.GetPlayerRank",
   PromoteRank: "rank.v1.PromoteRank",
@@ -258,6 +259,8 @@ export type ProtoTypes = {
   ListScoutReportsResponse: protobuf.Type;
   ListBeaconWarningsRequest: protobuf.Type;
   ListBeaconWarningsResponse: protobuf.Type;
+  UseTruceTokenRequest: protobuf.Type;
+  UseTruceTokenResponse: protobuf.Type;
   TransferCityTroopsRequest: protobuf.Type;
   TransferCityTroopsResponse: protobuf.Type;
   GetPlayerRankRequest: protobuf.Type;
@@ -478,6 +481,8 @@ export function getTypes(): ProtoTypes {
     ListScoutReportsRequest: r.lookupType("sanguo.military.v1.ListScoutReportsRequest"),
     ListScoutReportsResponse: r.lookupType("sanguo.military.v1.ListScoutReportsResponse"),
     ListBeaconWarningsRequest: r.lookupType("sanguo.military.v1.ListBeaconWarningsRequest"),
+    UseTruceTokenRequest: r.lookupType("sanguo.world.v1.UseTruceTokenRequest"),
+    UseTruceTokenResponse: r.lookupType("sanguo.world.v1.UseTruceTokenResponse"),
     ListBeaconWarningsResponse: r.lookupType("sanguo.military.v1.ListBeaconWarningsResponse"),
     TransferCityTroopsRequest: r.lookupType("sanguo.world.v1.TransferCityTroopsRequest"),
     TransferCityTroopsResponse: r.lookupType("sanguo.world.v1.TransferCityTroopsResponse"),

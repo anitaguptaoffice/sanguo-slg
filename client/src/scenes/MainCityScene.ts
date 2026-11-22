@@ -2381,11 +2381,14 @@ export class MainCityScene implements Scene {
     }
   }
 
-  private async rankAction(action: "promote" | "found" | "transfer", name: string, x: number, y: number): Promise<void> {
+  private async rankAction(action: "promote" | "found" | "transfer" | "truce", name: string, x: number, y: number): Promise<void> {
     const session = this.session;
     if (!session?.cityId) return;
     try {
-      if (action === "promote") {
+      if (action === "truce") {
+        const res = (await this.gateway.useTruceToken(session.cityId)) as { protection_until_ms?: number };
+        this.status = `免战至 ${new Date(res.protection_until_ms ?? 0).toLocaleString()}`;
+      } else if (action === "promote") {
         const res = (await this.gateway.promoteRank(session.cityId)) as { rank?: Record<string, unknown>; gold?: number };
         this.buildingPanel.setRank(res.rank ?? null);
         this.status = `爵位已晋升，余金 ${res.gold ?? 0}`;

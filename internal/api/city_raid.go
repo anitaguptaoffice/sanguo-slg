@@ -115,13 +115,23 @@ func (s *Server) applyCityRaid(ctx context.Context, ev march.MarchArrivalEvent, 
 		complaint = 100
 	}
 	rule := city.Rule
+	transferred := false
 	if ev.Order.Purpose == combat.PurposeOccupy && !city.IsCapital {
 		rule -= 25
 		if rule <= 0 {
-			rule = 100
+			rule, complaint, transferred = 100, 0, true
 		}
 	}
-	if _, err := tx.Exec(ctx, `UPDATE player_city SET complaint=$3,rule=$4 WHERE server_id=$1 AND city_id=$2`,
+	if transferred {
+		if _, err := tx.Exec(ctx, `UPDATE player_city SET player_id=$3,complaint=0,rule=100,protection_until=NULL
+			WHERE server_id=$1 AND city_id=$2`, defaultServerID, city.CityID, ev.PlayerID); err != nil {
+			return nil, err
+		}
+		if _, err := tx.Exec(ctx, `UPDATE mil_city_origin SET owner_player_id=$3 WHERE server_id=$1 AND city_id=$2`,
+			defaultServerID, city.CityID, ev.PlayerID); err != nil {
+			return nil, err
+		}
+	} else if _, err := tx.Exec(ctx, `UPDATE player_city SET complaint=$3,rule=$4 WHERE server_id=$1 AND city_id=$2`,
 		defaultServerID, city.CityID, complaint, rule); err != nil {
 		return nil, err
 	}

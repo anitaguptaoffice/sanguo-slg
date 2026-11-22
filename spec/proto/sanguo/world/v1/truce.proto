@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package sanguo.world.v1;
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/world/v1;worldv1";
+
+// route: world.v1.UseTruceToken
+message UseTruceTokenRequest { int32 server_id = 1; int64 city_id = 2; }
+message UseTruceTokenResponse { int64 protection_until_ms = 1; }
