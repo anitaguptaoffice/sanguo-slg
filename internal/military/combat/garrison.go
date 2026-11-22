@@ -18,6 +18,7 @@ type Garrison struct {
 	Name     string
 	HeroName string
 	Loot     battle.Loot
+	Walls    []battle.WallGroup
 }
 
 // GarrisonSource resolves defenders for one destination tile. The in-memory

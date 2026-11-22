@@ -136,3 +136,29 @@ func TestResolveScoutProducesTieredReport(t *testing.T) {
 		t.Fatalf("observation = %+v", got)
 	}
 }
+
+func TestResolveCityProtectionAndRaid(t *testing.T) {
+	ctx := context.Background()
+	svc := report.NewService(report.NewMemStore())
+	r := NewResolver(1, svc, NewGarrisonTable(), nil)
+	city := &CityDefense{CityID: 9, PlayerID: 2, Name: "敌城", IsCapital: true, Protected: true,
+		Troops: []march.TroopStack{{UnitCfgID: 1, Count: 10}}}
+	r.CityDefense = func(context.Context, int, int) (*CityDefense, error) { return city, nil }
+	ev := march.MarchArrivalEvent{MarchID: 20, PlayerID: 1,
+		Troops: []march.TroopStack{{UnitCfgID: 1, Count: 100}},
+		Order:  march.MarchOrder{OriginCityID: 1, ToX: 9, ToY: 9, Purpose: PurposeAttack}}
+	res, err := r.ResolveAttackGarrison(ctx, ev)
+	if err != nil || res.BattleRan || len(res.AttackerRemaining) != 1 {
+		t.Fatalf("protected result=%+v err=%v", res, err)
+	}
+	city.Protected = false
+	raided := false
+	r.CityRaid = func(context.Context, march.MarchArrivalEvent, *CityDefense) (*march.LootRecord, error) {
+		raided = true
+		return &march.LootRecord{Food: 100}, nil
+	}
+	res, err = r.ResolveAttackGarrison(ctx, ev)
+	if err != nil || !res.BattleRan || !raided || res.Report.Loot.Food != 100 {
+		t.Fatalf("raid result=%+v err=%v raided=%v", res, err, raided)
+	}
+}

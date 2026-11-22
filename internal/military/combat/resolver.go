@@ -12,6 +12,20 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// CityDefense is a player city garrison read for raid/occupy.
+type CityDefense struct {
+	CityID          int64
+	PlayerID        int64
+	Name            string
+	IsCapital       bool
+	Protected       bool
+	ProtectionUntil time.Time
+	Complaint       int32
+	Rule            int32
+	Troops          []march.TroopStack
+	Walls           []battle.WallGroup
+}
+
 // Resolver runs battle simulation and archives reports on march arrival.
 type Resolver struct {
 	ServerID    int32
@@ -30,7 +44,11 @@ type Resolver struct {
 	// Prestige awards the attacker after a won battle.
 	Prestige func(ctx context.Context, serverID int32, playerID int64, amount int64) error
 	// ScoutSink archives a scout observation instead of running combat.
-	ScoutSink     func(ctx context.Context, obs ScoutObservation) error
+	ScoutSink func(ctx context.Context, obs ScoutObservation) error
+	// CityDefense loads a player city at the target tile.
+	CityDefense func(ctx context.Context, x, y int) (*CityDefense, error)
+	// CityRaid applies loot/complaint/rule changes after a won city battle.
+	CityRaid      func(ctx context.Context, ev march.MarchArrivalEvent, city *CityDefense) (*march.LootRecord, error)
 	nextReport    int64
 	beginArrival  func(context.Context, pgx.TxOptions) (pgx.Tx, error)
 	commitArrival func(context.Context, pgx.Tx, march.ArrivalCommit) (march.ArrivalCommitted, error)
@@ -104,6 +122,21 @@ func (r *Resolver) allocReportID() int64 {
 // ResolveAttackGarrison handles PurposeAttack against a fixed garrison tile.
 func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArrivalEvent) (ArrivalResult, error) {
 	g := r.Garrisons.Get(ctx, ev.Order.ToX, ev.Order.ToY)
+	var cityTarget *CityDefense
+	if ev.Order.Purpose == PurposeAttack || ev.Order.Purpose == PurposeLoot || ev.Order.Purpose == PurposeOccupy {
+		if r.CityDefense != nil {
+			if cd, err := r.CityDefense(ctx, ev.Order.ToX, ev.Order.ToY); err == nil && cd != nil {
+				if cd.Protected {
+					if r.commitArrival != nil {
+						return r.persistArrival(ctx, ev, ArrivalResult{AttackerRemaining: append([]march.TroopStack(nil), ev.Troops...)})
+					}
+					return ArrivalResult{AttackerRemaining: append([]march.TroopStack(nil), ev.Troops...)}, nil
+				}
+				cityTarget = cd
+				g = &Garrison{Troops: cd.Troops, Name: cd.Name, Morale: 1, Walls: cd.Walls}
+			}
+		}
+	}
 	if ev.Order.Purpose == PurposeScout {
 		tier := scoutTier(ev.Troops)
 		name := "未知目标"
@@ -152,6 +185,7 @@ func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArri
 		Attacker:   attacker,
 		Defender:   ArmyFromStacksWithHero(r.UnitCatalog, g.Troops, g.HeroLevel, g.HeroForce, g.HeroIntel, g.Morale),
 	}
+	bin.Defender.Defenses = g.Walls
 	rep := battle.Simulate(bin)
 	if r.Prestige != nil && rep.Result == battle.ResultAttackerWin {
 		_ = r.Prestige(ctx, r.ServerID, ev.PlayerID, 50)
@@ -177,6 +211,12 @@ func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArri
 		}
 	}
 
+	if cityTarget != nil && rep.Result == battle.ResultAttackerWin && r.CityRaid != nil {
+		if raid, err := r.CityRaid(ctx, ev, cityTarget); err == nil && raid != nil {
+			rep.Loot = battle.Loot{Food: raid.Food, Wood: raid.Wood, Stone: raid.Stone, Iron: raid.Iron, Gold: raid.Gold, HeroExp: raid.HeroExp}
+			loot = raid
+		}
+	}
 	attRemain := StacksFromUnits(rep.FinalAttackerUnits)
 	defRemain := StacksFromUnits(rep.FinalDefenderUnits)
 	if len(rep.FinalAttackerUnits) == 0 && len(rep.FinalDefenderUnits) == 0 {
