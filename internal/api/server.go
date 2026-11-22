@@ -56,6 +56,10 @@ const (
 	RouteListSpecialCities    = "world.v1.ListSpecialCities"
 	RouteClaimSpecialCityTax  = "world.v1.ClaimSpecialCityTax"
 	RouteRecruitSpecialTroops = "world.v1.RecruitSpecialTroops"
+	RouteListCampaignStages   = "military.v1.ListCampaignStages"
+	RouteFightCampaignStage   = "military.v1.FightCampaignStage"
+	RouteListArenaOpponents   = "military.v1.ListArenaOpponents"
+	RouteFightArenaOpponent   = "military.v1.FightArenaOpponent"
 	RouteTransferCityTroops   = "world.v1.TransferCityTroops"
 	RouteGetPlayerRank        = "rank.v1.GetPlayerRank"
 	RoutePromoteRank          = "rank.v1.PromoteRank"
@@ -314,6 +318,10 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteListSpecialCities] = s.handleListSpecialCities
 	handlers[RouteClaimSpecialCityTax] = s.handleClaimSpecialCityTax
 	handlers[RouteRecruitSpecialTroops] = s.handleRecruitSpecialTroops
+	handlers[RouteListCampaignStages] = s.handleListCampaignStages
+	handlers[RouteFightCampaignStage] = s.handleFightCampaignStage
+	handlers[RouteListArenaOpponents] = s.handleListArenaOpponents
+	handlers[RouteFightArenaOpponent] = s.handleFightArenaOpponent
 	handlers[RouteTransferCityTroops] = s.handleTransferCityTroops
 	handlers[RouteGetPlayerRank] = s.handleGetPlayerRank
 	handlers[RoutePromoteRank] = s.handlePromoteRank
