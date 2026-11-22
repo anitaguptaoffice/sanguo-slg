@@ -169,6 +169,11 @@ func (s *Server) createPlayerCity(ctx context.Context, pc PlayerContext, name st
 	if x == 0 && y == 0 {
 		x, y = 50, 50
 	}
+	var existing int64
+	if err := s.players.Pool.QueryRow(ctx, `SELECT city_id FROM player_city WHERE server_id=$1 AND player_id=$2 AND x=$3 AND y=$4`,
+		serverID, pc.PlayerID, x, y).Scan(&existing); err == nil {
+		return world.City{}, world.ErrOccupied
+	}
 	var cityCount int
 	if err := s.players.Pool.QueryRow(ctx, `SELECT count(*) FROM player_city WHERE server_id=$1 AND player_id=$2`,
 		serverID, pc.PlayerID).Scan(&cityCount); err != nil {

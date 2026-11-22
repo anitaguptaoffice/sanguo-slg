@@ -62,6 +62,10 @@ func TestCreateCityAtomicDefaultsAndParticipantFailure(t *testing.T) {
 	if _, err := pool.Exec(context.Background(), "DELETE FROM player_wallet"); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := pool.Exec(context.Background(), `INSERT INTO player_rank(server_id,player_id,prestige,rank_level)
+		VALUES(1,55,100,1) ON CONFLICT (server_id,player_id) DO UPDATE SET rank_level=1`); err != nil {
+		t.Fatal(err)
+	}
 	calls := 0
 	s.world = world.NewService(&atomicCityWorld{insert: func(ctx context.Context, tx pgx.Tx, c world.City) (world.City, error) {
 		calls++
@@ -138,6 +142,10 @@ func atomicCityPacket(t *testing.T, index int) *commonv1.ClientPacket {
 func TestCreateCityAtomicStarterWalletOnlyOnce(t *testing.T) {
 	s, pool, _, _ := registrationServer(t)
 	if _, err := pool.Exec(context.Background(), "DELETE FROM player_wallet"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(context.Background(), `INSERT INTO player_rank(server_id,player_id,prestige,rank_level)
+		VALUES(1,55,100,1) ON CONFLICT (server_id,player_id) DO UPDATE SET rank_level=1`); err != nil {
 		t.Fatal(err)
 	}
 	for i := 0; i < 2; i++ {
