@@ -10,7 +10,7 @@ import (
 )
 
 // wireSpecialCity attaches national-war defense and ownership callbacks.
-func wireSpecialCity(resolver *combat.Resolver, svc *specialcity.Service) {
+func wireSpecialCity(resolver *combat.Resolver, svc *specialcity.Service, onCapture func(ctx context.Context)) {
 	if resolver == nil || svc == nil {
 		return
 	}
@@ -29,9 +29,12 @@ func wireSpecialCity(resolver *combat.Resolver, svc *specialcity.Service) {
 		return out, nil
 	}
 	resolver.SpecialCityBattle = func(ctx context.Context, ev march.MarchArrivalEvent, city *combat.CityDefense, won bool, defenders []march.TroopStack) (*march.LootRecord, error) {
-		_, _, err := svc.AfterBattle(ctx, defaultServerID, city.SpecialCityCfgID, ev.PlayerID, won, defenders)
+		captured, _, err := svc.AfterBattle(ctx, defaultServerID, city.SpecialCityCfgID, ev.PlayerID, won, defenders)
 		if err != nil || !won {
 			return nil, err
+		}
+		if captured && onCapture != nil {
+			onCapture(ctx)
 		}
 		return &march.LootRecord{Food: city.Loot.Food, Wood: city.Loot.Wood, Stone: city.Loot.Stone,
 			Iron: city.Loot.Iron, Gold: city.Loot.Gold}, nil

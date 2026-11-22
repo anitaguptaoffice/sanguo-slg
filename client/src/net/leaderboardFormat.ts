@@ -5,6 +5,13 @@ import { formatSocialRankEmptyMessage, leaderboardTypeLabel } from "@/net/social
 /** 与 sanguo.rank.v1.LeaderboardType / rank_gateway 一致 */
 export const LB_PLAYER_POWER = 1;
 export const LB_PLAYER_RESOURCE = 2;
+export const LB_GUILD_POWER = 3;
+export const LB_PLAYER_PRESTIGE = 4;
+export const LB_HERO_FORCE = 5;
+export const LB_HERO_INTEL = 6;
+export const LB_HERO_POLITICS = 7;
+export const LB_HERO_COMMAND = 8;
+export const LB_SPECIAL_CITIES = 9;
 
 export type LeaderboardEntryRow = {
   rank?: number;
@@ -41,6 +48,20 @@ export function leaderboardScoreLabel(type?: number): string {
   switch (type) {
     case LB_PLAYER_RESOURCE:
       return "资源总量";
+    case LB_PLAYER_PRESTIGE:
+      return "声望";
+    case LB_HERO_FORCE:
+      return "武力";
+    case LB_HERO_INTEL:
+      return "智力";
+    case LB_HERO_POLITICS:
+      return "政治";
+    case LB_HERO_COMMAND:
+      return "统率";
+    case LB_GUILD_POWER:
+      return "联盟实力";
+    case LB_SPECIAL_CITIES:
+      return "名城数";
     case LB_PLAYER_POWER:
       return "战力";
     default:
@@ -167,7 +188,7 @@ function formatRelativeRefresh(atMs: number, nowMs: number): string | null {
 
 export function selectedLeaderboardTypeFromValue(raw: string | number): number {
   const n = Number(raw);
-  if (n === LB_PLAYER_RESOURCE) return LB_PLAYER_RESOURCE;
+  if (Number.isInteger(n) && n >= LB_PLAYER_POWER && n <= LB_SPECIAL_CITIES) return n;
   return LB_PLAYER_POWER;
 }
 

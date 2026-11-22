@@ -60,6 +60,9 @@ const (
 	RouteFightCampaignStage   = "military.v1.FightCampaignStage"
 	RouteListArenaOpponents   = "military.v1.ListArenaOpponents"
 	RouteFightArenaOpponent   = "military.v1.FightArenaOpponent"
+	RouteListAchievements     = "meta.v1.ListAchievements"
+	RouteClaimAchievement     = "meta.v1.ClaimAchievement"
+	RouteGetWorldProgress     = "meta.v1.GetWorldProgress"
 	RouteTransferCityTroops   = "world.v1.TransferCityTroops"
 	RouteGetPlayerRank        = "rank.v1.GetPlayerRank"
 	RoutePromoteRank          = "rank.v1.PromoteRank"
@@ -322,6 +325,9 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteFightCampaignStage] = s.handleFightCampaignStage
 	handlers[RouteListArenaOpponents] = s.handleListArenaOpponents
 	handlers[RouteFightArenaOpponent] = s.handleFightArenaOpponent
+	handlers[RouteListAchievements] = s.handleListAchievements
+	handlers[RouteClaimAchievement] = s.handleClaimAchievement
+	handlers[RouteGetWorldProgress] = s.handleGetWorldProgress
 	handlers[RouteTransferCityTroops] = s.handleTransferCityTroops
 	handlers[RouteGetPlayerRank] = s.handleGetPlayerRank
 	handlers[RoutePromoteRank] = s.handlePromoteRank

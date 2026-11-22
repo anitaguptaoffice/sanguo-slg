@@ -68,6 +68,20 @@ func protoRankType(t rankv1.LeaderboardType) (rank.RankType, error) {
 		return rank.RankPlayerPower, nil
 	case rankv1.LeaderboardType_LEADERBOARD_TYPE_PLAYER_RESOURCE:
 		return rank.RankPlayerResource, nil
+	case rankv1.LeaderboardType_LEADERBOARD_TYPE_GUILD_POWER:
+		return rank.RankGuildPower, nil
+	case rankv1.LeaderboardType_LEADERBOARD_TYPE_PLAYER_PRESTIGE:
+		return rank.RankPlayerPrestige, nil
+	case rankv1.LeaderboardType_LEADERBOARD_TYPE_HERO_FORCE:
+		return rank.RankHeroForce, nil
+	case rankv1.LeaderboardType_LEADERBOARD_TYPE_HERO_INTEL:
+		return rank.RankHeroIntel, nil
+	case rankv1.LeaderboardType_LEADERBOARD_TYPE_HERO_POLITICS:
+		return rank.RankHeroPolitics, nil
+	case rankv1.LeaderboardType_LEADERBOARD_TYPE_HERO_COMMAND:
+		return rank.RankHeroCommand, nil
+	case rankv1.LeaderboardType_LEADERBOARD_TYPE_SPECIAL_CITIES:
+		return rank.RankSpecialCities, nil
 	default:
 		return 0, rank.ErrUnknownRankType
 	}
@@ -100,6 +114,20 @@ func rankTypeToProto(t rank.RankType) rankv1.LeaderboardType {
 		return rankv1.LeaderboardType_LEADERBOARD_TYPE_PLAYER_POWER
 	case rank.RankPlayerResource:
 		return rankv1.LeaderboardType_LEADERBOARD_TYPE_PLAYER_RESOURCE
+	case rank.RankGuildPower:
+		return rankv1.LeaderboardType_LEADERBOARD_TYPE_GUILD_POWER
+	case rank.RankPlayerPrestige:
+		return rankv1.LeaderboardType_LEADERBOARD_TYPE_PLAYER_PRESTIGE
+	case rank.RankHeroForce:
+		return rankv1.LeaderboardType_LEADERBOARD_TYPE_HERO_FORCE
+	case rank.RankHeroIntel:
+		return rankv1.LeaderboardType_LEADERBOARD_TYPE_HERO_INTEL
+	case rank.RankHeroPolitics:
+		return rankv1.LeaderboardType_LEADERBOARD_TYPE_HERO_POLITICS
+	case rank.RankHeroCommand:
+		return rankv1.LeaderboardType_LEADERBOARD_TYPE_HERO_COMMAND
+	case rank.RankSpecialCities:
+		return rankv1.LeaderboardType_LEADERBOARD_TYPE_SPECIAL_CITIES
 	default:
 		return rankv1.LeaderboardType_LEADERBOARD_TYPE_UNSPECIFIED
 	}

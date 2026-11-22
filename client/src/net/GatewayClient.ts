@@ -89,6 +89,9 @@ export type GatewayPort = {
   fightCampaignStage(cityId: number, stageId: number, attacker: { unit_cfg_id: number; count: number }[]): Promise<unknown>;
   listArenaOpponents(cityId: number): Promise<unknown>;
   fightArenaOpponent(cityId: number, opponentId: number, attacker: { unit_cfg_id: number; count: number }[]): Promise<unknown>;
+  listAchievements(): Promise<unknown>;
+  claimAchievement(achievementId: number): Promise<unknown>;
+  getWorldProgress(): Promise<unknown>;
   setGuildRelation(guildId: number, targetGuildId: number, state: number): Promise<unknown>;
   listGuildRelations(guildId: number): Promise<unknown>;
   stationGuildTroops(cityId: number, guildId: number, unitCfgId: number, count: number): Promise<unknown>;
@@ -813,6 +816,21 @@ export class GatewayClient implements GatewayPort {
   async listCampaignStages(cityId: number) {
     const { ListCampaignStagesResponse } = getTypes();
     return this.rpc(Routes.ListCampaignStages, "ListCampaignStagesRequest", { city_id: cityId }, ListCampaignStagesResponse, true);
+  }
+
+  async listAchievements() {
+    const { ListAchievementsResponse } = getTypes();
+    return this.rpc(Routes.ListAchievements, "ListAchievementsRequest", { server_id: 1 }, ListAchievementsResponse, true);
+  }
+
+  async claimAchievement(achievementId: number) {
+    const { ClaimAchievementResponse } = getTypes();
+    return this.rpc(Routes.ClaimAchievement, "ClaimAchievementRequest", { server_id: 1, achievement_id: achievementId }, ClaimAchievementResponse, true);
+  }
+
+  async getWorldProgress() {
+    const { GetWorldProgressResponse } = getTypes();
+    return this.rpc(Routes.GetWorldProgress, "GetWorldProgressRequest", { server_id: 1 }, GetWorldProgressResponse, true);
   }
 
   async listArenaOpponents(cityId: number) {

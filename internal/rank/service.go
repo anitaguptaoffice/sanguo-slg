@@ -32,7 +32,7 @@ func (s *Service) SetTopN(n int) {
 
 // Refresh pulls scores from DataSource, ranks them, and writes a new snapshot batch.
 func (s *Service) Refresh(ctx context.Context, serverID int32, rankType RankType) (SnapshotMeta, error) {
-	if rankType != RankPlayerPower && rankType != RankPlayerResource {
+	if !Supported(rankType) {
 		return SnapshotMeta{}, ErrUnknownRankType
 	}
 	rows, err := s.source.ListPlayerScores(ctx, serverID, rankType)
@@ -53,7 +53,7 @@ func (s *Service) Refresh(ctx context.Context, serverID int32, rankType RankType
 
 // GetLeaderboard returns a page from the latest snapshot for server_id and type.
 func (s *Service) GetLeaderboard(ctx context.Context, q LeaderboardQuery) (LeaderboardPage, error) {
-	if q.Type != RankPlayerPower && q.Type != RankPlayerResource {
+	if !Supported(q.Type) {
 		return LeaderboardPage{}, ErrUnknownRankType
 	}
 	meta, err := s.store.LatestSnapshot(ctx, q.ServerID, q.Type)

@@ -210,6 +210,13 @@ func (s *Service) AfterBattle(ctx context.Context, serverID int32, cfgID int32, 
 	if err != nil {
 		return false, 0, err
 	}
+	if captured {
+		if _, err := tx.Exec(ctx, `INSERT INTO player_special_capture(server_id,player_id,captures)
+			VALUES($1,$2,1) ON CONFLICT (server_id,player_id)
+			DO UPDATE SET captures=player_special_capture.captures+1`, serverID, attackerPlayerID); err != nil {
+			return false, 0, err
+		}
+	}
 	if err := tx.Commit(ctx); err != nil {
 		return false, 0, err
 	}

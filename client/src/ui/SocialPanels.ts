@@ -10,6 +10,13 @@ import {
   formatViewerRankSummary,
   leaderboardTopDensityEntries,
   LB_PLAYER_POWER,
+  LB_PLAYER_PRESTIGE,
+  LB_HERO_FORCE,
+  LB_HERO_INTEL,
+  LB_HERO_POLITICS,
+  LB_HERO_COMMAND,
+  LB_GUILD_POWER,
+  LB_SPECIAL_CITIES,
   LB_PLAYER_RESOURCE,
   selectedLeaderboardTypeFromValue,
   viewerScoreFallback,
@@ -645,6 +652,13 @@ export class SocialPanels {
         <select data-field="rank-type">
           <option value="${LB_PLAYER_POWER}">玩家战力</option>
           <option value="${LB_PLAYER_RESOURCE}">玩家资源总量</option>
+          <option value="${LB_PLAYER_PRESTIGE}">君主声望</option>
+          <option value="${LB_HERO_FORCE}">名将武力</option>
+          <option value="${LB_HERO_INTEL}">名将智力</option>
+          <option value="${LB_HERO_POLITICS}">名将政治</option>
+          <option value="${LB_HERO_COMMAND}">名将统率</option>
+          <option value="${LB_GUILD_POWER}">联盟实力</option>
+          <option value="${LB_SPECIAL_CITIES}">名城占领</option>
         </select>
       </label>
       <button type="button" data-action="refresh-rank">刷新排行榜</button>

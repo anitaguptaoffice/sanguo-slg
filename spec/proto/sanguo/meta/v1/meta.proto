@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package sanguo.meta.v1;
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/meta/v1;metav1";
+
+message MetaItemView {
+  int32 item_cfg_id = 1;
+  int32 count = 2;
+}
+
+message AchievementView {
+  int32 achievement_id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  int32 category = 5;
+  string metric = 6;
+  int64 threshold = 7;
+  int64 progress = 8;
+  bool claimed = 9;
+  bool can_claim = 10;
+  int64 reward_gold = 11;
+  int64 reward_prestige = 12;
+  repeated MetaItemView reward_items = 13;
+}
+
+// route: meta.v1.ListAchievements
+message ListAchievementsRequest { int32 server_id = 1; }
+message ListAchievementsResponse { repeated AchievementView achievements = 1; }
+
+// route: meta.v1.ClaimAchievement
+message ClaimAchievementRequest { int32 server_id = 1; int32 achievement_id = 2; }
+message ClaimAchievementResponse {
+  AchievementView achievement = 1;
+  int64 gold = 2;
+  int64 prestige = 3;
+  repeated MetaItemView items = 4;
+}
+
+// route: meta.v1.GetWorldProgress
+message GetWorldProgressRequest { int32 server_id = 1; }
+message GetWorldProgressResponse {
+  int32 phase = 1;
+  string name = 2;
+  string next = 3;
+  int64 owned_cities = 4;
+  int64 campaign_clears = 5;
+}

@@ -64,6 +64,7 @@ export type MarketView = {
 export type TacticPresetRow = { unit_cfg_id?: number; troop_type?: number; target_type?: number; hold?: boolean };
 export type ScoutReportRow = { report_id?: number; x?: number; y?: number; tier?: number; target_name?: string; detail?: string; created_at_ms?: number };
 export type BeaconWarningRow = { warning_id?: number; x?: number; y?: number; purpose?: number; arrive_at_ms?: number; beacon_level?: number; attacker_player_id?: number; attacker_troops?: number };
+export type AchievementRow = { achievement_id?: number; code?: string; name?: string; description?: string; category?: number; threshold?: number | string; progress?: number | string; claimed?: boolean; can_claim?: boolean; reward_gold?: number | string; reward_prestige?: number | string };
 export type ArenaOpponentRow = { opponent_id?: number; name?: string; troop_cap?: number; defender_total?: number; defender_hero?: string; reward_gold?: number | string; reward_prestige?: number | string; reward_item_cfg_id?: number; reward_item_count?: number };
 export type CampaignStageRow = { stage_id?: number; code?: string; name?: string; chapter?: number; stage_order?: number; troop_cap?: number; unlocked?: boolean; cleared?: boolean; stars?: number; defender_total?: number; defender_hero?: string; reward_gold?: number | string; reward_prestige?: number | string };
 export type SpecialCityRow = { city_cfg_id?: number; city_type?: number; name?: string; x?: number; y?: number; owner_guild_id?: number; owner_guild_name?: string; garrison?: number; wall_level?: number; hero_name?: string; hero_level?: number; unit_cfg_id?: number; unit_name?: string; next_recover_at_ms?: number | string };
@@ -116,6 +117,8 @@ export class MainCityBuildingPanel {
   private specialCities: SpecialCityRow[] = [];
   private campaignStages: CampaignStageRow[] = [];
   private arenaOpponents: ArenaOpponentRow[] = [];
+  private achievements: AchievementRow[] = [];
+  private worldProgress: { phase?: number; name?: string; next?: string; owned_cities?: number | string; campaign_clears?: number | string } = {};
   private unlockedUnits: number[] = [];
   private guildGarrison: GuildGarrisonRow[] = [];
   private focusTrap: CenterPanelFocusTrap | null = null;
@@ -143,6 +146,7 @@ export class MainCityBuildingPanel {
     private readonly onSpecialAction?: (action: string, unit: number, count: number) => void,
     private readonly onCampaignAction?: (action: string, stageId: number, unit: number, count: number) => void,
     private readonly onArenaAction?: (action: string, opponentId: number, unit: number, count: number) => void,
+    private readonly onAchievementAction?: (achievementId: number) => void,
   ) {}
 
   attach(): void {
@@ -308,6 +312,9 @@ export class MainCityBuildingPanel {
           </label>
           <label>数量 <input type="number" data-field="special-count" value="10"></label>
           <button type="button" data-action="recruit-special">招募精锐</button>
+          <h4>世界进程与成就</h4>
+          <p data-role="world-progress"></p>
+          <div data-role="achievements"></div>
         </div>
         <div class="trick-section hidden" data-role="tricks">
           <h4>招贤馆计谋</h4>
@@ -457,6 +464,7 @@ export class MainCityBuildingPanel {
     if (slotKey === "hall") {
       this.renderRank();
       this.renderSpecialCities();
+      this.renderAchievements();
     }
     const trickEl = this.panel.querySelector<HTMLElement>('[data-role="tricks"]');
     trickEl?.classList.toggle("hidden", slotKey !== "recruit_hall");
@@ -685,6 +693,39 @@ export class MainCityBuildingPanel {
     }
     const cleared = this.campaignStages.filter((stage) => stage.cleared).length;
     status.textContent = `战役 ${cleared}/${this.campaignStages.length} 通关 · 首通奖励：高阶装备图纸、宝珠匣与声望`;
+  }
+
+  setAchievements(rows: AchievementRow[], world: { phase?: number; name?: string; next?: string; owned_cities?: number | string; campaign_clears?: number | string }): void {
+    this.achievements = rows;
+    this.worldProgress = world;
+    this.renderAchievements();
+  }
+
+  private renderAchievements(): void {
+    const section = this.panel?.querySelector<HTMLElement>('[data-role="rank"]');
+    if (!section || section.classList.contains("hidden")) return;
+    const list = section.querySelector<HTMLElement>('[data-role="achievements"]');
+    const world = section.querySelector<HTMLElement>('[data-role="world-progress"]');
+    if (!list || !world) return;
+    const p = this.worldProgress;
+    world.textContent = `世界阶段 ${p.phase ?? 1} · ${p.name ?? "讨平黄巾"} · ${p.next ?? ""} · 名城 ${p.owned_cities ?? 0} · 战役通关 ${p.campaign_clears ?? 0}`;
+    list.textContent = "";
+    for (const row of this.achievements) {
+      const line = document.createElement("div");
+      const state = row.claimed ? "已领取" : row.can_claim ? "可领取" : `${row.progress ?? 0}/${row.threshold ?? 0}`;
+      const text = `${row.name ?? ""} · ${row.description ?? ""} · ${state} · 金 ${row.reward_gold ?? 0} 声望 ${row.reward_prestige ?? 0}`;
+      if (row.can_claim) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.dataset.action = "claim-achievement";
+        btn.dataset.achievementId = String(row.achievement_id ?? 0);
+        btn.textContent = `领取 ${row.name ?? ""}`;
+        line.append(`${text} `, btn);
+      } else {
+        line.textContent = text;
+      }
+      list.appendChild(line);
+    }
   }
 
   setArenaOpponents(opponents: ArenaOpponentRow[]): void {
@@ -1034,6 +1075,10 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    if (btn?.getAttribute("data-action") === "claim-achievement") {
+      this.onAchievementAction?.(Number(btn.dataset.achievementId ?? 0));
+      return;
+    }
     if (btn?.getAttribute("data-action") === "fight-arena") {
       const section = this.panel.querySelector<HTMLElement>('[data-role="drill-tactics"]');
       const opponent = Number(section?.querySelector<HTMLSelectElement>('[data-field="arena-opponent"]')?.value ?? 0);
