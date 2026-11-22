@@ -1075,8 +1075,8 @@ export class MainCityScene implements Scene {
       (action, npcCfgId) => void this.historicalAction(action, npcCfgId),
       (trickType, targetMarchId) => void this.castTrick(trickType, targetMarchId),
       (action, name, x, y) => void this.rankAction(action, name, x, y),
-      (action, guildId, targetGuildId, cityId, unit, count) =>
-        void this.diplomacyAction(action, guildId, targetGuildId, cityId, unit, count),
+      (action, guildId, targetGuildId, cityId, unit, count, fromCityId) =>
+        void this.diplomacyAction(action, guildId, targetGuildId, cityId, unit, count, fromCityId),
       (action, unit, count) => void this.specialCityAction(action, unit, count),
       (action, stageId, unit, count) => void this.campaignAction(action, stageId, unit, count),
       (action, opponentId, unit, count) => void this.arenaAction(action, opponentId, unit, count),
@@ -2564,7 +2564,7 @@ export class MainCityScene implements Scene {
     }
   }
 
-  private async diplomacyAction(action: string, guildId: number, targetGuildId: number, cityId: number, unit: number, count: number): Promise<void> {
+  private async diplomacyAction(action: string, guildId: number, targetGuildId: number, cityId: number, unit: number, count: number, fromCityId = 0): Promise<void> {
     const session = this.session;
     if (!session) return;
     try {
@@ -2573,7 +2573,7 @@ export class MainCityScene implements Scene {
       } else if (action === "guild-hostile") {
         await this.gateway.setGuildRelation(guildId, targetGuildId, 3);
       } else if (action === "station-garrison") {
-        await this.gateway.stationGuildTroops(cityId, guildId, unit, count);
+        await this.gateway.stationGuildTroops(cityId, guildId, unit, count, fromCityId || cityId);
       }
       await this.refreshDiplomacy();
       this.status = "外交操作完成";

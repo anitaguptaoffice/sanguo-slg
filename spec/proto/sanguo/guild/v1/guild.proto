@@ -116,5 +116,7 @@ message StationGuildTroopsRequest {
   int64 guild_id = 3;
   int32 unit_cfg_id = 4;
   int32 count = 5;
+  // 出发城：兵力从该城扣除，目标城可为同联盟盟友城池。
+  int64 from_city_id = 6;
 }
 message StationGuildTroopsResponse { repeated GuildGarrisonView troops = 1; }

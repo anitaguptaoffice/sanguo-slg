@@ -135,6 +135,10 @@ func (s *Server) applyCityRaid(ctx context.Context, ev march.MarchArrivalEvent, 
 			defaultServerID, city.CityID, ev.PlayerID); err != nil {
 			return nil, err
 		}
+		if _, err := tx.Exec(ctx, `DELETE FROM guild_garrison WHERE server_id=$1 AND city_id=$2`,
+			defaultServerID, city.CityID); err != nil {
+			return nil, err
+		}
 	} else if _, err := tx.Exec(ctx, `UPDATE player_city SET complaint=$3,rule=$4 WHERE server_id=$1 AND city_id=$2`,
 		defaultServerID, city.CityID, complaint, rule); err != nil {
 		return nil, err

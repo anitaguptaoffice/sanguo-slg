@@ -1107,12 +1107,14 @@ func (x *ListGuildGarrisonResponse) GetTroops() []*GuildGarrisonView {
 }
 
 type StationGuildTroopsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ServerId      int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
-	CityId        int64                  `protobuf:"varint,2,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
-	GuildId       int64                  `protobuf:"varint,3,opt,name=guild_id,json=guildId,proto3" json:"guild_id,omitempty"`
-	UnitCfgId     int32                  `protobuf:"varint,4,opt,name=unit_cfg_id,json=unitCfgId,proto3" json:"unit_cfg_id,omitempty"`
-	Count         int32                  `protobuf:"varint,5,opt,name=count,proto3" json:"count,omitempty"`
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	ServerId  int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	CityId    int64                  `protobuf:"varint,2,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	GuildId   int64                  `protobuf:"varint,3,opt,name=guild_id,json=guildId,proto3" json:"guild_id,omitempty"`
+	UnitCfgId int32                  `protobuf:"varint,4,opt,name=unit_cfg_id,json=unitCfgId,proto3" json:"unit_cfg_id,omitempty"`
+	Count     int32                  `protobuf:"varint,5,opt,name=count,proto3" json:"count,omitempty"`
+	// 出发城：兵力从该城扣除，目标城可为同联盟盟友城池。
+	FromCityId    int64 `protobuf:"varint,6,opt,name=from_city_id,json=fromCityId,proto3" json:"from_city_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1178,6 +1180,13 @@ func (x *StationGuildTroopsRequest) GetUnitCfgId() int32 {
 func (x *StationGuildTroopsRequest) GetCount() int32 {
 	if x != nil {
 		return x.Count
+	}
+	return 0
+}
+
+func (x *StationGuildTroopsRequest) GetFromCityId() int64 {
+	if x != nil {
+		return x.FromCityId
 	}
 	return 0
 }
@@ -1296,13 +1305,15 @@ const file_sanguo_guild_v1_guild_proto_rawDesc = "" +
 	"\tserver_id\x18\x01 \x01(\x05R\bserverId\x12\x17\n" +
 	"\acity_id\x18\x02 \x01(\x03R\x06cityId\"W\n" +
 	"\x19ListGuildGarrisonResponse\x12:\n" +
-	"\x06troops\x18\x01 \x03(\v2\".sanguo.guild.v1.GuildGarrisonViewR\x06troops\"\xa2\x01\n" +
+	"\x06troops\x18\x01 \x03(\v2\".sanguo.guild.v1.GuildGarrisonViewR\x06troops\"\xc4\x01\n" +
 	"\x19StationGuildTroopsRequest\x12\x1b\n" +
 	"\tserver_id\x18\x01 \x01(\x05R\bserverId\x12\x17\n" +
 	"\acity_id\x18\x02 \x01(\x03R\x06cityId\x12\x19\n" +
 	"\bguild_id\x18\x03 \x01(\x03R\aguildId\x12\x1e\n" +
 	"\vunit_cfg_id\x18\x04 \x01(\x05R\tunitCfgId\x12\x14\n" +
-	"\x05count\x18\x05 \x01(\x05R\x05count\"X\n" +
+	"\x05count\x18\x05 \x01(\x05R\x05count\x12 \n" +
+	"\ffrom_city_id\x18\x06 \x01(\x03R\n" +
+	"fromCityId\"X\n" +
 	"\x1aStationGuildTroopsResponse\x12:\n" +
 	"\x06troops\x18\x01 \x03(\v2\".sanguo.guild.v1.GuildGarrisonViewR\x06troops*\x8f\x01\n" +
 	"\x0fGuildMemberRole\x12!\n" +
