@@ -18,6 +18,9 @@ func MountGmHTTP(mux *http.ServeMux, gm *GmService) {
 	mux.HandleFunc("/gm/grant", h.grant)
 	mux.HandleFunc("/gm/kick", h.kick)
 	mux.HandleFunc("/gm/mute", h.mute)
+	mux.HandleFunc("/gm/world-phase", h.worldPhase)
+	mux.HandleFunc("/gm/special-city", h.specialCity)
+	mux.HandleFunc("/gm/achievement", h.achievement)
 }
 
 type gmHTTP struct {
@@ -154,4 +157,113 @@ func writeGmErr(w http.ResponseWriter, err error) {
 func writeJSON(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(v)
+}
+
+type gmWorldPhaseReq struct {
+	Token    string `json:"token"`
+	Audit    GmAudit
+	ServerID int32 `json:"server_id"`
+	Phase    int16 `json:"phase"`
+}
+
+func (h *gmHTTP) worldPhase(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req gmWorldPhaseReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+	req.Token = h.token(r, req.Token)
+	if req.Phase == 0 {
+		res, phase, err := h.gm.WorldPhase(r.Context(), req.Token, req.Audit, req.ServerID)
+		if err != nil {
+			writeGmErr(w, err)
+			return
+		}
+		writeJSON(w, map[string]any{"result": res, "world_phase": phase})
+		return
+	}
+	res, phase, err := h.gm.SetWorldPhase(r.Context(), req.Token, req.Audit, req.ServerID, req.Phase)
+	if err != nil {
+		writeGmErr(w, err)
+		return
+	}
+	writeJSON(w, map[string]any{"result": res, "world_phase": phase})
+}
+
+type gmSpecialCityReq struct {
+	Token     string `json:"token"`
+	Audit     GmAudit
+	ServerID  int32 `json:"server_id"`
+	List      bool  `json:"list"`
+	CityCfgID int32 `json:"city_cfg_id"`
+	GuildID   int64 `json:"guild_id"`
+}
+
+func (h *gmHTTP) specialCity(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req gmSpecialCityReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+	req.Token = h.token(r, req.Token)
+	if req.List || req.CityCfgID == 0 {
+		res, cities, err := h.gm.ListSpecialCities(r.Context(), req.Token, req.Audit, req.ServerID)
+		if err != nil {
+			writeGmErr(w, err)
+			return
+		}
+		writeJSON(w, map[string]any{"result": res, "cities": cities})
+		return
+	}
+	res, city, err := h.gm.SetSpecialCityOwner(r.Context(), req.Token, req.Audit, req.ServerID, req.CityCfgID, req.GuildID)
+	if err != nil {
+		writeGmErr(w, err)
+		return
+	}
+	writeJSON(w, map[string]any{"result": res, "city": city})
+}
+
+type gmAchievementReq struct {
+	Token         string `json:"token"`
+	Audit         GmAudit
+	ServerID      int32 `json:"server_id"`
+	PlayerID      int64 `json:"player_id"`
+	List          bool  `json:"list"`
+	AchievementID int32 `json:"achievement_id"`
+}
+
+func (h *gmHTTP) achievement(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var req gmAchievementReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+	req.Token = h.token(r, req.Token)
+	if req.List || req.AchievementID == 0 {
+		res, rows, err := h.gm.ListAchievements(r.Context(), req.Token, req.Audit, req.ServerID, req.PlayerID)
+		if err != nil {
+			writeGmErr(w, err)
+			return
+		}
+		writeJSON(w, map[string]any{"result": res, "achievements": rows})
+		return
+	}
+	res, reset, err := h.gm.ResetAchievement(r.Context(), req.Token, req.Audit, req.ServerID, req.PlayerID, req.AchievementID)
+	if err != nil {
+		writeGmErr(w, err)
+		return
+	}
+	writeJSON(w, map[string]any{"result": res, "reset": reset})
 }
