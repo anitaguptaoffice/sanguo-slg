@@ -14,9 +14,9 @@ func TestPGDiplomacyAndGarrison(t *testing.T) {
 	ctx := context.Background()
 	_, err := pool.Exec(ctx, `
 		INSERT INTO account(account_id,login_name,password_hash) OVERRIDING SYSTEM VALUE VALUES
-			(98,'diplo98','x'),(99,'diplo99','x'),(100,'diplo100','x') ON CONFLICT DO NOTHING;
+			(98,'diplo98','x'),(99,'diplo99','x'),(100,'diplo100','x'),(101,'diplo101','x') ON CONFLICT DO NOTHING;
 		INSERT INTO player(server_id,player_id,account_id,display_name) VALUES
-			(1,98,98,'盟主'),(1,99,99,'敌盟主'),(1,100,100,'盟友') ON CONFLICT DO NOTHING;
+			(1,98,98,'盟主'),(1,99,99,'敌盟主'),(1,100,100,'盟友'),(1,101,101,'散人') ON CONFLICT DO NOTHING;
 		INSERT INTO guild(server_id,guild_id,name,leader_player_id,member_count) VALUES
 			(1,1,'盟一',98,2),(1,2,'盟二',99,1) ON CONFLICT DO NOTHING;
 		INSERT INTO guild_member(server_id,guild_id,player_id,role) VALUES
@@ -36,13 +36,35 @@ func TestPGDiplomacyAndGarrison(t *testing.T) {
 	}
 	now := time.Date(2026, 11, 22, 12, 0, 0, 0, time.UTC)
 	d := NewDiplomacy(pool, func() time.Time { return now })
+	if ok, _, err := d.CanAttack(ctx, 1, 98, 99); err != nil || ok {
+		t.Fatalf("undeclared war allowed=%v err=%v", ok, err)
+	}
+	if ok, _, err := d.CanAttack(ctx, 1, 98, 100); err != nil || ok {
+		t.Fatalf("same guild allowed=%v err=%v", ok, err)
+	}
+	if ok, _, err := d.CanAttack(ctx, 1, 101, 99); err != nil || !ok {
+		t.Fatalf("unguilded allowed=%v err=%v", ok, err)
+	}
 	rel, err := d.SetRelation(ctx, 1, 98, 1, 2, 3)
 	if err != nil || !rel.Pending || !time.UnixMilli(rel.EffectiveAtMs).Equal(now.Add(8*time.Hour)) {
 		t.Fatalf("hostile = %+v err=%v", rel, err)
 	}
+	if ok, _, err := d.CanAttack(ctx, 1, 98, 99); err != nil || ok {
+		t.Fatalf("pending war allowed=%v err=%v", ok, err)
+	}
+	now = now.Add(8*time.Hour + time.Second)
+	if ok, _, err := d.CanAttack(ctx, 1, 98, 99); err != nil || !ok {
+		t.Fatalf("effective war allowed=%v err=%v", ok, err)
+	}
+	if ok, _, err := d.CanAttack(ctx, 1, 99, 98); err != nil || !ok {
+		t.Fatalf("reverse war allowed=%v err=%v", ok, err)
+	}
 	rel, err = d.SetRelation(ctx, 1, 98, 1, 2, 1)
 	if err != nil || rel.Pending || rel.State != 1 {
 		t.Fatalf("friendly = %+v err=%v", rel, err)
+	}
+	if ok, _, err := d.CanAttack(ctx, 1, 98, 99); err != nil || ok {
+		t.Fatalf("friendly attack allowed=%v err=%v", ok, err)
 	}
 	rows, err := d.Station(ctx, 1, 98, 98, 100, 1, 1, 4)
 	if err != nil || len(rows) != 1 || rows[0].Count != 4 {

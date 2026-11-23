@@ -111,6 +111,11 @@ func (s *Server) startMarch(ctx context.Context, pkt *commonv1.ClientPacket, pre
 	if errPkt != nil {
 		return errPkt, nil
 	}
+	if reason, err := s.warViolation(ctx, pc, req.GetToX(), req.GetToY(), req.GetPurpose()); err != nil {
+		return nil, err
+	} else if reason != "" {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_MILITARY_INVALID_MARCH, reason), nil
+	}
 	coord, ok := s.cityCoordinate(req.GetCityId())
 	if !ok {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode(50005), "city coordinates unknown"), nil
