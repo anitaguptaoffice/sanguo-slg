@@ -26,7 +26,7 @@ describe("original item production inventory", () => {
   it("preserves 161 non-item entries and accepts only absent or complete item delivery", () => {
     const assets = manifest.assets;
     expect(new Set(assets.map((a) => a.id)).size).toBe(assets.length);
-    expect(assets.filter((a) => !a.id.startsWith("item.icon."))).toHaveLength(285);
+    expect(assets.filter((a) => !a.id.startsWith("item.icon."))).toHaveLength(294);
     const items = assets.filter((a) => a.id.startsWith("item.icon."));
     if (items.length) validate(items);
     for (const a of items) for (const v of a.variants ?? []) expect(existsSync(join(root, v.path))).toBe(true);

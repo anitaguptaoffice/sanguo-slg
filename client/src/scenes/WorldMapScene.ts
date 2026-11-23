@@ -19,6 +19,7 @@ import {
   worldCityAssetId,
   worldFlagAssetId,
   worldSpecialCityAssetId,
+  worldSpecialCityLandmarkAssetId,
   worldMarchAssetId,
   worldResourceAssetId,
   worldTileAssetId,
@@ -616,7 +617,7 @@ export class WorldMapScene {
       if (city.x < 0 || city.y < 0 || city.x >= MAP_SIZE || city.y >= MAP_SIZE) continue;
       const point = projectTile(city.x, city.y, this.camera, size);
       if (point.x < -80 || point.x > size.width + 80 || point.y < -80 || point.y > size.height + 80) continue;
-      const drawn = this.drawAssetAt(ctx, worldSpecialCityAssetId(city.city_type), point.x, point.y, this.camera.zoom * 0.62);
+      const drawn = this.drawAssetAt(ctx, worldSpecialCityLandmarkAssetId(city.city_cfg_id, city.city_type), point.x, point.y, this.camera.zoom * 0.62);
       if (!drawn) {
         ctx.fillStyle = "#e0b34a";
         ctx.beginPath();

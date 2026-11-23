@@ -8,6 +8,7 @@ import {
   worldResourceAssetId,
   worldTileAssetId,
   worldSpecialCityAssetId,
+  worldSpecialCityLandmarkAssetId,
 } from "./worldMapArt";
 
 describe("world map art mapping", () => {
@@ -41,6 +42,15 @@ describe("world map art mapping", () => {
     expect(worldSpecialCityAssetId(2)).toBe("world.obj.city.town.v1");
     expect(worldSpecialCityAssetId(3)).toBe("world.obj.city.town.v1");
     expect(worldSpecialCityAssetId(4)).toBe("world.obj.city.capital.v1");
+  });
+
+  it("uses a unique landmark for every configured special city", () => {
+    for (let id = 1; id <= 9; id++) {
+      expect(worldSpecialCityLandmarkAssetId(id, 1 + (id % 4))).toBe(`world.obj.special.${id}.v1`);
+    }
+    expect(worldSpecialCityLandmarkAssetId(99, 1)).toBe("world.obj.city.village.v1");
+    expect(worldSpecialCityLandmarkAssetId(99, 2)).toBe("world.obj.city.town.v1");
+    expect(worldSpecialCityLandmarkAssetId(99, 4)).toBe("world.obj.city.capital.v1");
   });
 
   it("keeps resource landmarks and march markers deterministic", () => {
