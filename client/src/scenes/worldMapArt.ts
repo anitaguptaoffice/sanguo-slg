@@ -32,6 +32,17 @@ export function worldCityAssetId(level: number): string {
   return "world.obj.city.village.v1";
 }
 
+const SPECIAL_LANDMARK_IDS: Record<number, string> = {
+  1: "world.obj.special.1.v1", 2: "world.obj.special.2.v1", 3: "world.obj.special.3.v1",
+  4: "world.obj.special.4.v1", 5: "world.obj.special.5.v1", 6: "world.obj.special.6.v1",
+  7: "world.obj.special.7.v1", 8: "world.obj.special.8.v1", 9: "world.obj.special.9.v1",
+};
+
+/** Unique landmark for a configured special city; type art is the fallback. */
+export function worldSpecialCityLandmarkAssetId(cityCfgID: number, cityType: number): string {
+  return SPECIAL_LANDMARK_IDS[cityCfgID] ?? worldSpecialCityAssetId(cityType);
+}
+
 /** Landmark sprite for a special city type: county/commandery/state/capital. */
 export function worldSpecialCityAssetId(cityType: number): string {
   if (cityType >= 4) return worldCityAssetId(8);

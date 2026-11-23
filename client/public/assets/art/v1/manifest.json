@@ -9285,6 +9285,258 @@
       "tags": [
         "wall-defense"
       ]
+    },
+    {
+      "id": "world.obj.special.1.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 192,
+        "h": 160
+      },
+      "anchor": {
+        "x": 96,
+        "y": 152
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/world/special/city_1.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/world/special/city_1.png"
+        }
+      ],
+      "tags": [
+        "special-city-landmark",
+        "city:1",
+        "陈留"
+      ]
+    },
+    {
+      "id": "world.obj.special.2.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 192,
+        "h": 160
+      },
+      "anchor": {
+        "x": 96,
+        "y": 152
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/world/special/city_2.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/world/special/city_2.png"
+        }
+      ],
+      "tags": [
+        "special-city-landmark",
+        "city:2",
+        "汝南"
+      ]
+    },
+    {
+      "id": "world.obj.special.3.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 192,
+        "h": 160
+      },
+      "anchor": {
+        "x": 96,
+        "y": 152
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/world/special/city_3.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/world/special/city_3.png"
+        }
+      ],
+      "tags": [
+        "special-city-landmark",
+        "city:3",
+        "北海"
+      ]
+    },
+    {
+      "id": "world.obj.special.4.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 192,
+        "h": 160
+      },
+      "anchor": {
+        "x": 96,
+        "y": 152
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/world/special/city_4.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/world/special/city_4.png"
+        }
+      ],
+      "tags": [
+        "special-city-landmark",
+        "city:4",
+        "青州"
+      ]
+    },
+    {
+      "id": "world.obj.special.5.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 192,
+        "h": 160
+      },
+      "anchor": {
+        "x": 96,
+        "y": 152
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/world/special/city_5.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/world/special/city_5.png"
+        }
+      ],
+      "tags": [
+        "special-city-landmark",
+        "city:5",
+        "南中"
+      ]
+    },
+    {
+      "id": "world.obj.special.6.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 192,
+        "h": 160
+      },
+      "anchor": {
+        "x": 96,
+        "y": 152
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/world/special/city_6.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/world/special/city_6.png"
+        }
+      ],
+      "tags": [
+        "special-city-landmark",
+        "city:6",
+        "长安"
+      ]
+    },
+    {
+      "id": "world.obj.special.7.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 192,
+        "h": 160
+      },
+      "anchor": {
+        "x": 96,
+        "y": 152
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/world/special/city_7.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/world/special/city_7.png"
+        }
+      ],
+      "tags": [
+        "special-city-landmark",
+        "city:7",
+        "幽州"
+      ]
+    },
+    {
+      "id": "world.obj.special.8.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 192,
+        "h": 160
+      },
+      "anchor": {
+        "x": 96,
+        "y": 152
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/world/special/city_8.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/world/special/city_8.png"
+        }
+      ],
+      "tags": [
+        "special-city-landmark",
+        "city:8",
+        "洛阳"
+      ]
+    },
+    {
+      "id": "world.obj.special.9.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 192,
+        "h": 160
+      },
+      "anchor": {
+        "x": 96,
+        "y": 152
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/world/special/city_9.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/world/special/city_9.png"
+        }
+      ],
+      "tags": [
+        "special-city-landmark",
+        "city:9",
+        "永昌"
+      ]
     }
   ]
 }

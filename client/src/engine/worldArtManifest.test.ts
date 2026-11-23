@@ -13,6 +13,7 @@ const CITIES = ["village", "town", "capital"];
 const RESOURCES = ["farm", "lumber", "quarry", "iron"];
 const FLAGS = ["self", "ally", "neutral", "enemy"];
 const MARCHES = ["troop", "returning"];
+const SPECIAL = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 const WORLD_IDS = [
   ...TILES.map((code) => `world.tile.${code}.v1`),
@@ -21,6 +22,7 @@ const WORLD_IDS = [
   ...RESOURCES.map((code) => `world.obj.resource.${code}.v1`),
   ...FLAGS.map((code) => `world.flag.${code}.v1`),
   ...MARCHES.map((code) => `world.march.${code}.v1`),
+  ...SPECIAL.map((id) => `world.obj.special.${id}.v1`),
 ];
 
 function pngSize(file: string): { w: number; h: number; colorType: number } {
@@ -30,8 +32,8 @@ function pngSize(file: string): { w: number; h: number; colorType: number } {
 }
 
 describe("R1-S6 world art pack", () => {
-  it("registers exactly the 22 world assets once", () => {
-    expect(new Set(WORLD_IDS).size).toBe(22);
+  it("registers exactly the 31 world assets once", () => {
+    expect(new Set(WORLD_IDS).size).toBe(31);
     const registered = manifest.assets.filter((a) => a.id.startsWith("world."));
     expect(registered.map((a) => a.id).sort()).toEqual([...WORLD_IDS].sort());
     expect(manifest.assets.filter((a) => a.id === "world.tile.plain.v1")).toHaveLength(1);
