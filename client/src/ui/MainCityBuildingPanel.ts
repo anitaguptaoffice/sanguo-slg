@@ -66,6 +66,13 @@ export type ScoutReportRow = { report_id?: number; x?: number; y?: number; tier?
 export type BeaconWarningRow = { warning_id?: number; x?: number; y?: number; purpose?: number; arrive_at_ms?: number; beacon_level?: number; attacker_player_id?: number; attacker_troops?: number };
 export type AchievementRow = { achievement_id?: number; code?: string; name?: string; description?: string; category?: number; threshold?: number | string; progress?: number | string; claimed?: boolean; can_claim?: boolean; reward_gold?: number | string; reward_prestige?: number | string };
 export type ArenaOpponentRow = { opponent_id?: number; name?: string; troop_cap?: number; defender_total?: number; defender_hero?: string; reward_gold?: number | string; reward_prestige?: number | string; reward_item_cfg_id?: number; reward_item_count?: number };
+const CAMPAIGN_UNITS: Array<[number, string]> = [
+  [1, "步兵"], [2, "骑兵"], [3, "弓兵"], [4, "器械"], [5, "民夫"], [6, "义兵"],
+  [7, "斥候"], [8, "长枪兵"], [9, "刀盾兵"], [10, "长弓手"], [11, "轻骑"], [12, "铁骑"],
+  [13, "西凉铁骑"], [14, "虎豹骑"], [15, "青州兵"], [16, "南蛮象兵"], [17, "藤甲兵"], [18, "突骑兵"],
+];
+
+export type CampaignUnitStack = { unit_cfg_id: number; count: number };
 export type CampaignStageRow = { stage_id?: number; code?: string; name?: string; chapter?: number; stage_order?: number; troop_cap?: number; unlocked?: boolean; cleared?: boolean; stars?: number; defender_total?: number; defender_hero?: string; reward_gold?: number | string; reward_prestige?: number | string };
 export type SpecialCityRow = { city_cfg_id?: number; city_type?: number; name?: string; x?: number; y?: number; owner_guild_id?: number; owner_guild_name?: string; garrison?: number; wall_level?: number; hero_name?: string; hero_level?: number; unit_cfg_id?: number; unit_name?: string; next_recover_at_ms?: number | string; min_phase?: number; locked?: boolean; lock_reason?: string };
 export type GuildRelationRow = { guild_id?: number; target_guild_id?: number; state?: number; effective_at_ms?: number; pending?: boolean };
@@ -144,7 +151,7 @@ export class MainCityBuildingPanel {
     private readonly onRankAction?: (action: "promote" | "found" | "transfer" | "truce", name: string, x: number, y: number) => void,
     private readonly onDiplomacyAction?: (action: string, guildId: number, targetGuildId: number, cityId: number, unit: number, count: number, fromCityId: number) => void,
     private readonly onSpecialAction?: (action: string, unit: number, count: number) => void,
-    private readonly onCampaignAction?: (action: string, stageId: number, unit: number, count: number) => void,
+    private readonly onCampaignAction?: (action: string, stageId: number, attacker: CampaignUnitStack[]) => void,
     private readonly onArenaAction?: (action: string, opponentId: number, unit: number, count: number) => void,
     private readonly onAchievementAction?: (achievementId: number) => void,
     private readonly onPhaseClaim?: () => void,
@@ -227,11 +234,9 @@ export class MainCityBuildingPanel {
           <h4>历史战役</h4>
           <p data-role="campaign-status">借调兵力闯关，不损耗城内真实部队；首通发放图纸、宝珠与声望。</p>
           <label>关卡 <select data-field="campaign-stage"></select></label>
-          <label>兵种 <select data-field="campaign-unit">
-            <option value="1">步兵</option><option value="2">骑兵</option><option value="3">弓兵</option>
-            <option value="4">器械</option><option value="9">刀盾兵</option><option value="11">轻骑</option>
-          </select></label>
-          <label>借调兵力 <input type="number" data-field="campaign-count" value="3000"></label>
+          <div class="campaign-formation" data-role="campaign-formation"></div>
+          <button type="button" data-action="campaign-add-unit">添加兵种</button>
+          <p data-role="campaign-cap"></p>
           <button type="button" data-action="fight-campaign">出征战役</button>
           <div data-role="campaign-stages"></div>
           <h4>沙场比武</h4>
@@ -358,6 +363,9 @@ export class MainCityBuildingPanel {
     `;
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
+    this.panel.addEventListener("input", () => this.updateCampaignFormationState());
+    this.panel.addEventListener("change", () => this.updateCampaignFormationState());
+    this.resetCampaignFormation();
     this.focusTrap = createCenterPanelFocusTrap(this.panel, () => this.close());
     this.reskin?.(this.panel);
   }
@@ -676,6 +684,57 @@ export class MainCityBuildingPanel {
     this.renderEquipment();
   }
 
+  private campaignUnitOptions(selected: number): string {
+    return CAMPAIGN_UNITS.map(([id, name]) => `<option value="${id}"${id === selected ? " selected" : ""}>${name}</option>`).join("");
+  }
+
+  private addCampaignRow(unit = 1, count = 1000): void {
+    const host = this.panel?.querySelector<HTMLElement>('[data-role="campaign-formation"]');
+    if (!host) return;
+    const row = document.createElement("div");
+    row.dataset.role = "campaign-unit-row";
+    row.style.cssText = "display:flex;gap:4px;align-items:center;margin:3px 0";
+    row.innerHTML = `<select data-field="campaign-unit" style="flex:1">${this.campaignUnitOptions(unit)}</select>
+      <input type="number" data-field="campaign-count" min="1" value="${count}" style="width:90px">
+      <button type="button" data-action="campaign-remove-unit">移除</button>`;
+    host.appendChild(row);
+    this.updateCampaignFormationState();
+  }
+
+  private resetCampaignFormation(): void {
+    const host = this.panel?.querySelector<HTMLElement>('[data-role="campaign-formation"]');
+    if (!host) return;
+    host.textContent = "";
+    this.addCampaignRow();
+  }
+
+  private campaignFormation(): CampaignUnitStack[] {
+    const rows = this.panel?.querySelectorAll<HTMLElement>('[data-role="campaign-unit-row"]') ?? [];
+    const out: CampaignUnitStack[] = [];
+    for (const row of rows) {
+      const unit = Number(row.querySelector<HTMLSelectElement>('[data-field="campaign-unit"]')?.value ?? 0);
+      const count = Number(row.querySelector<HTMLInputElement>('[data-field="campaign-count"]')?.value ?? 0);
+      if (unit > 0 && count > 0) out.push({ unit_cfg_id: unit, count });
+    }
+    return out;
+  }
+
+  private selectedCampaignCap(): number {
+    const select = this.panel?.querySelector<HTMLSelectElement>('[data-field="campaign-stage"]');
+    const stage = this.campaignStages.find((row) => String(row.stage_id ?? 0) === select?.value);
+    return Number(stage?.troop_cap ?? 0);
+  }
+
+  private updateCampaignFormationState(): void {
+    const hint = this.panel?.querySelector<HTMLElement>('[data-role="campaign-cap"]');
+    if (!hint) return;
+    const total = this.campaignFormation().reduce((sum, row) => sum + row.count, 0);
+    const cap = this.selectedCampaignCap();
+    const over = cap > 0 && total > cap;
+    hint.textContent = `借调兵力 ${total}${cap > 0 ? ` / ${cap}` : ""}${over ? "（超出关卡上限）" : ""}`;
+    hint.style.color = over ? "#c0392b" : "";
+  }
+
   setCampaignStages(stages: CampaignStageRow[]): void {
     this.campaignStages = stages;
     this.renderCampaignStages();
@@ -710,6 +769,7 @@ export class MainCityBuildingPanel {
     }
     const cleared = this.campaignStages.filter((stage) => stage.cleared).length;
     status.textContent = `战役 ${cleared}/${this.campaignStages.length} 通关 · 首通奖励：高阶装备图纸、宝珠匣与声望`;
+    this.updateCampaignFormationState();
   }
 
   setAchievements(rows: AchievementRow[], world: typeof this.worldProgress): void {
@@ -1127,12 +1187,33 @@ export class MainCityBuildingPanel {
       this.onArenaAction?.("fight", opponent, unit, count);
       return;
     }
+    if (btn?.getAttribute("data-action") === "campaign-add-unit") {
+      const rows = this.panel.querySelectorAll('[data-role="campaign-unit-row"]').length;
+      if (rows < 5) this.addCampaignRow();
+      return;
+    }
+    if (btn?.getAttribute("data-action") === "campaign-remove-unit") {
+      const rows = this.panel.querySelectorAll('[data-role="campaign-unit-row"]');
+      if (rows.length > 1) btn.closest('[data-role="campaign-unit-row"]')?.remove();
+      this.updateCampaignFormationState();
+      return;
+    }
     if (btn?.getAttribute("data-action") === "fight-campaign") {
       const section = this.panel.querySelector<HTMLElement>('[data-role="drill-tactics"]');
       const stage = Number(section?.querySelector<HTMLSelectElement>('[data-field="campaign-stage"]')?.value ?? 0);
-      const unit = Number(section?.querySelector<HTMLSelectElement>('[data-field="campaign-unit"]')?.value ?? 0);
-      const count = Number(section?.querySelector<HTMLInputElement>('[data-field="campaign-count"]')?.value ?? 0);
-      this.onCampaignAction?.("fight", stage, unit, count);
+      const attacker = this.campaignFormation();
+      const total = attacker.reduce((sum, row) => sum + row.count, 0);
+      const cap = this.selectedCampaignCap();
+      const status = section?.querySelector<HTMLElement>('[data-role="campaign-status"]');
+      if (attacker.length === 0) {
+        if (status) status.textContent = "请至少配置一个兵种";
+        return;
+      }
+      if (cap > 0 && total > cap) {
+        if (status) status.textContent = `借调兵力 ${total} 超出关卡上限 ${cap}`;
+        return;
+      }
+      this.onCampaignAction?.("fight", stage, attacker);
       return;
     }
     const specialAction = btn?.getAttribute("data-action");
