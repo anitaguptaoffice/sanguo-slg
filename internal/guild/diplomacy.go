@@ -154,6 +154,37 @@ func (d *Diplomacy) Station(ctx context.Context, serverID int32, playerID, fromC
 	return d.ListGarrison(ctx, serverID, cityID)
 }
 
+// CanAttack reports whether attackerPlayerID may attack defenderPlayerID's city
+// under the current guild relations. A declared war only opens after its
+// eight-hour effective window.
+func (d *Diplomacy) CanAttack(ctx context.Context, serverID int32, attackerPlayerID, defenderPlayerID int64) (bool, string, error) {
+	var attackerGuild, defenderGuild int64
+	if err := d.Pool.QueryRow(ctx, `SELECT
+		COALESCE((SELECT guild_id FROM guild_member WHERE server_id=$1 AND player_id=$2),0),
+		COALESCE((SELECT guild_id FROM guild_member WHERE server_id=$1 AND player_id=$3),0)`,
+		serverID, attackerPlayerID, defenderPlayerID).Scan(&attackerGuild, &defenderGuild); err != nil {
+		return false, "", err
+	}
+	if attackerGuild == 0 || defenderGuild == 0 {
+		return true, "", nil
+	}
+	if attackerGuild == defenderGuild {
+		return false, "同联盟城池不可攻击", nil
+	}
+	var active bool
+	if err := d.Pool.QueryRow(ctx, `SELECT EXISTS(
+		SELECT 1 FROM guild_relation
+		WHERE server_id=$1 AND state=3 AND effective_at<=$4
+		AND ((guild_id=$2 AND target_guild_id=$3) OR (guild_id=$3 AND target_guild_id=$2)))`,
+		serverID, attackerGuild, defenderGuild, d.Now()).Scan(&active); err != nil {
+		return false, "", err
+	}
+	if !active {
+		return false, "未宣战或宣战尚未生效（宣战后需等待 8 小时）", nil
+	}
+	return true, "", nil
+}
+
 // Withdraw returns stationed troops from a guild city to the player's own city.
 func (d *Diplomacy) Withdraw(ctx context.Context, serverID int32, playerID, cityID, toCityID, guildID int64, unit int32, count int32) ([]*guildv1.GuildGarrisonView, error) {
 	if count <= 0 || unit < 1 || unit > 12 {
