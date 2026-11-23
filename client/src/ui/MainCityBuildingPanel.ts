@@ -67,7 +67,7 @@ export type BeaconWarningRow = { warning_id?: number; x?: number; y?: number; pu
 export type AchievementRow = { achievement_id?: number; code?: string; name?: string; description?: string; category?: number; threshold?: number | string; progress?: number | string; claimed?: boolean; can_claim?: boolean; reward_gold?: number | string; reward_prestige?: number | string };
 export type ArenaOpponentRow = { opponent_id?: number; name?: string; troop_cap?: number; defender_total?: number; defender_hero?: string; reward_gold?: number | string; reward_prestige?: number | string; reward_item_cfg_id?: number; reward_item_count?: number };
 export type CampaignStageRow = { stage_id?: number; code?: string; name?: string; chapter?: number; stage_order?: number; troop_cap?: number; unlocked?: boolean; cleared?: boolean; stars?: number; defender_total?: number; defender_hero?: string; reward_gold?: number | string; reward_prestige?: number | string };
-export type SpecialCityRow = { city_cfg_id?: number; city_type?: number; name?: string; x?: number; y?: number; owner_guild_id?: number; owner_guild_name?: string; garrison?: number; wall_level?: number; hero_name?: string; hero_level?: number; unit_cfg_id?: number; unit_name?: string; next_recover_at_ms?: number | string };
+export type SpecialCityRow = { city_cfg_id?: number; city_type?: number; name?: string; x?: number; y?: number; owner_guild_id?: number; owner_guild_name?: string; garrison?: number; wall_level?: number; hero_name?: string; hero_level?: number; unit_cfg_id?: number; unit_name?: string; next_recover_at_ms?: number | string; min_phase?: number; locked?: boolean; lock_reason?: string };
 export type GuildRelationRow = { guild_id?: number; target_guild_id?: number; state?: number; effective_at_ms?: number; pending?: boolean };
 export type GuildGarrisonRow = { city_id?: number; player_id?: number; unit_cfg_id?: number; count?: number };
 export type RankView = {
@@ -118,7 +118,7 @@ export class MainCityBuildingPanel {
   private campaignStages: CampaignStageRow[] = [];
   private arenaOpponents: ArenaOpponentRow[] = [];
   private achievements: AchievementRow[] = [];
-  private worldProgress: { phase?: number; name?: string; next?: string; owned_cities?: number | string; campaign_clears?: number | string } = {};
+  private worldProgress: { phase?: number; name?: string; next?: string; unlock?: string; owned_cities?: number | string; campaign_clears?: number | string; reward_gold?: number | string; reward_prestige?: number | string; reward_item_cfg_id?: number; reward_item_count?: number; can_claim?: boolean; claimed?: boolean } = {};
   private unlockedUnits: number[] = [];
   private guildGarrison: GuildGarrisonRow[] = [];
   private focusTrap: CenterPanelFocusTrap | null = null;
@@ -147,6 +147,7 @@ export class MainCityBuildingPanel {
     private readonly onCampaignAction?: (action: string, stageId: number, unit: number, count: number) => void,
     private readonly onArenaAction?: (action: string, opponentId: number, unit: number, count: number) => void,
     private readonly onAchievementAction?: (achievementId: number) => void,
+    private readonly onPhaseClaim?: () => void,
     private readonly equipmentIcon?: (cfgId?: number) => string | undefined,
   ) {}
 
@@ -317,6 +318,7 @@ export class MainCityBuildingPanel {
           <button type="button" data-action="recruit-special">招募精锐</button>
           <h4>世界进程与成就</h4>
           <p data-role="world-progress"></p>
+          <button type="button" data-action="claim-phase-reward">领取世界阶段奖励</button>
           <div data-role="achievements"></div>
         </div>
         <div class="trick-section hidden" data-role="tricks">
@@ -698,7 +700,7 @@ export class MainCityBuildingPanel {
     status.textContent = `战役 ${cleared}/${this.campaignStages.length} 通关 · 首通奖励：高阶装备图纸、宝珠匣与声望`;
   }
 
-  setAchievements(rows: AchievementRow[], world: { phase?: number; name?: string; next?: string; owned_cities?: number | string; campaign_clears?: number | string }): void {
+  setAchievements(rows: AchievementRow[], world: typeof this.worldProgress): void {
     this.achievements = rows;
     this.worldProgress = world;
     this.renderAchievements();
@@ -711,7 +713,14 @@ export class MainCityBuildingPanel {
     const world = section.querySelector<HTMLElement>('[data-role="world-progress"]');
     if (!list || !world) return;
     const p = this.worldProgress;
-    world.textContent = `世界阶段 ${p.phase ?? 1} · ${p.name ?? "讨平黄巾"} · ${p.next ?? ""} · 名城 ${p.owned_cities ?? 0} · 战役通关 ${p.campaign_clears ?? 0}`;
+    const item = p.reward_item_cfg_id ? ` · 道具 ${p.reward_item_count ?? 0}` : "";
+    world.textContent = `世界阶段 ${p.phase ?? 1} · ${p.name ?? "讨平黄巾"} · ${p.unlock ?? ""} · ${p.next ?? ""} · 名城 ${p.owned_cities ?? 0} · 战役通关 ${p.campaign_clears ?? 0}` +
+      (Number(p.phase ?? 1) >= 2 ? ` · 阶段奖励 金${p.reward_gold ?? 0} 声望${p.reward_prestige ?? 0}${item}${p.claimed ? " · 已领取" : ""}` : "");
+    const claim = section.querySelector<HTMLButtonElement>('[data-action="claim-phase-reward"]');
+    if (claim) {
+      claim.classList.toggle("hidden", Number(p.phase ?? 1) < 2 || p.claimed === true);
+      claim.disabled = !p.can_claim;
+    }
     list.textContent = "";
     for (const row of this.achievements) {
       const line = document.createElement("div");
@@ -775,7 +784,8 @@ export class MainCityBuildingPanel {
       const line = document.createElement("div");
       const owner = city.owner_guild_id ? city.owner_guild_name || `盟#${city.owner_guild_id}` : "中立";
       const unit = city.unit_cfg_id ? ` · 精锐 ${city.unit_name || `#${city.unit_cfg_id}`}` : "";
-      line.textContent = `${labels[city.city_type ?? 0] ?? "名城"} ${city.name ?? ""} (${city.x ?? 0},${city.y ?? 0}) · ${owner} · 守军 ${city.garrison ?? 0}${unit}`;
+      const lock = city.locked ? ` · 未开放（${city.lock_reason ?? `需阶段 ${city.min_phase ?? 1}`}）` : "";
+      line.textContent = `${labels[city.city_type ?? 0] ?? "名城"} ${city.name ?? ""} (${city.x ?? 0},${city.y ?? 0}) · ${owner} · 守军 ${city.garrison ?? 0}${unit}${lock}`;
       list.appendChild(line);
     }
     status.textContent = `名城 ${this.specialCities.length} 座 · 已解锁精锐 ${this.unlockedUnits.join("/") || "无"}`;
@@ -1089,6 +1099,10 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    if (btn?.getAttribute("data-action") === "claim-phase-reward") {
+      this.onPhaseClaim?.();
+      return;
+    }
     if (btn?.getAttribute("data-action") === "claim-achievement") {
       this.onAchievementAction?.(Number(btn.dataset.achievementId ?? 0));
       return;

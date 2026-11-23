@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
@@ -26,6 +27,12 @@ func (s *Server) handleListSpecialCities(ctx context.Context, pkt *commonv1.Clie
 	if err != nil {
 		return nil, err
 	}
+	_, _, _ = s.metaService().AdvancePhase(ctx, pc.ServerID)
+	progress, err := s.metaService().CurrentPhase(ctx, pc.ServerID, pc.PlayerID)
+	if err != nil {
+		return nil, err
+	}
+	phaseNames := map[int16]string{1: "讨平黄巾", 2: "群雄割据", 3: "问鼎洛阳"}
 	out := &worldv1.ListSpecialCitiesResponse{UnlockedUnits: units}
 	for _, c := range cities {
 		view := &worldv1.SpecialCityView{CityCfgId: c.CfgID, CityType: int32(c.CityType), Name: c.Name,
@@ -34,6 +41,11 @@ func (s *Server) handleListSpecialCities(ctx context.Context, pkt *commonv1.Clie
 			UnitCfgId: c.UnitCfgID, UnitName: c.UnitName}
 		if !c.NextRecoverAt.IsZero() && c.NextRecoverAt.Unix() > 0 {
 			view.NextRecoverAtMs = c.NextRecoverAt.UnixMilli()
+		}
+		view.MinPhase = int32(c.MinPhase)
+		if progress.Phase < c.MinPhase {
+			view.Locked = true
+			view.LockReason = "需世界阶段 " + strconv.Itoa(int(c.MinPhase)) + " · " + phaseNames[c.MinPhase]
 		}
 		out.Cities = append(out.Cities, view)
 	}

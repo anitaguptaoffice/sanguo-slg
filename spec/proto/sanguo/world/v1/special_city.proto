@@ -19,6 +19,9 @@ message SpecialCityView {
   int32 unit_cfg_id = 12;
   string unit_name = 13;
   int64 next_recover_at_ms = 14;
+  int32 min_phase = 15;
+  bool locked = 16;
+  string lock_reason = 17;
 }
 
 // route: world.v1.ListSpecialCities

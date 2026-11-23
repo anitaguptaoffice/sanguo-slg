@@ -354,3 +354,22 @@ describe("MainCityBuildingPanel achievements", () => {
     panel.detach();
   });
 });
+
+describe("MainCityBuildingPanel world phase reward", () => {
+  it("offers the phase reward once the phase is open", () => {
+    const mount = document.createElement("div");
+    const panel = new MainCityBuildingPanel(mount, { hall: "官府" }, () => null, () => {}, () => "idle");
+    panel.attach();
+    panel.selectSlot("hall");
+    panel.setAchievements([], {
+      phase: 2, name: "群雄割据", unlock: "开放郡城、州城国战与州郡税赋。", next: "攻占一座州城",
+      can_claim: true, reward_gold: 500, reward_prestige: 50, reward_item_cfg_id: 2061, reward_item_count: 1,
+    });
+    const section = mount.querySelector<HTMLElement>('[data-role="rank"]')!;
+    const btn = section.querySelector<HTMLButtonElement>('[data-action="claim-phase-reward"]')!;
+    expect(btn.classList.contains("hidden")).toBe(false);
+    expect(btn.disabled).toBe(false);
+    expect(section.textContent).toContain("阶段奖励 金500 声望50");
+    panel.detach();
+  });
+});
