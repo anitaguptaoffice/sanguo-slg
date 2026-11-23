@@ -373,3 +373,38 @@ describe("MainCityBuildingPanel world phase reward", () => {
     panel.detach();
   });
 });
+
+describe("MainCityBuildingPanel campaign formation", () => {
+  it("submits multiple unit stacks and enforces the stage cap", () => {
+    const mount = document.createElement("div");
+    const calls: unknown[][] = [];
+    const Ctor = MainCityBuildingPanel as unknown as new (...args: unknown[]) => MainCityBuildingPanel;
+    const optional = new Array(15).fill(undefined);
+    const panel = new Ctor(
+      mount, { drill_ground: "校场" }, () => null, () => {}, () => "idle",
+      ...optional,
+      (_action: string, stageId: number, stacks: unknown[]) => calls.push([stageId, stacks]),
+    );
+    panel.attach();
+    panel.selectSlot("drill_ground");
+    panel.setCampaignStages([
+      { stage_id: 1, name: "广宗黄巾", chapter: 1, troop_cap: 4000, unlocked: true, cleared: false, stars: 0, defender_total: 2500 },
+    ]);
+    const root = mount.querySelector<HTMLElement>('[data-role="drill-tactics"]')!;
+    const rows = () => root.querySelectorAll<HTMLElement>('[data-role="campaign-unit-row"]');
+    rows()[0]!.querySelector<HTMLSelectElement>('[data-field="campaign-unit"]')!.value = "2";
+    rows()[0]!.querySelector<HTMLInputElement>('[data-field="campaign-count"]')!.value = "2000";
+    root.querySelector<HTMLButtonElement>('[data-action="campaign-add-unit"]')!.click();
+    expect(rows()).toHaveLength(2);
+    rows()[1]!.querySelector<HTMLSelectElement>('[data-field="campaign-unit"]')!.value = "3";
+    rows()[1]!.querySelector<HTMLInputElement>('[data-field="campaign-count"]')!.value = "1500";
+    root.querySelector<HTMLButtonElement>('[data-action="fight-campaign"]')!.click();
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toEqual([1, [{ unit_cfg_id: 2, count: 2000 }, { unit_cfg_id: 3, count: 1500 }]]);
+    rows()[0]!.querySelector<HTMLInputElement>('[data-field="campaign-count"]')!.value = "3000";
+    root.querySelector<HTMLButtonElement>('[data-action="fight-campaign"]')!.click();
+    expect(calls).toHaveLength(1);
+    expect(root.querySelector<HTMLElement>('[data-role="campaign-status"]')!.textContent).toContain("超出关卡上限");
+    panel.detach();
+  });
+});

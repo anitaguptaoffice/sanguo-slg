@@ -1078,7 +1078,7 @@ export class MainCityScene implements Scene {
       (action, guildId, targetGuildId, cityId, unit, count, fromCityId) =>
         void this.diplomacyAction(action, guildId, targetGuildId, cityId, unit, count, fromCityId),
       (action, unit, count) => void this.specialCityAction(action, unit, count),
-      (action, stageId, unit, count) => void this.campaignAction(action, stageId, unit, count),
+      (action, stageId, attacker) => void this.campaignAction(action, stageId, attacker),
       (action, opponentId, unit, count) => void this.arenaAction(action, opponentId, unit, count),
       (achievementId) => void this.claimAchievement(achievementId),
       () => void this.claimWorldPhaseRewards(),
@@ -2515,11 +2515,11 @@ export class MainCityScene implements Scene {
     }
   }
 
-  private async campaignAction(_action: string, stageId: number, unit: number, count: number): Promise<void> {
+  private async campaignAction(_action: string, stageId: number, attacker: { unit_cfg_id: number; count: number }[]): Promise<void> {
     const session = this.session;
     if (!session?.cityId || !stageId) return;
     try {
-      const res = (await this.gateway.fightCampaignStage(session.cityId, stageId, [{ unit_cfg_id: unit, count }])) as {
+      const res = (await this.gateway.fightCampaignStage(session.cityId, stageId, attacker)) as {
         result?: string;
         stars?: number;
         first_clear?: boolean;
