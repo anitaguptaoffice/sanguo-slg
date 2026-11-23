@@ -41,6 +41,10 @@ func (s *Server) warViolation(ctx context.Context, pc PlayerContext, toX, toY, p
 		}
 		return "", nil
 	}
+	var specialReady bool
+	if err := pool.QueryRow(ctx, `SELECT to_regclass('cfg_special_city') IS NOT NULL`).Scan(&specialReady); err != nil || !specialReady {
+		return "", nil
+	}
 	var minPhase int16
 	var cityName string
 	err = pool.QueryRow(ctx, `SELECT min_phase,name FROM cfg_special_city WHERE x=$1 AND y=$2`, toX, toY).
@@ -51,12 +55,18 @@ func (s *Server) warViolation(ctx context.Context, pc PlayerContext, toX, toY, p
 	if err != nil {
 		return "", err
 	}
-	_, _, _ = meta.New(pool, s.now).AdvancePhase(ctx, pc.ServerID)
-	var phase int16
-	err = pool.QueryRow(ctx, `SELECT COALESCE((SELECT phase FROM world_phase_state WHERE server_id=$1),1)`,
-		pc.ServerID).Scan(&phase)
-	if err != nil {
+	var phaseReady bool
+	if err := pool.QueryRow(ctx, `SELECT to_regclass('world_phase_state') IS NOT NULL`).Scan(&phaseReady); err != nil {
 		return "", err
+	}
+	var phase int16 = 1
+	if phaseReady {
+		_, _, _ = meta.New(pool, s.now).AdvancePhase(ctx, pc.ServerID)
+		err = pool.QueryRow(ctx, `SELECT COALESCE((SELECT phase FROM world_phase_state WHERE server_id=$1),1)`,
+			pc.ServerID).Scan(&phase)
+		if err != nil {
+			return "", err
+		}
 	}
 	if phase < minPhase {
 		return fmt.Sprintf("世界阶段未开放%s（需阶段 %d）", cityName, minPhase), nil
