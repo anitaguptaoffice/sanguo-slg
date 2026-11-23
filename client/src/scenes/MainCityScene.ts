@@ -1081,6 +1081,7 @@ export class MainCityScene implements Scene {
       (action, stageId, unit, count) => void this.campaignAction(action, stageId, unit, count),
       (action, opponentId, unit, count) => void this.arenaAction(action, opponentId, unit, count),
       (achievementId) => void this.claimAchievement(achievementId),
+      () => void this.claimWorldPhaseRewards(),
       (cfgId) => (cfgId ? this.assets.getImageForAsset(`equip.icon.${cfgId}.v1`)?.img.src : undefined),
     );
     this.buildingPanel.attach();
@@ -2403,6 +2404,22 @@ export class MainCityScene implements Scene {
       ];
       if (this.session !== session) return;
       this.buildingPanel.setAchievements((ach.achievements ?? []) as never, world);
+    } catch (error) {
+      this.status = formatPanelGatewayErrorFromUnknown("build", error);
+      this.renderHud();
+    }
+  }
+
+  private async claimWorldPhaseRewards(): Promise<void> {
+    try {
+      const res = (await this.gateway.claimWorldPhaseRewards()) as {
+        phases?: number[];
+        gold?: number | string;
+        prestige?: number | string;
+      };
+      this.status = `世界阶段奖励已领取：阶段 ${(res.phases ?? []).join("/")} · 金 ${res.gold ?? 0} 声望 ${res.prestige ?? 0}`;
+      await this.refreshMeta();
+      this.renderHud();
     } catch (error) {
       this.status = formatPanelGatewayErrorFromUnknown("build", error);
       this.renderHud();

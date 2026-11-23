@@ -41,6 +41,7 @@ type City struct {
 	Recovery       time.Duration
 	UnitCfgID      int32
 	UnitName       string
+	MinPhase       int16
 	OwnerGuildID   int64
 	OwnerGuildName string
 	OccupiedAt     time.Time
@@ -75,7 +76,7 @@ func (s *Service) List(ctx context.Context, serverID int32) ([]City, error) {
 	rows, err := s.pool.Query(ctx, `SELECT c.city_cfg_id,c.city_type,c.name,c.x,c.y,c.wall_level,c.hero_name,
 		c.hero_level,c.hero_force,c.hero_intel,c.garrison,c.loot,c.recovery_seconds,COALESCE(c.unit_cfg_id,0),
 		COALESCE(st.owner_guild_id,0),COALESCE(g.name,''),COALESCE(st.occupied_at,'epoch'::timestamptz),
-		COALESCE(st.next_recover_at,'epoch'::timestamptz),st.garrison,COALESCE(u.name,'')
+		COALESCE(st.next_recover_at,'epoch'::timestamptz),st.garrison,COALESCE(u.name,''),c.min_phase
 		FROM cfg_special_city c
 		LEFT JOIN cfg_unit u ON u.unit_cfg_id=c.unit_cfg_id
 		LEFT JOIN special_city_state st ON st.server_id=$1 AND st.city_cfg_id=c.city_cfg_id
@@ -92,7 +93,7 @@ func (s *Service) List(ctx context.Context, serverID int32) ([]City, error) {
 		var recovery int
 		if err := rows.Scan(&c.CfgID, &c.CityType, &c.Name, &c.X, &c.Y, &c.WallLevel, &c.HeroName,
 			&c.HeroLevel, &c.HeroForce, &c.HeroIntel, &garrisonRaw, &lootRaw, &recovery, &c.UnitCfgID,
-			&c.OwnerGuildID, &c.OwnerGuildName, &c.OccupiedAt, &c.NextRecoverAt, &stateRaw, &c.UnitName); err != nil {
+			&c.OwnerGuildID, &c.OwnerGuildName, &c.OccupiedAt, &c.NextRecoverAt, &stateRaw, &c.UnitName, &c.MinPhase); err != nil {
 			return nil, err
 		}
 		c.Recovery = time.Duration(recovery) * time.Second

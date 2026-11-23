@@ -46,4 +46,20 @@ message GetWorldProgressResponse {
   string next = 3;
   int64 owned_cities = 4;
   int64 campaign_clears = 5;
+  string unlock = 6;
+  int64 reward_gold = 7;
+  int64 reward_prestige = 8;
+  int32 reward_item_cfg_id = 9;
+  int32 reward_item_count = 10;
+  bool can_claim = 11;
+  bool claimed = 12;
+}
+
+// route: meta.v1.ClaimWorldPhaseRewards
+message ClaimWorldPhaseRewardsRequest { int32 server_id = 1; }
+message ClaimWorldPhaseRewardsResponse {
+  repeated int32 phases = 1;
+  int64 gold = 2;
+  int64 prestige = 3;
+  repeated MetaItemView items = 4;
 }

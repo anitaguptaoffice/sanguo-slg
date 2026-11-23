@@ -102,6 +102,7 @@ export const Routes = {
   ListAchievements: "meta.v1.ListAchievements",
   ClaimAchievement: "meta.v1.ClaimAchievement",
   GetWorldProgress: "meta.v1.GetWorldProgress",
+  ClaimWorldPhaseRewards: "meta.v1.ClaimWorldPhaseRewards",
   SetGuildRelation: "guild.v1.SetGuildRelation",
   ListGuildRelations: "guild.v1.ListGuildRelations",
   StationGuildTroops: "guild.v1.StationGuildTroops",
@@ -296,6 +297,8 @@ export type ProtoTypes = {
   ClaimAchievementResponse: protobuf.Type;
   GetWorldProgressRequest: protobuf.Type;
   GetWorldProgressResponse: protobuf.Type;
+  ClaimWorldPhaseRewardsRequest: protobuf.Type;
+  ClaimWorldPhaseRewardsResponse: protobuf.Type;
   SetGuildRelationRequest: protobuf.Type;
   SetGuildRelationResponse: protobuf.Type;
   ListGuildRelationsRequest: protobuf.Type;
@@ -558,6 +561,8 @@ export function getTypes(): ProtoTypes {
     ClaimAchievementResponse: r.lookupType("sanguo.meta.v1.ClaimAchievementResponse"),
     GetWorldProgressRequest: r.lookupType("sanguo.meta.v1.GetWorldProgressRequest"),
     GetWorldProgressResponse: r.lookupType("sanguo.meta.v1.GetWorldProgressResponse"),
+    ClaimWorldPhaseRewardsRequest: r.lookupType("sanguo.meta.v1.ClaimWorldPhaseRewardsRequest"),
+    ClaimWorldPhaseRewardsResponse: r.lookupType("sanguo.meta.v1.ClaimWorldPhaseRewardsResponse"),
     ListBeaconWarningsResponse: r.lookupType("sanguo.military.v1.ListBeaconWarningsResponse"),
     TransferCityTroopsRequest: r.lookupType("sanguo.world.v1.TransferCityTroopsRequest"),
     TransferCityTroopsResponse: r.lookupType("sanguo.world.v1.TransferCityTroopsResponse"),

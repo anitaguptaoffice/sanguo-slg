@@ -78,18 +78,48 @@ func (s *Server) handleClaimAchievement(ctx context.Context, pkt *commonv1.Clien
 	return okResp(pkt.GetTraceId(), data), nil
 }
 
+func (s *Server) handleClaimWorldPhaseRewards(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+	pc, errPkt := s.playerCtx(ctx, pkt)
+	if errPkt != nil {
+		return errPkt, nil
+	}
+	claim, err := s.metaService().ClaimPhaseRewards(ctx, pc.ServerID, pc.PlayerID)
+	if err != nil {
+		msg := err.Error()
+		if errors.Is(err, meta.ErrNoPhaseReward) || errors.Is(err, meta.ErrAlreadyClaimed) {
+			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, msg), nil
+		}
+		return nil, err
+	}
+	out := &metav1.ClaimWorldPhaseRewardsResponse{Gold: claim.Gold, Prestige: claim.Prestige}
+	for _, phase := range claim.Phases {
+		out.Phases = append(out.Phases, int32(phase))
+	}
+	for _, item := range claim.Items {
+		out.Items = append(out.Items, &metav1.MetaItemView{ItemCfgId: item.ItemCfgID, Count: item.Count})
+	}
+	data, err := marshal(out)
+	if err != nil {
+		return nil, err
+	}
+	return okResp(pkt.GetTraceId(), data), nil
+}
+
 func (s *Server) handleGetWorldProgress(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
 	pc, errPkt := s.playerCtx(ctx, pkt)
 	if errPkt != nil {
 		return errPkt, nil
 	}
 	_, _, _ = s.metaService().AdvancePhase(ctx, pc.ServerID)
-	progress, err := s.metaService().CurrentPhase(ctx, pc.ServerID)
+	progress, err := s.metaService().CurrentPhase(ctx, pc.ServerID, pc.PlayerID)
 	if err != nil {
 		return nil, err
 	}
 	data, err := marshal(&metav1.GetWorldProgressResponse{Phase: int32(progress.Phase), Name: progress.Name,
-		Next: progress.Next, OwnedCities: progress.OwnedCities, CampaignClears: progress.Cleared})
+		Next: progress.Next, OwnedCities: progress.OwnedCities, CampaignClears: progress.Cleared,
+		Unlock: progress.Unlock, RewardGold: progress.RewardGold, RewardPrestige: progress.RewardPrestige,
+		RewardItemCfgId: progress.RewardItemCfgID, RewardItemCount: progress.RewardItemCount,
+		CanClaim: progress.CanClaim, Claimed: progress.Claimed})
 	if err != nil {
 		return nil, err
 	}

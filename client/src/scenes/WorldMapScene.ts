@@ -43,6 +43,9 @@ type SpecialCityMarker = {
   garrison: number;
   hero_name: string;
   unit_name: string;
+  min_phase: number;
+  locked: boolean;
+  lock_reason: string;
 };
 
 type Tile = {
@@ -436,6 +439,9 @@ export class WorldMapScene {
         garrison: Number(row.garrison ?? 0),
         hero_name: String(row.hero_name ?? ""),
         unit_name: String(row.unit_name ?? ""),
+        min_phase: Number(row.min_phase ?? 1),
+        locked: Boolean(row.locked),
+        lock_reason: String(row.lock_reason ?? ""),
       }));
       this.requestRender();
     } catch {
@@ -478,7 +484,9 @@ export class WorldMapScene {
       <p>坐标 (${city.x}, ${city.y}) · 归属：${owner}</p>
       <p>守军 ${city.garrison} · 守将 ${city.hero_name || "未知"}${elite}</p>
       <p style="color:#e8a87c">名城国战：胜利后由攻方联盟占领并解锁地域精锐。</p>
-      <button type="button" data-action="world-map-march" style="width:100%;margin-top:6px;background:#6a4f2a;color:#f4e6c8;border:1px solid #a07c46;border-radius:4px;padding:4px;">出征名城 (${city.x}, ${city.y})</button>
+      ${city.locked
+        ? `<p style="color:#e8a87c">${city.lock_reason || `需世界阶段 ${city.min_phase}`}</p>`
+        : `<button type="button" data-action="world-map-march" style="width:100%;margin-top:6px;background:#6a4f2a;color:#f4e6c8;border:1px solid #a07c46;border-radius:4px;padding:4px;">出征名城 (${city.x}, ${city.y})</button>`}
     `;
     this.detail.classList.remove("hidden");
     const close = this.detail.querySelector('[data-action="world-map-detail-close"]');
@@ -615,7 +623,7 @@ export class WorldMapScene {
         ctx.arc(point.x, point.y - 8, 6, 0, Math.PI * 2);
         ctx.fill();
       }
-      const label = city.name.slice(0, 6);
+      const label = city.locked ? `${city.name.slice(0, 5)}🔒` : city.name.slice(0, 6);
       ctx.font = "bold 11px system-ui, sans-serif";
       const width = (ctx.measureText?.(label).width ?? label.length * 8) + 10;
       ctx.fillStyle = "rgba(26,16,8,0.88)";

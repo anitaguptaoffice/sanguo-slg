@@ -37,6 +37,9 @@ type SpecialCityView struct {
 	UnitCfgId       int32                  `protobuf:"varint,12,opt,name=unit_cfg_id,json=unitCfgId,proto3" json:"unit_cfg_id,omitempty"`
 	UnitName        string                 `protobuf:"bytes,13,opt,name=unit_name,json=unitName,proto3" json:"unit_name,omitempty"`
 	NextRecoverAtMs int64                  `protobuf:"varint,14,opt,name=next_recover_at_ms,json=nextRecoverAtMs,proto3" json:"next_recover_at_ms,omitempty"`
+	MinPhase        int32                  `protobuf:"varint,15,opt,name=min_phase,json=minPhase,proto3" json:"min_phase,omitempty"`
+	Locked          bool                   `protobuf:"varint,16,opt,name=locked,proto3" json:"locked,omitempty"`
+	LockReason      string                 `protobuf:"bytes,17,opt,name=lock_reason,json=lockReason,proto3" json:"lock_reason,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -167,6 +170,27 @@ func (x *SpecialCityView) GetNextRecoverAtMs() int64 {
 		return x.NextRecoverAtMs
 	}
 	return 0
+}
+
+func (x *SpecialCityView) GetMinPhase() int32 {
+	if x != nil {
+		return x.MinPhase
+	}
+	return 0
+}
+
+func (x *SpecialCityView) GetLocked() bool {
+	if x != nil {
+		return x.Locked
+	}
+	return false
+}
+
+func (x *SpecialCityView) GetLockReason() string {
+	if x != nil {
+		return x.LockReason
+	}
+	return ""
 }
 
 // route: world.v1.ListSpecialCities
@@ -512,7 +536,7 @@ var File_sanguo_world_v1_special_city_proto protoreflect.FileDescriptor
 
 const file_sanguo_world_v1_special_city_proto_rawDesc = "" +
 	"\n" +
-	"\"sanguo/world/v1/special_city.proto\x12\x0fsanguo.world.v1\"\xaf\x03\n" +
+	"\"sanguo/world/v1/special_city.proto\x12\x0fsanguo.world.v1\"\x85\x04\n" +
 	"\x0fSpecialCityView\x12\x1e\n" +
 	"\vcity_cfg_id\x18\x01 \x01(\x05R\tcityCfgId\x12\x1b\n" +
 	"\tcity_type\x18\x02 \x01(\x05R\bcityType\x12\x12\n" +
@@ -530,7 +554,11 @@ const file_sanguo_world_v1_special_city_proto_rawDesc = "" +
 	"hero_level\x18\v \x01(\x05R\theroLevel\x12\x1e\n" +
 	"\vunit_cfg_id\x18\f \x01(\x05R\tunitCfgId\x12\x1b\n" +
 	"\tunit_name\x18\r \x01(\tR\bunitName\x12+\n" +
-	"\x12next_recover_at_ms\x18\x0e \x01(\x03R\x0fnextRecoverAtMs\"7\n" +
+	"\x12next_recover_at_ms\x18\x0e \x01(\x03R\x0fnextRecoverAtMs\x12\x1b\n" +
+	"\tmin_phase\x18\x0f \x01(\x05R\bminPhase\x12\x16\n" +
+	"\x06locked\x18\x10 \x01(\bR\x06locked\x12\x1f\n" +
+	"\vlock_reason\x18\x11 \x01(\tR\n" +
+	"lockReason\"7\n" +
 	"\x18ListSpecialCitiesRequest\x12\x1b\n" +
 	"\tserver_id\x18\x01 \x01(\x05R\bserverId\"|\n" +
 	"\x19ListSpecialCitiesResponse\x128\n" +

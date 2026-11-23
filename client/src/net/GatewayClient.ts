@@ -92,6 +92,7 @@ export type GatewayPort = {
   listAchievements(): Promise<unknown>;
   claimAchievement(achievementId: number): Promise<unknown>;
   getWorldProgress(): Promise<unknown>;
+  claimWorldPhaseRewards(): Promise<unknown>;
   setGuildRelation(guildId: number, targetGuildId: number, state: number): Promise<unknown>;
   listGuildRelations(guildId: number): Promise<unknown>;
   stationGuildTroops(cityId: number, guildId: number, unitCfgId: number, count: number, fromCityId?: number): Promise<unknown>;
@@ -832,6 +833,11 @@ export class GatewayClient implements GatewayPort {
   async claimAchievement(achievementId: number) {
     const { ClaimAchievementResponse } = getTypes();
     return this.rpc(Routes.ClaimAchievement, "ClaimAchievementRequest", { server_id: 1, achievement_id: achievementId }, ClaimAchievementResponse, true);
+  }
+
+  async claimWorldPhaseRewards() {
+    const { ClaimWorldPhaseRewardsResponse } = getTypes();
+    return this.rpc(Routes.ClaimWorldPhaseRewards, "ClaimWorldPhaseRewardsRequest", { server_id: 1 }, ClaimWorldPhaseRewardsResponse, true);
   }
 
   async getWorldProgress() {

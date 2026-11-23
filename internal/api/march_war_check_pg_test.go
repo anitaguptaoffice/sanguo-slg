@@ -49,4 +49,29 @@ func TestPGWarViolationWindow(t *testing.T) {
 	if reason, err := s.warViolation(ctx, PlayerContext{ServerID: 1, PlayerID: 97}, 11, 11, 1); err != nil || reason != "" {
 		t.Fatalf("unguilded reason=%q err=%v", reason, err)
 	}
+	if reason, err := s.warViolation(ctx, PlayerContext{ServerID: 1, PlayerID: 97}, 120, 140, 1); err != nil || reason != "" {
+		t.Fatalf("county phase1 reason=%q err=%v", reason, err)
+	}
+	if reason, err := s.warViolation(ctx, PlayerContext{ServerID: 1, PlayerID: 97}, 150, 180, 1); err != nil || reason == "" {
+		t.Fatalf("state phase1 reason=%q err=%v", reason, err)
+	}
+	if reason, err := s.warViolation(ctx, PlayerContext{ServerID: 1, PlayerID: 97}, 250, 250, 1); err != nil || reason == "" {
+		t.Fatalf("luoyang phase1 reason=%q err=%v", reason, err)
+	}
+	if _, err := pool.Exec(ctx, `INSERT INTO world_phase_state(server_id,phase,updated_at) VALUES(1,2,$1)
+		ON CONFLICT (server_id) DO UPDATE SET phase=2`, now); err != nil {
+		t.Fatal(err)
+	}
+	if reason, err := s.warViolation(ctx, PlayerContext{ServerID: 1, PlayerID: 97}, 150, 180, 1); err != nil || reason != "" {
+		t.Fatalf("state phase2 reason=%q err=%v", reason, err)
+	}
+	if reason, err := s.warViolation(ctx, PlayerContext{ServerID: 1, PlayerID: 97}, 250, 250, 1); err != nil || reason == "" {
+		t.Fatalf("luoyang phase2 reason=%q err=%v", reason, err)
+	}
+	if _, err := pool.Exec(ctx, `UPDATE world_phase_state SET phase=3 WHERE server_id=1`); err != nil {
+		t.Fatal(err)
+	}
+	if reason, err := s.warViolation(ctx, PlayerContext{ServerID: 1, PlayerID: 97}, 250, 250, 1); err != nil || reason != "" {
+		t.Fatalf("luoyang phase3 reason=%q err=%v", reason, err)
+	}
 }

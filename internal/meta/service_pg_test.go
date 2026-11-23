@@ -50,7 +50,7 @@ func TestPGAchievementsAndWorldPhase(t *testing.T) {
 		t.Fatalf("gold=%d err=%v", gold, err)
 	}
 
-	progress, err := svc.CurrentPhase(ctx, 1)
+	progress, err := svc.CurrentPhase(ctx, 1, 96)
 	if err != nil || progress.Phase != 1 || progress.Name != "讨平黄巾" {
 		t.Fatalf("phase=%+v err=%v", progress, err)
 	}
@@ -68,16 +68,27 @@ func TestPGAchievementsAndWorldPhase(t *testing.T) {
 		t.Fatalf("advance phase2=%d %v err=%v", phase, changed, err)
 	}
 	if _, err := pool.Exec(ctx, `INSERT INTO guild(server_id,guild_id,name,leader_player_id,member_count) VALUES(1,9,'问鼎盟',96,1) ON CONFLICT DO NOTHING;
-		INSERT INTO special_city_state(server_id,city_cfg_id,owner_guild_id) VALUES(1,8,9) ON CONFLICT (server_id,city_cfg_id) DO UPDATE SET owner_guild_id=9`); err != nil {
+		INSERT INTO special_city_state(server_id,city_cfg_id,owner_guild_id) VALUES(1,6,9) ON CONFLICT (server_id,city_cfg_id) DO UPDATE SET owner_guild_id=9`); err != nil {
 		t.Fatal(err)
 	}
 	phase, changed, err = svc.AdvancePhase(ctx, 1)
 	if err != nil || !changed || phase != 3 {
 		t.Fatalf("advance phase3=%d %v err=%v", phase, changed, err)
 	}
-	progress, _ = svc.CurrentPhase(ctx, 1)
+	progress, _ = svc.CurrentPhase(ctx, 1, 96)
 	if progress.Phase != 3 || progress.Name != "问鼎洛阳" || progress.OwnedCities != 1 {
 		t.Fatalf("final phase=%+v", progress)
+	}
+	claim, err := svc.ClaimPhaseRewards(ctx, 1, 96)
+	if err != nil || len(claim.Phases) != 2 || claim.Gold != 2000 || claim.Prestige != 200 || len(claim.Items) != 2 {
+		t.Fatalf("phase claim=%+v err=%v", claim, err)
+	}
+	if _, err := svc.ClaimPhaseRewards(ctx, 1, 96); err != ErrAlreadyClaimed {
+		t.Fatalf("second phase claim err=%v", err)
+	}
+	progress, _ = svc.CurrentPhase(ctx, 1, 96)
+	if !progress.Claimed {
+		t.Fatalf("phase claim state=%+v", progress)
 	}
 	if _, err := pool.Exec(ctx, `INSERT INTO guild_member(server_id,guild_id,player_id,role) VALUES(1,9,96,1) ON CONFLICT DO NOTHING;
 		INSERT INTO special_city_state(server_id,city_cfg_id,owner_guild_id) VALUES(1,1,9),(1,2,9) ON CONFLICT (server_id,city_cfg_id) DO UPDATE SET owner_guild_id=9;
@@ -94,7 +105,7 @@ func TestPGAchievementsAndWorldPhase(t *testing.T) {
 			claimable[v.ID] = true
 		}
 	}
-	for _, id := range []int32{6, 7, 9, 10} {
+	for _, id := range []int32{6, 7, 10} {
 		if !claimable[id] {
 			t.Fatalf("achievement %d not claimable: %+v", id, views)
 		}

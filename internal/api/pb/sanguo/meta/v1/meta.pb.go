@@ -469,14 +469,21 @@ func (x *GetWorldProgressRequest) GetServerId() int32 {
 }
 
 type GetWorldProgressResponse struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	Phase          int32                  `protobuf:"varint,1,opt,name=phase,proto3" json:"phase,omitempty"`
-	Name           string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Next           string                 `protobuf:"bytes,3,opt,name=next,proto3" json:"next,omitempty"`
-	OwnedCities    int64                  `protobuf:"varint,4,opt,name=owned_cities,json=ownedCities,proto3" json:"owned_cities,omitempty"`
-	CampaignClears int64                  `protobuf:"varint,5,opt,name=campaign_clears,json=campaignClears,proto3" json:"campaign_clears,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Phase           int32                  `protobuf:"varint,1,opt,name=phase,proto3" json:"phase,omitempty"`
+	Name            string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Next            string                 `protobuf:"bytes,3,opt,name=next,proto3" json:"next,omitempty"`
+	OwnedCities     int64                  `protobuf:"varint,4,opt,name=owned_cities,json=ownedCities,proto3" json:"owned_cities,omitempty"`
+	CampaignClears  int64                  `protobuf:"varint,5,opt,name=campaign_clears,json=campaignClears,proto3" json:"campaign_clears,omitempty"`
+	Unlock          string                 `protobuf:"bytes,6,opt,name=unlock,proto3" json:"unlock,omitempty"`
+	RewardGold      int64                  `protobuf:"varint,7,opt,name=reward_gold,json=rewardGold,proto3" json:"reward_gold,omitempty"`
+	RewardPrestige  int64                  `protobuf:"varint,8,opt,name=reward_prestige,json=rewardPrestige,proto3" json:"reward_prestige,omitempty"`
+	RewardItemCfgId int32                  `protobuf:"varint,9,opt,name=reward_item_cfg_id,json=rewardItemCfgId,proto3" json:"reward_item_cfg_id,omitempty"`
+	RewardItemCount int32                  `protobuf:"varint,10,opt,name=reward_item_count,json=rewardItemCount,proto3" json:"reward_item_count,omitempty"`
+	CanClaim        bool                   `protobuf:"varint,11,opt,name=can_claim,json=canClaim,proto3" json:"can_claim,omitempty"`
+	Claimed         bool                   `protobuf:"varint,12,opt,name=claimed,proto3" json:"claimed,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *GetWorldProgressResponse) Reset() {
@@ -544,6 +551,168 @@ func (x *GetWorldProgressResponse) GetCampaignClears() int64 {
 	return 0
 }
 
+func (x *GetWorldProgressResponse) GetUnlock() string {
+	if x != nil {
+		return x.Unlock
+	}
+	return ""
+}
+
+func (x *GetWorldProgressResponse) GetRewardGold() int64 {
+	if x != nil {
+		return x.RewardGold
+	}
+	return 0
+}
+
+func (x *GetWorldProgressResponse) GetRewardPrestige() int64 {
+	if x != nil {
+		return x.RewardPrestige
+	}
+	return 0
+}
+
+func (x *GetWorldProgressResponse) GetRewardItemCfgId() int32 {
+	if x != nil {
+		return x.RewardItemCfgId
+	}
+	return 0
+}
+
+func (x *GetWorldProgressResponse) GetRewardItemCount() int32 {
+	if x != nil {
+		return x.RewardItemCount
+	}
+	return 0
+}
+
+func (x *GetWorldProgressResponse) GetCanClaim() bool {
+	if x != nil {
+		return x.CanClaim
+	}
+	return false
+}
+
+func (x *GetWorldProgressResponse) GetClaimed() bool {
+	if x != nil {
+		return x.Claimed
+	}
+	return false
+}
+
+// route: meta.v1.ClaimWorldPhaseRewards
+type ClaimWorldPhaseRewardsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerId      int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClaimWorldPhaseRewardsRequest) Reset() {
+	*x = ClaimWorldPhaseRewardsRequest{}
+	mi := &file_sanguo_meta_v1_meta_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClaimWorldPhaseRewardsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClaimWorldPhaseRewardsRequest) ProtoMessage() {}
+
+func (x *ClaimWorldPhaseRewardsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_meta_v1_meta_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClaimWorldPhaseRewardsRequest.ProtoReflect.Descriptor instead.
+func (*ClaimWorldPhaseRewardsRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_meta_v1_meta_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ClaimWorldPhaseRewardsRequest) GetServerId() int32 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+type ClaimWorldPhaseRewardsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Phases        []int32                `protobuf:"varint,1,rep,packed,name=phases,proto3" json:"phases,omitempty"`
+	Gold          int64                  `protobuf:"varint,2,opt,name=gold,proto3" json:"gold,omitempty"`
+	Prestige      int64                  `protobuf:"varint,3,opt,name=prestige,proto3" json:"prestige,omitempty"`
+	Items         []*MetaItemView        `protobuf:"bytes,4,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClaimWorldPhaseRewardsResponse) Reset() {
+	*x = ClaimWorldPhaseRewardsResponse{}
+	mi := &file_sanguo_meta_v1_meta_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClaimWorldPhaseRewardsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClaimWorldPhaseRewardsResponse) ProtoMessage() {}
+
+func (x *ClaimWorldPhaseRewardsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_meta_v1_meta_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClaimWorldPhaseRewardsResponse.ProtoReflect.Descriptor instead.
+func (*ClaimWorldPhaseRewardsResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_meta_v1_meta_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ClaimWorldPhaseRewardsResponse) GetPhases() []int32 {
+	if x != nil {
+		return x.Phases
+	}
+	return nil
+}
+
+func (x *ClaimWorldPhaseRewardsResponse) GetGold() int64 {
+	if x != nil {
+		return x.Gold
+	}
+	return 0
+}
+
+func (x *ClaimWorldPhaseRewardsResponse) GetPrestige() int64 {
+	if x != nil {
+		return x.Prestige
+	}
+	return 0
+}
+
+func (x *ClaimWorldPhaseRewardsResponse) GetItems() []*MetaItemView {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
 var File_sanguo_meta_v1_meta_proto protoreflect.FileDescriptor
 
 const file_sanguo_meta_v1_meta_proto_rawDesc = "" +
@@ -581,13 +750,29 @@ const file_sanguo_meta_v1_meta_proto_rawDesc = "" +
 	"\bprestige\x18\x03 \x01(\x03R\bprestige\x122\n" +
 	"\x05items\x18\x04 \x03(\v2\x1c.sanguo.meta.v1.MetaItemViewR\x05items\"6\n" +
 	"\x17GetWorldProgressRequest\x12\x1b\n" +
-	"\tserver_id\x18\x01 \x01(\x05R\bserverId\"\xa4\x01\n" +
+	"\tserver_id\x18\x01 \x01(\x05R\bserverId\"\x96\x03\n" +
 	"\x18GetWorldProgressResponse\x12\x14\n" +
 	"\x05phase\x18\x01 \x01(\x05R\x05phase\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
 	"\x04next\x18\x03 \x01(\tR\x04next\x12!\n" +
 	"\fowned_cities\x18\x04 \x01(\x03R\vownedCities\x12'\n" +
-	"\x0fcampaign_clears\x18\x05 \x01(\x03R\x0ecampaignClearsBNZLgithub.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/meta/v1;metav1b\x06proto3"
+	"\x0fcampaign_clears\x18\x05 \x01(\x03R\x0ecampaignClears\x12\x16\n" +
+	"\x06unlock\x18\x06 \x01(\tR\x06unlock\x12\x1f\n" +
+	"\vreward_gold\x18\a \x01(\x03R\n" +
+	"rewardGold\x12'\n" +
+	"\x0freward_prestige\x18\b \x01(\x03R\x0erewardPrestige\x12+\n" +
+	"\x12reward_item_cfg_id\x18\t \x01(\x05R\x0frewardItemCfgId\x12*\n" +
+	"\x11reward_item_count\x18\n" +
+	" \x01(\x05R\x0frewardItemCount\x12\x1b\n" +
+	"\tcan_claim\x18\v \x01(\bR\bcanClaim\x12\x18\n" +
+	"\aclaimed\x18\f \x01(\bR\aclaimed\"<\n" +
+	"\x1dClaimWorldPhaseRewardsRequest\x12\x1b\n" +
+	"\tserver_id\x18\x01 \x01(\x05R\bserverId\"\x9c\x01\n" +
+	"\x1eClaimWorldPhaseRewardsResponse\x12\x16\n" +
+	"\x06phases\x18\x01 \x03(\x05R\x06phases\x12\x12\n" +
+	"\x04gold\x18\x02 \x01(\x03R\x04gold\x12\x1a\n" +
+	"\bprestige\x18\x03 \x01(\x03R\bprestige\x122\n" +
+	"\x05items\x18\x04 \x03(\v2\x1c.sanguo.meta.v1.MetaItemViewR\x05itemsBNZLgithub.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/meta/v1;metav1b\x06proto3"
 
 var (
 	file_sanguo_meta_v1_meta_proto_rawDescOnce sync.Once
@@ -601,27 +786,30 @@ func file_sanguo_meta_v1_meta_proto_rawDescGZIP() []byte {
 	return file_sanguo_meta_v1_meta_proto_rawDescData
 }
 
-var file_sanguo_meta_v1_meta_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_sanguo_meta_v1_meta_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_sanguo_meta_v1_meta_proto_goTypes = []any{
-	(*MetaItemView)(nil),             // 0: sanguo.meta.v1.MetaItemView
-	(*AchievementView)(nil),          // 1: sanguo.meta.v1.AchievementView
-	(*ListAchievementsRequest)(nil),  // 2: sanguo.meta.v1.ListAchievementsRequest
-	(*ListAchievementsResponse)(nil), // 3: sanguo.meta.v1.ListAchievementsResponse
-	(*ClaimAchievementRequest)(nil),  // 4: sanguo.meta.v1.ClaimAchievementRequest
-	(*ClaimAchievementResponse)(nil), // 5: sanguo.meta.v1.ClaimAchievementResponse
-	(*GetWorldProgressRequest)(nil),  // 6: sanguo.meta.v1.GetWorldProgressRequest
-	(*GetWorldProgressResponse)(nil), // 7: sanguo.meta.v1.GetWorldProgressResponse
+	(*MetaItemView)(nil),                   // 0: sanguo.meta.v1.MetaItemView
+	(*AchievementView)(nil),                // 1: sanguo.meta.v1.AchievementView
+	(*ListAchievementsRequest)(nil),        // 2: sanguo.meta.v1.ListAchievementsRequest
+	(*ListAchievementsResponse)(nil),       // 3: sanguo.meta.v1.ListAchievementsResponse
+	(*ClaimAchievementRequest)(nil),        // 4: sanguo.meta.v1.ClaimAchievementRequest
+	(*ClaimAchievementResponse)(nil),       // 5: sanguo.meta.v1.ClaimAchievementResponse
+	(*GetWorldProgressRequest)(nil),        // 6: sanguo.meta.v1.GetWorldProgressRequest
+	(*GetWorldProgressResponse)(nil),       // 7: sanguo.meta.v1.GetWorldProgressResponse
+	(*ClaimWorldPhaseRewardsRequest)(nil),  // 8: sanguo.meta.v1.ClaimWorldPhaseRewardsRequest
+	(*ClaimWorldPhaseRewardsResponse)(nil), // 9: sanguo.meta.v1.ClaimWorldPhaseRewardsResponse
 }
 var file_sanguo_meta_v1_meta_proto_depIdxs = []int32{
 	0, // 0: sanguo.meta.v1.AchievementView.reward_items:type_name -> sanguo.meta.v1.MetaItemView
 	1, // 1: sanguo.meta.v1.ListAchievementsResponse.achievements:type_name -> sanguo.meta.v1.AchievementView
 	1, // 2: sanguo.meta.v1.ClaimAchievementResponse.achievement:type_name -> sanguo.meta.v1.AchievementView
 	0, // 3: sanguo.meta.v1.ClaimAchievementResponse.items:type_name -> sanguo.meta.v1.MetaItemView
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	0, // 4: sanguo.meta.v1.ClaimWorldPhaseRewardsResponse.items:type_name -> sanguo.meta.v1.MetaItemView
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_sanguo_meta_v1_meta_proto_init() }
@@ -635,7 +823,7 @@ func file_sanguo_meta_v1_meta_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sanguo_meta_v1_meta_proto_rawDesc), len(file_sanguo_meta_v1_meta_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
