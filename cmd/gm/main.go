@@ -22,7 +22,7 @@ func main() {
 	}
 	cmd := os.Args[1]
 	switch cmd {
-	case "lookup", "grant", "kick", "mute", "send-mail":
+	case "lookup", "grant", "kick", "mute", "send-mail", "world-phase", "special-city", "achievement":
 	case "help", "-h", "--help":
 		usage()
 		return
@@ -53,6 +53,11 @@ func main() {
 	mailType := fs.Int("mail-type", int(mail.TypeReward), "mail type: 1=system 2=reward 3=announcement")
 	food := fs.Int64("food", 0, "grant food (shortcut)")
 	gold := fs.Int64("gold", 0, "grant gold (shortcut)")
+	phase := fs.Int("phase", 0, "world phase 1..3 (world-phase; 0=read)")
+	cityCfgID := fs.Int("city-cfg-id", 0, "special city cfg id")
+	guildID := fs.Int64("guild-id", 0, "guild id (special-city; 0=neutral)")
+	list := fs.Bool("list", false, "list rows")
+	achievementID := fs.Int("achievement-id", 0, "achievement id to reset")
 	_ = fs.Parse(os.Args[2:])
 
 	audit, token, err := common.materialize()
@@ -87,6 +92,33 @@ func main() {
 		}
 		res, until, err := gm.MutePlayer(ctx, token, audit, int32(*serverID), *playerID, *muteUntil)
 		exitJSON(err, map[string]any{"result": res, "chat_muted_until_ms": until})
+	case "world-phase":
+		if *phase == 0 {
+			res, view, err := gm.WorldPhase(ctx, token, audit, int32(*serverID))
+			exitJSON(err, map[string]any{"result": res, "world_phase": view})
+			return
+		}
+		res, view, err := gm.SetWorldPhase(ctx, token, audit, int32(*serverID), int16(*phase))
+		exitJSON(err, map[string]any{"result": res, "world_phase": view})
+	case "special-city":
+		if *list || *cityCfgID == 0 {
+			res, cities, err := gm.ListSpecialCities(ctx, token, audit, int32(*serverID))
+			exitJSON(err, map[string]any{"result": res, "cities": cities})
+			return
+		}
+		res, city, err := gm.SetSpecialCityOwner(ctx, token, audit, int32(*serverID), int32(*cityCfgID), *guildID)
+		exitJSON(err, map[string]any{"result": res, "city": city})
+	case "achievement":
+		if *playerID == 0 {
+			fatal("achievement requires --player-id")
+		}
+		if *list || *achievementID == 0 {
+			res, rows, err := gm.ListAchievements(ctx, token, audit, int32(*serverID), *playerID)
+			exitJSON(err, map[string]any{"result": res, "achievements": rows})
+			return
+		}
+		res, reset, err := gm.ResetAchievement(ctx, token, audit, int32(*serverID), *playerID, int32(*achievementID))
+		exitJSON(err, map[string]any{"result": res, "reset": reset})
 	case "send-mail":
 		if *playerID == 0 {
 			fatal("send-mail requires --player-id")
@@ -191,7 +223,7 @@ func smokeBoot(ctx context.Context) {
 	}
 	defer app.Close()
 	app.Log.Info("gm ready", "postgres", app.Config.DatabaseURL, "redis", app.Config.RedisAddr)
-	fmt.Println("sanguo-slg gm: platform wiring ok; subcommands lookup|grant|kick|mute|send-mail")
+	fmt.Println("sanguo-slg gm: platform wiring ok; subcommands lookup|grant|kick|mute|send-mail|world-phase|special-city|achievement")
 	fmt.Println("smoke: see tools/smoke/README.md (INTG-039 TestINTG039Wave42SmokePath; INTG-038 TestINTG038Wave41SmokePath; INTG-037 TestINTG037Wave40SmokePath; INTG-036 TestINTG036Wave39SmokePath; INTG-035 TestINTG035Wave38SmokePath; INTG-034 TestINTG034Wave37SmokePath; INTG-033 TestINTG033Wave36SmokePath; INTG-032 TestINTG032Wave35SmokePath; INTG-031 TestINTG031Wave34SmokePath; INTG-030 TestINTG030Wave33SmokePath; INTG-029 TestINTG029Wave32SmokePath; INTG-028 TestINTG028Wave31SmokePath; INTG-027 TestINTG027Wave30SmokePath; INTG-026 TestINTG026Wave29SmokePath; INTG-009 TestINTG009Wave12SmokePath; INTG-008 TestINTG008Wave11SmokePath; INTG-007 TestINTG007M4DeepSmokePath; INTG-006 TestINTG006Data002SmokePath)")
 }
 
@@ -204,6 +236,9 @@ Usage:
   gm kick   --server-id=1 --player-id=ID --operator-id=... --reason=...
   gm mute   --server-id=1 --player-id=ID [--mute-until-ms=MS] --operator-id=... --reason=...
   gm send-mail --server-id=1 --player-id=ID --title=T --body=B [--mail-type=2] [--rewards-json=...] --operator-id=... --reason=...
+  gm world-phase --server-id=1 [--phase=1..3] --operator-id=... --reason=...
+  gm special-city --server-id=1 [--list | --city-cfg-id=ID --guild-id=ID] --operator-id=... --reason=...
+  gm achievement --server-id=1 --player-id=ID [--list | --achievement-id=ID] --operator-id=... --reason=...
 
 Auth: set GM_TOKEN and pass --token (or env). Optional GM_OPERATOR_WHITELIST=op1,op2.
 
