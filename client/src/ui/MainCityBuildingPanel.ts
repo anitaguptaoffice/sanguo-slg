@@ -149,6 +149,7 @@ export class MainCityBuildingPanel {
     private readonly onAchievementAction?: (achievementId: number) => void,
     private readonly onPhaseClaim?: () => void,
     private readonly equipmentIcon?: (cfgId?: number) => string | undefined,
+    private readonly defenseIcon?: (defenseType?: number) => string | undefined,
   ) {}
 
   attach(): void {
@@ -578,7 +579,18 @@ export class MainCityBuildingPanel {
       button.type = "button";
       button.dataset.action = "build-defense";
       button.dataset.defenseType = String(row.defense_type ?? 0);
-      button.textContent = `建造${row.name}`;
+      const icon = this.defenseIcon?.(row.defense_type);
+      if (icon) {
+        const img = document.createElement("img");
+        img.src = icon;
+        img.width = 24;
+        img.height = 24;
+        img.alt = "";
+        img.style.verticalAlign = "middle";
+        img.style.marginRight = "4px";
+        button.appendChild(img);
+      }
+      button.append(`建造${row.name}`);
       build.appendChild(button);
     }
     const troops = this.getSession()?.cityTroops ?? [];

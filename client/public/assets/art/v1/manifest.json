@@ -9043,6 +9043,248 @@
       "tags": [
         "equipment-icon"
       ]
+    },
+    {
+      "id": "mc.building.wall.v1.lv1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 640,
+        "h": 120
+      },
+      "anchor": {
+        "x": 320,
+        "y": 120
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/maincity/buildings/wall_lv1.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/maincity/buildings/wall_lv1.png"
+        }
+      ],
+      "tags": [
+        "building-tier",
+        "wall",
+        "lv1"
+      ]
+    },
+    {
+      "id": "mc.building.wall.v1.lv4",
+      "kind": "sprite",
+      "display_size": {
+        "w": 640,
+        "h": 120
+      },
+      "anchor": {
+        "x": 320,
+        "y": 120
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/maincity/buildings/wall_lv4.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/maincity/buildings/wall_lv4.png"
+        }
+      ],
+      "tags": [
+        "building-tier",
+        "wall",
+        "lv4"
+      ]
+    },
+    {
+      "id": "mc.building.wall.v1.lv7",
+      "kind": "sprite",
+      "display_size": {
+        "w": 640,
+        "h": 120
+      },
+      "anchor": {
+        "x": 320,
+        "y": 120
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/maincity/buildings/wall_lv7.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/maincity/buildings/wall_lv7.png"
+        }
+      ],
+      "tags": [
+        "building-tier",
+        "wall",
+        "lv7"
+      ]
+    },
+    {
+      "id": "mc.building.wall.v1.lv10",
+      "kind": "sprite",
+      "display_size": {
+        "w": 640,
+        "h": 120
+      },
+      "anchor": {
+        "x": 320,
+        "y": 120
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/maincity/buildings/wall_lv10.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/maincity/buildings/wall_lv10.png"
+        }
+      ],
+      "tags": [
+        "building-tier",
+        "wall",
+        "lv10"
+      ]
+    },
+    {
+      "id": "wall.defense.trap.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 48,
+        "h": 48
+      },
+      "anchor": {
+        "x": 24,
+        "y": 24
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/wall/defense_trap.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/wall/defense_trap.png"
+        }
+      ],
+      "tags": [
+        "wall-defense"
+      ]
+    },
+    {
+      "id": "wall.defense.stakes.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 48,
+        "h": 48
+      },
+      "anchor": {
+        "x": 24,
+        "y": 24
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/wall/defense_stakes.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/wall/defense_stakes.png"
+        }
+      ],
+      "tags": [
+        "wall-defense"
+      ]
+    },
+    {
+      "id": "wall.defense.tower.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 48,
+        "h": 48
+      },
+      "anchor": {
+        "x": 24,
+        "y": 24
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/wall/defense_tower.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/wall/defense_tower.png"
+        }
+      ],
+      "tags": [
+        "wall-defense"
+      ]
+    },
+    {
+      "id": "wall.defense.log.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 48,
+        "h": 48
+      },
+      "anchor": {
+        "x": 24,
+        "y": 24
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/wall/defense_log.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/wall/defense_log.png"
+        }
+      ],
+      "tags": [
+        "wall-defense"
+      ]
+    },
+    {
+      "id": "wall.defense.rock.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 48,
+        "h": 48
+      },
+      "anchor": {
+        "x": 24,
+        "y": 24
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/wall/defense_rock.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/wall/defense_rock.png"
+        }
+      ],
+      "tags": [
+        "wall-defense"
+      ]
     }
   ]
 }
