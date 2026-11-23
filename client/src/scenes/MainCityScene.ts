@@ -1083,6 +1083,11 @@ export class MainCityScene implements Scene {
       (achievementId) => void this.claimAchievement(achievementId),
       () => void this.claimWorldPhaseRewards(),
       (cfgId) => (cfgId ? this.assets.getImageForAsset(`equip.icon.${cfgId}.v1`)?.img.src : undefined),
+      (defenseType) => {
+        const codes = ["", "trap", "stakes", "tower", "log", "rock"];
+        const code = codes[defenseType ?? 0];
+        return code ? this.assets.getImageForAsset(`wall.defense.${code}.v1`)?.img.src : undefined;
+      },
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
