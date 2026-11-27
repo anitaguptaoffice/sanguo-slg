@@ -1,5 +1,6 @@
 import { captureActor } from "@/net/actorContext";
 import { captureCenterPanelIntent, openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
+import { productPanelHeaderHtml, wireProductPanelChrome } from "@/ui/panelChromeHeader";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import {
@@ -222,6 +223,9 @@ export class SocialPanels {
     this.mount.appendChild(this.chatPanel);
     this.mount.appendChild(this.guildPanel);
     this.mount.appendChild(this.rankPanel);
+    wireProductPanelChrome(this.chatPanel);
+    wireProductPanelChrome(this.guildPanel);
+    wireProductPanelChrome(this.rankPanel);
     this.chatPanel.addEventListener("click", (ev) => this.onChatClick(ev));
     this.guildPanel.addEventListener("click", (ev) => this.onGuildClick(ev));
     this.rankPanel.addEventListener("click", (ev) => this.onRankClick(ev));
@@ -520,10 +524,10 @@ export class SocialPanels {
 
   private buildChatPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "social-panel hidden";
+    el.className = "social-panel product-chrome-panel hidden";
     el.dataset.centerPanel = "chat";
     el.innerHTML = `
-      <h3>聊天</h3>
+      ${productPanelHeaderHtml("聊天")}
       <div class="chat-channel-tabs" data-role="chat-channel-tabs" role="tablist" aria-label="聊天频道">
         <button type="button" class="chat-channel-tab active" data-action="pick-chat-channel" data-chat-channel="1" role="tab" aria-selected="true">世界<span class="chat-channel-tab-badge hidden" data-role="chat-tab-badge-1"></span></button>
         <button type="button" class="chat-channel-tab" data-action="pick-chat-channel" data-chat-channel="2" role="tab" aria-selected="false">私聊</button>
@@ -613,10 +617,10 @@ export class SocialPanels {
 
   private buildGuildPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "social-panel hidden";
+    el.className = "social-panel product-chrome-panel hidden";
     el.dataset.centerPanel = "guild";
     el.innerHTML = `
-      <h3>军团</h3>
+      ${productPanelHeaderHtml("军团")}
       <button type="button" class="guild-chat-entry" data-action="open-guild-chat-channel">军团频道<span class="chat-channel-tab-badge hidden" data-role="guild-chat-entry-badge" aria-hidden="true"></span></button>
       <p data-role="guild-summary">尚未加入军团</p>
       <label>军团名称 <input type="text" data-field="guild-name" placeholder="新建军团名" /></label>
@@ -644,10 +648,10 @@ export class SocialPanels {
 
   private buildRankPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden rank-panel";
+    el.className = "content-panel product-chrome-panel hidden rank-panel";
     el.dataset.centerPanel = "rank";
     el.innerHTML = `
-      <h3>排行榜</h3>
+      ${productPanelHeaderHtml("排行榜")}
       <label>榜单
         <select data-field="rank-type">
           <option value="${LB_PLAYER_POWER}">玩家战力</option>

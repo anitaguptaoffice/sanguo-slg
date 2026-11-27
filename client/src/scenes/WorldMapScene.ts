@@ -24,11 +24,23 @@ import {
   worldResourceAssetId,
   worldTileAssetId,
 } from "./worldMapArt";
+import {
+  buildWorldMapTileActionSpecs,
+  worldMapActionDataAction,
+  type WorldMapTileActionSpec,
+} from "@/ui/worldMapTileDetailActions";
+import {
+  marchInterpolatedTile,
+  worldMapMarchNeedsAnimation,
+  type WorldMapMarchDrawInput,
+} from "@/net/worldMapMarchInterp";
 
 export type WorldMapDeps = {
   gateway: () => GatewayPort;
   getSession: () => MainCitySession | null;
-  onMarchTarget: (x: number, y: number) => void;
+  onMarchTarget: (x: number, y: number, marchPurpose?: number) => void;
+  /** 采集/野地管理等次要入口：回主城并打开「世界」面板定位格点。 */
+  onOpenWorldAtTile?: (x: number, y: number) => void;
   /** Optional R1-S6 art; procedural shapes remain the fallback. */
   assets?: AssetLoader;
 };
@@ -66,14 +78,8 @@ type Tile = {
   in_battle: boolean;
 };
 
-type MarchLine = {
+type MarchLine = WorldMapMarchDrawInput & {
   march_id: number;
-  from_x: number;
-  from_y: number;
-  to_x: number;
-  to_y: number;
-  phase: number;
-  arrive_at_ms: number;
   owner_player_id: number;
 };
 
@@ -109,20 +115,22 @@ export class WorldMapScene {
   private fetchTimer: number | null = null;
   private fetchGeneration = 0;
   private renderQueued = false;
+  private marchAnimFrame = 0;
   private dragging = false;
   private dragMoved = 0;
   private dragLast: { x: number; y: number } | null = null;
   private pointerId: number | null = null;
   private opened = false;
+  private onKeyDown: ((ev: KeyboardEvent) => void) | null = null;
 
   constructor(private readonly parent: HTMLElement, private readonly deps: WorldMapDeps) {}
 
   attach(): void {
     this.layer = document.createElement("div");
-    this.layer.className = "world-map-layer hidden";
+    this.layer.className = "world-map-layer world-map-scene hidden";
     this.layer.dataset.role = "world-map-layer";
     this.layer.innerHTML = `
-      <div class="world-map-header" data-role="world-map-header">
+      <div class="world-map-header world-map-header-bar" data-role="world-map-header">
         <strong>世界大地图</strong>
         <span class="world-map-coords" data-role="world-map-coords"></span>
         <label>X <input type="number" min="0" max="499" data-field="jump-x" /></label>
@@ -137,16 +145,16 @@ export class WorldMapScene {
       <div class="world-map-canvas-wrap" data-role="world-map-canvas-wrap">
         <canvas data-role="world-map-canvas"></canvas>
       </div>
-      <div class="world-map-status" data-role="world-map-status"></div>
-      <div class="world-map-legend">
-        <span><i style="background:#8fbf5f"></i>平地</span>
-        <span><i style="background:#3f7a45"></i>森林</span>
-        <span><i style="background:#8a8070"></i>山地</span>
-        <span><i style="background:#4f8fbf"></i>湖泊</span>
-        <span><i style="background:#d8c07a"></i>荒漠</span>
-        <span><i style="background:#5f6f4f"></i>沼泽</span>
-        <span><i style="background:#c8a24a"></i>城池</span>
-        <span><i style="background:#c0392b"></i>黄巾</span>
+      <div class="world-map-status world-map-status-line" data-role="world-map-status"></div>
+      <div class="world-map-legend world-map-legend-bar">
+        <span><i class="world-map-legend-swatch" data-legend-color="#8fbf5f"></i>平地</span>
+        <span><i class="world-map-legend-swatch" data-legend-color="#3f7a45"></i>森林</span>
+        <span><i class="world-map-legend-swatch" data-legend-color="#8a8070"></i>山地</span>
+        <span><i class="world-map-legend-swatch" data-legend-color="#4f8fbf"></i>湖泊</span>
+        <span><i class="world-map-legend-swatch" data-legend-color="#d8c07a"></i>荒漠</span>
+        <span><i class="world-map-legend-swatch" data-legend-color="#5f6f4f"></i>沼泽</span>
+        <span><i class="world-map-legend-swatch" data-legend-color="#c8a24a"></i>城池</span>
+        <span><i class="world-map-legend-swatch" data-legend-color="#c0392b"></i>黄巾</span>
       </div>
       <aside class="world-map-detail hidden" data-role="world-map-detail"></aside>
     `;
@@ -191,13 +199,28 @@ export class WorldMapScene {
     this.hideDetail();
     this.resizeCanvas();
     this.requestRender();
+    this.startMarchAnimationLoop();
     this.scheduleFetch(0);
     void this.refreshSpecialCities();
     this.setStatus("拖拽平移，滚轮或按钮缩放；点击格点查看详情。");
+    if (!this.onKeyDown) {
+      this.onKeyDown = (ev: KeyboardEvent) => {
+        if (!this.opened || ev.key !== "Escape") return;
+        if (!this.detail.classList.contains("hidden")) {
+          ev.preventDefault();
+          this.hideDetail();
+          return;
+        }
+        ev.preventDefault();
+        this.close();
+      };
+      window.addEventListener("keydown", this.onKeyDown);
+    }
   }
 
   close(): void {
     this.opened = false;
+    this.stopMarchAnimationLoop();
     this.dragging = false;
     this.dragLast = null;
     if (this.fetchTimer != null) {
@@ -229,13 +252,23 @@ export class WorldMapScene {
     this.canvas.style.cssText = "display:block;width:100%;height:100%;cursor:grab;touch-action:none;";
     this.statusEl.style.cssText = "min-height:18px;color:#c8b795;";
     legend.style.cssText = "display:flex;flex-wrap:wrap;gap:10px;color:#c8b795;font-size:12px;";
-    legend.querySelectorAll("i").forEach((el) => {
-      (el as HTMLElement).style.cssText =
-        "display:inline-block;width:10px;height:10px;margin-right:3px;border-radius:2px;vertical-align:middle;";
+    legend.querySelectorAll("i.world-map-legend-swatch").forEach((el) => {
+      const swatch = el as HTMLElement;
+      const fill = swatch.dataset.legendColor ?? "#888888";
+      swatch.style.display = "inline-block";
+      swatch.style.width = "10px";
+      swatch.style.height = "10px";
+      swatch.style.marginRight = "3px";
+      swatch.style.borderRadius = "2px";
+      swatch.style.verticalAlign = "middle";
+      swatch.style.background = fill;
+      swatch.style.border = "1px solid rgba(0,0,0,0.28)";
+      swatch.style.boxShadow = "inset 0 0 0 1px rgba(255,255,255,0.15)";
     });
     this.detail.style.cssText =
-      "position:absolute;right:16px;top:64px;width:260px;max-height:70%;overflow:auto;padding:10px;" +
+      "position:absolute;right:16px;top:64px;width:min(280px,calc(100% - 32px));max-height:min(70%,calc(100% - 80px));overflow:auto;padding:10px;" +
       "background:#241d16ee;border:1px solid #6a5538;border-radius:8px;box-shadow:0 6px 18px #0008;";
+    this.detail.classList.add("world-map-detail-card");
   }
 
   private onResize = (): void => {
@@ -278,15 +311,26 @@ export class WorldMapScene {
         break;
       }
       case "world-map-zoom-in":
-        this.setZoom(this.camera.zoom === MIN_ZOOM ? MAX_ZOOM : MIN_ZOOM);
+        this.setZoom(Math.min(MAX_ZOOM, this.camera.zoom + 0.5));
         break;
       case "world-map-zoom-out":
-        this.setZoom(this.camera.zoom === MAX_ZOOM ? MIN_ZOOM : MAX_ZOOM);
+        this.setZoom(Math.max(MIN_ZOOM, this.camera.zoom - 0.5));
         break;
-      case "world-map-march":
-        this.deps.onMarchTarget(this.selected?.x ?? this.camera.centerX, this.selected?.y ?? this.camera.centerY);
+      case "world-map-march": {
+        const purpose = Number(target.getAttribute("data-march-purpose"));
+        const x = this.selected?.x ?? this.camera.centerX;
+        const y = this.selected?.y ?? this.camera.centerY;
+        this.deps.onMarchTarget(x, y, Number.isFinite(purpose) && purpose > 0 ? purpose : undefined);
         this.close();
         break;
+      }
+      case "world-map-open-world": {
+        const x = this.selected?.x ?? this.camera.centerX;
+        const y = this.selected?.y ?? this.camera.centerY;
+        this.deps.onOpenWorldAtTile?.(x, y);
+        this.close();
+        break;
+      }
     }
   };
 
@@ -398,6 +442,7 @@ export class WorldMapScene {
       if (this.tiles.size > 20000) this.tiles.clear();
       for (const tile of reply.tiles ?? []) this.tiles.set(`${tile.x}:${tile.y}`, tile);
       this.marches = reply.marches ?? [];
+      this.kickMarchAnimationTick();
       if (reply.provinces?.length) {
         this.provinces = reply.provinces;
         this.fillProvinceSelect();
@@ -494,6 +539,17 @@ export class WorldMapScene {
     close?.addEventListener("click", () => this.hideDetail());
   }
 
+  private renderTileActionButton(spec: WorldMapTileActionSpec, tileX: number, tileY: number): string {
+    const dataAction = worldMapActionDataAction(spec.kind);
+    const purpose =
+      spec.marchPurpose != null ? ` data-march-purpose="${spec.marchPurpose}"` : "";
+    const className =
+      spec.variant === "primary"
+        ? "world-map-detail-btn world-map-detail-btn--primary art-btn-primary art-btn-primary-full"
+        : "world-map-detail-btn world-map-detail-btn--secondary";
+    return `<button type="button" class="${className}" data-action="${dataAction}"${purpose}>${spec.label}</button>`;
+  }
+
   private showDetail(detail: TileDetail): void {
     const tile = detail.tile;
     const viewer = this.deps.getSession()?.player.player_id ?? 0;
@@ -502,20 +558,27 @@ export class WorldMapScene {
         ? `${tile.owner_name || "未知领主"}${tile.owner_player_id === viewer ? "（己方）" : ""} · ${tile.owner_city_id}`
         : "无主";
     const npc = tile.npc_kind === 1 ? "黄巾营寨" : "普通野地";
-    const actions = (detail.actions ?? [])
-      .map((action) => `<button type="button" disabled>${action}</button>`)
-      .join(" ");
+    const ownCity = tile.owner_player_id === viewer && tile.owner_city_id > 0;
+    const { primary, secondary } = buildWorldMapTileActionSpecs(detail.actions ?? [], {
+      ownCity,
+      npcHuangjin: tile.npc_kind === 1,
+    });
+    const secondaryHtml = secondary
+      .map((spec) => this.renderTileActionButton(spec, tile.x, tile.y))
+      .join("");
     this.detail.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+      <div class="world-map-detail-head">
         <strong>${terrainLabel(tile.terrain)} Lv${tile.level}</strong>
-        <button type="button" data-action="world-map-detail-close" style="background:none;border:none;color:#c8b795;cursor:pointer;">×</button>
+        <button type="button" class="world-map-detail-close" data-action="world-map-detail-close" aria-label="关闭">×</button>
       </div>
-      <p>坐标 (${tile.x}, ${tile.y}) · ${tile.province_name || `州郡 ${tile.province_id}`}</p>
-      <p>${npc} · 归属：${owner}</p>
-      <p>守军档位 ${detail.garrison_tier} · 产量加成 ${detail.resource_bonus_percent}% · 距主城 ${detail.distance_from_capital}</p>
-      ${tile.npc_kind === 1 ? "<p style='color:#e8a87c'>黄巾营寨：可讨伐掠夺。</p>" : ""}
-      <p style="display:flex;flex-wrap:wrap;gap:4px;">${actions}</p>
-      <button type="button" data-action="world-map-march" style="width:100%;margin-top:6px;background:#6a4f2a;color:#f4e6c8;border:1px solid #a07c46;border-radius:4px;padding:4px;">出征到此格 (${tile.x}, ${tile.y})</button>
+      <p class="world-map-detail-meta">坐标 (${tile.x}, ${tile.y}) · ${tile.province_name || `州郡 ${tile.province_id}`}</p>
+      <p class="world-map-detail-meta">${npc} · 归属：${owner}</p>
+      <p class="world-map-detail-meta">守军档位 ${detail.garrison_tier} · 产量加成 ${detail.resource_bonus_percent}% · 距主城 ${detail.distance_from_capital}</p>
+      ${tile.npc_kind === 1 ? '<p class="world-map-detail-tip">黄巾营寨：主操作为出征讨伐，亦可先侦察。</p>' : ""}
+      <div class="world-map-detail-actions">
+        ${this.renderTileActionButton(primary, tile.x, tile.y)}
+        ${secondaryHtml ? `<div class="world-map-detail-actions-secondary">${secondaryHtml}</div>` : ""}
+      </div>
     `;
     this.detail.classList.remove("hidden");
     const close = this.detail.querySelector('[data-action="world-map-detail-close"]');
@@ -538,6 +601,29 @@ export class WorldMapScene {
       this.renderQueued = false;
       this.render();
     });
+  }
+
+  private startMarchAnimationLoop(): void {
+    this.kickMarchAnimationTick();
+  }
+
+  private kickMarchAnimationTick(): void {
+    if (!this.opened || this.marchAnimFrame) return;
+    this.marchAnimFrame = requestAnimationFrame(() => {
+      this.marchAnimFrame = 0;
+      if (!this.opened) return;
+      if (worldMapMarchNeedsAnimation(this.marches, Date.now())) {
+        this.requestRender();
+        this.kickMarchAnimationTick();
+      }
+    });
+  }
+
+  private stopMarchAnimationLoop(): void {
+    if (this.marchAnimFrame) {
+      cancelAnimationFrame(this.marchAnimFrame);
+      this.marchAnimFrame = 0;
+    }
   }
 
   private render(): void {
@@ -724,12 +810,35 @@ export class WorldMapScene {
       return;
     }
 
-    // Wild level: only the more valuable tiles keep a label at 1× to limit noise.
-    if (tile.level >= 5 || this.camera.zoom >= 2) {
-      ctx.fillStyle = tile.level >= 8 ? "#f4e6c8" : "rgba(20,16,10,0.65)";
-      ctx.font = "10px system-ui, sans-serif";
+    const session = this.deps.getSession();
+    const isOwnCapital =
+      session &&
+      tile.x === session.cityX &&
+      tile.y === session.cityY;
+    if (isOwnCapital) {
+      ctx.strokeStyle = "#ffe566";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(point.x, point.y - halfH);
+      ctx.lineTo(point.x + halfW, point.y);
+      ctx.lineTo(point.x, point.y + halfH);
+      ctx.lineTo(point.x - halfW, point.y);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      ctx.fillStyle = "rgba(255, 230, 140, 0.92)";
+      ctx.font = "bold 10px system-ui, sans-serif";
+      ctx.fillText("主城", point.x, point.y - halfH - 6);
+    }
+    const minLevelLabel =
+      this.camera.zoom >= MAX_ZOOM ? 1 : this.camera.zoom >= 1.5 ? 6 : 9;
+    const selectedHere =
+      this.selected?.x === tile.x && this.selected?.y === tile.y;
+    if (tile.level >= minLevelLabel || selectedHere) {
+      ctx.fillStyle = tile.level >= 8 ? "#f4e6c8" : "rgba(232, 220, 200, 0.55)";
+      ctx.font = "9px system-ui, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(`Lv${tile.level}`, point.x, point.y + 3);
+      ctx.fillText(`Lv${tile.level}`, point.x, point.y + halfH - 4);
     }
     if (tile.max_level > tile.level) {
       ctx.fillStyle = "rgba(255,255,255,0.55)";
@@ -775,30 +884,56 @@ export class WorldMapScene {
 
   private drawMarches(ctx: CanvasRenderingContext2D, size: { width: number; height: number }): void {
     if (!this.marches.length) return;
+    const nowMs = Date.now();
+    const dashOffset = (nowMs / 40) % 16;
     ctx.save();
-    ctx.setLineDash([6, 4]);
     ctx.lineWidth = 2;
     for (const march of this.marches) {
       const from = projectTile(march.from_x, march.from_y, this.camera, size);
       const to = projectTile(march.to_x, march.to_y, this.camera, size);
-      ctx.strokeStyle = "#ffd166";
+      const interp = marchInterpolatedTile(march, nowMs);
+      const marker = projectTile(interp.x, interp.y, this.camera, size);
+      ctx.strokeStyle = "rgba(255, 209, 102, 0.85)";
+      ctx.setLineDash([8, 6]);
+      ctx.lineDashOffset = -dashOffset;
       ctx.beginPath();
       ctx.moveTo(from.x, from.y);
       ctx.lineTo(to.x, to.y);
       ctx.stroke();
-      const markerX = from.x + (to.x - from.x) * 0.6;
-      const markerY = from.y + (to.y - from.y) * 0.6;
-      this.drawAssetAt(ctx, worldMarchAssetId(march.phase), markerX, markerY + 8, this.camera.zoom * 0.5);
-      const angle = Math.atan2(to.y - from.y, to.x - from.x);
+      if (interp.moving) {
+        ctx.strokeStyle = "#fff3c4";
+        ctx.setLineDash([4, 4]);
+        ctx.lineDashOffset = dashOffset;
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(marker.x, marker.y);
+        ctx.stroke();
+      }
+      const phase = march.phase ?? 2;
+      this.drawAssetAt(ctx, worldMarchAssetId(phase), marker.x, marker.y + 6, this.camera.zoom * 0.52);
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const angle = Math.atan2(dy, dx);
       ctx.setLineDash([]);
       ctx.fillStyle = "#ffd166";
       ctx.beginPath();
-      ctx.moveTo(to.x, to.y);
-      ctx.lineTo(to.x - 9 * Math.cos(angle - 0.4), to.y - 9 * Math.sin(angle - 0.4));
-      ctx.lineTo(to.x - 9 * Math.cos(angle + 0.4), to.y - 9 * Math.sin(angle + 0.4));
+      ctx.moveTo(marker.x + 10 * Math.cos(angle), marker.y + 10 * Math.sin(angle));
+      ctx.lineTo(marker.x + 6 * Math.cos(angle + 2.6), marker.y + 6 * Math.sin(angle + 2.6));
+      ctx.lineTo(marker.x + 6 * Math.cos(angle - 2.6), marker.y + 6 * Math.sin(angle - 2.6));
       ctx.closePath();
       ctx.fill();
-      ctx.setLineDash([6, 4]);
+      if (interp.remainingSec != null && interp.moving) {
+        ctx.font = "11px system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#ffe8b0";
+        const mins = Math.floor(interp.remainingSec / 60);
+        const secs = interp.remainingSec % 60;
+        ctx.fillText(
+          `${mins}:${String(secs).padStart(2, "0")}`,
+          marker.x,
+          marker.y - 14,
+        );
+      }
     }
     ctx.restore();
   }

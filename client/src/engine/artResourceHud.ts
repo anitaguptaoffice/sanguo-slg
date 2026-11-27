@@ -38,6 +38,15 @@ export function appendHudResourceStrip(
     item.className = "hud-resource-item";
     item.dataset.resource = key;
     const amount = formatResourceAmount(wallet?.[key]);
+    if (key === "gold") {
+      item.dataset.resource = key;
+      const amt = document.createElement("span");
+      amt.className = "hud-resource-amount";
+      amt.textContent = amount;
+      item.appendChild(amt);
+      group.appendChild(item);
+      continue;
+    }
     const assetId = HUD_RESOURCE_ICON_ASSET_IDS[key];
     const pack = assetId ? assets.getImageForAsset(assetId) : undefined;
     if (assetId && pack) {

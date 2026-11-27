@@ -3,6 +3,7 @@ import { claimQuestWithAssets, refreshQuestAssets } from "@/net/questClaimAssets
 import { captureActor } from "@/net/actorContext";
 import { renderSuccessfulReadNotice } from "@/net/successfulReadNotice";
 import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
+import { productPanelHeaderHtml, wireProductPanelChrome } from "@/ui/panelChromeHeader";
 import type { CityBuilding, MainCitySession } from "@/net/bootstrapSession";
 import { formatDailyQuestQueueInlineHint } from "@/net/dailyQuestQueueMatch";
 import type { RecruitQueueEntry } from "@/net/queueState";
@@ -130,6 +131,7 @@ export class DailyQuestPanels {
     this.activeChainId = readDailyChainTabSession();
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
+    wireProductPanelChrome(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
     this.panel.addEventListener("center-panel-suspend", () => { ++this.selectionIntent; });
     this.renderList();
@@ -256,10 +258,10 @@ export class DailyQuestPanels {
 
   private buildPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden";
+    el.className = "content-panel product-chrome-panel hidden";
     el.dataset.centerPanel = "daily";
     el.innerHTML = `
-      <h3>日常</h3>
+      ${productPanelHeaderHtml("日常")}
       <p class="daily-battle-report-banner hidden" data-role="daily-report-banner" data-action="daily-open-reports" role="button" tabindex="0" hidden></p>
       <p data-role="daily-hint">日常多链；接取后由服务端自动累积进度，无需手填上报。</p>
       <div class="daily-chain-tabs" data-role="daily-chain-tabs" role="tablist" aria-label="日常链类型"></div>

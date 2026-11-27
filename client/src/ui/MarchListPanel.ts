@@ -499,7 +499,7 @@ export class MarchListPanel {
     el.innerHTML = `
       <h3>行军</h3>
       <p class="${MARCH_SUBMIT_INTEL_HANDOFF_STRIP_CLASS} hidden" data-role="${MARCH_SUBMIT_INTEL_HANDOFF_LINE_ROLE}" aria-live="polite"></p>
-      <p data-role="march-hint">military.v1.ListMarches；打开面板时每 ${this.pollIntervalMs / 1000}s 自动刷新进行中行军，剩余时间每秒更新。</p>
+      <p class="product-panel-subhint" data-role="march-hint">进行中行军每 ${this.pollIntervalMs / 1000} 秒自动刷新，点选条目查看详情。</p>
       <fieldset class="march-dest-filter" data-role="march-dest-filter">
         <legend>目的格点筛选</legend>
         <label><input type="radio" name="march-dest-filter" value="all" checked /> 全部</label>

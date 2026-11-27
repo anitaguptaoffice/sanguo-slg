@@ -183,6 +183,7 @@ import {
   formatRecruitFormInlineHint,
   syncRecruitFormInlineHintDisplay,
 } from "@/net/recruitFormInlineHint";
+import { productPanelHeaderHtml, wireProductPanelChrome } from "@/ui/panelChromeHeader";
 import {
   buildRecruitSuccessFeedback,
   focusRecruitedHeroListRow,
@@ -535,6 +536,8 @@ export class HeroMailPanels {
     this.heroPanel.addEventListener("change", (ev) => this.onHeroChange(ev));
     this.mailPanel.addEventListener("change", (ev) => this.onMailChange(ev));
     this.heroPanel.addEventListener("keydown", this.onHeroListKeyDown);
+    wireProductPanelChrome(this.heroPanel);
+    wireProductPanelChrome(this.mailPanel);
     this.heroFocusTrap = createCenterPanelFocusTrap(this.heroPanel, () => this.closeHeroFromKeyboard());
   }
 
@@ -1723,16 +1726,18 @@ export class HeroMailPanels {
 
   private buildHeroPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden";
+    el.className = "content-panel product-chrome-panel hidden";
     el.dataset.centerPanel = "hero";
     el.innerHTML = `
-      <h3>将领</h3>
-      <button type="button" data-action="refresh-heroes">刷新列表</button>
+      ${productPanelHeaderHtml("将领", {
+        extraActionsHtml:
+          '<button type="button" class="product-btn-ghost" data-action="refresh-heroes">刷新列表</button>',
+      })}
       <p class="hero-list-refresh-status hidden" data-role="hero-list-refreshed-at" aria-label="列表上次刷新"></p>
       <p class="march-form-error-sibling hidden" data-role="hero-list-form-error" role="alert"></p>
       <details class="hero-recruit-host" data-role="hero-recruit-host" open>
         <summary class="hero-recruit-host-summary">招募 / 客栈</summary>
-        <p data-role="hero-hint">将领列表 / 详情 / 招募；模板与消耗来自招募模板列表。</p>
+        <p data-role="hero-hint">在此查看麾下将领、招募新将与客栈访贤。</p>
         <button type="button" data-action="refresh-templates">刷新招募模板</button>
         <label>招募模板
           <select data-field="template-select"><option value="">（先刷新模板）</option></select>
@@ -1859,11 +1864,11 @@ export class HeroMailPanels {
 
   private buildMailPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel mail-inbox-panel hidden";
+    el.className = "content-panel product-chrome-panel mail-inbox-panel hidden";
     el.dataset.centerPanel = "mail";
     el.innerHTML = `
-      <h3>邮件</h3>
-      <p class="mail-inbox-hint" data-role="mail-hint">content.v1 收件箱；点开自动标已读，有附件可一键领取。</p>
+      ${productPanelHeaderHtml("邮件")}
+      <p class="product-panel-subhint mail-inbox-hint" data-role="mail-hint">点选邮件可阅读全文；含附件时可一键领取。</p>
       <div class="mail-battle-category-bar panel-filter-chip-bar" data-role="mail-battle-category-bar" role="tablist" aria-label="邮件战报与系统分类">
         ${MAIL_BATTLE_CATEGORY_TABS.map(
           (tab) =>

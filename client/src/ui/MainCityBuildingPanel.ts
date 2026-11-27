@@ -16,6 +16,7 @@ import {
 } from "@/engine/panelStateChrome";
 import { createCenterPanelFocusTrap, type CenterPanelFocusTrap } from "@/ui/centerPanelFocusTrap";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
+import { wireProductPanelChrome } from "@/ui/panelChromeHeader";
 
 export type MainCityBuildingPanelReskin = (root: HTMLElement) => void;
 
@@ -161,21 +162,40 @@ export class MainCityBuildingPanel {
 
   attach(): void {
     this.panel = document.createElement("div");
-    this.panel.className = "building-panel hidden";
+    this.panel.className = "building-panel product-building-panel hidden";
     this.panel.dataset.centerPanel = "building";
     this.panel.innerHTML = `
-      <h3 data-role="build-title">建造</h3>
+      <div class="product-panel-header">
+        <h3 data-role="build-title">建造</h3>
+        <div class="product-panel-header-actions">
+          <button type="button" class="product-panel-close" data-action="close-panel" aria-label="关闭建筑面板">×</button>
+        </div>
+      </div>
       <div class="panel-scroll-body" data-role="building-scroll">
-        <p class="building-level-line" data-role="build-level"></p>
-        <p class="building-upgrade-preview" data-role="build-preview"></p>
-        <p class="build-form-error hidden" data-role="build-prerequisite" id="build-prerequisite" role="status"></p>
-        <p class="build-form-error hidden" data-role="build-form-error" role="alert"></p>
-        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="confirm-upgrade" aria-describedby="build-prerequisite" disabled>
-          确认升级
-        </button>
-        <button type="button" class="build-demolish hidden" data-action="demolish-building">
-          降级/拆除（返还 25%）
-        </button>
+        <div class="building-detail-card">
+          <div class="building-detail-head">
+            <div class="building-detail-icon" data-role="build-icon" aria-hidden="true">城</div>
+            <div class="building-detail-meta">
+              <h4 data-role="build-level">未建造</h4>
+              <p data-role="build-desc">点选槽位查看功能与升级条件。</p>
+            </div>
+          </div>
+          <dl class="building-upgrade-compare" data-role="build-compare"></dl>
+          <p class="building-upgrade-preview" data-role="build-preview"></p>
+          <div class="building-prerequisite-row hidden" data-role="build-prerequisite-row">
+            <span data-role="build-prerequisite" id="build-prerequisite" role="status"></span>
+            <button type="button" class="product-btn-ghost hidden" data-action="jump-prerequisite-hall">前往城主府</button>
+          </div>
+          <p class="build-form-error hidden" data-role="build-form-error" role="alert"></p>
+          <div class="building-panel-actions">
+            <button type="button" class="art-btn-primary art-btn-primary-full" data-action="confirm-upgrade" aria-describedby="build-prerequisite" disabled>
+              确认升级
+            </button>
+            <button type="button" class="product-btn-danger-ghost build-demolish hidden" data-action="demolish-building">
+              降级/拆除（返还 25%）
+            </button>
+          </div>
+        </div>
         <div class="wall-defenses hidden" data-role="wall-defenses">
           <h4>城墙城防</h4>
           <p data-role="wall-status"></p>
@@ -363,6 +383,7 @@ export class MainCityBuildingPanel {
     `;
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
+    wireProductPanelChrome(this.panel);
     this.panel.addEventListener("input", () => this.updateCampaignFormationState());
     this.panel.addEventListener("change", () => this.updateCampaignFormationState());
     this.resetCampaignFormation();
@@ -453,13 +474,20 @@ export class MainCityBuildingPanel {
     const btn = this.panel.querySelector<HTMLButtonElement>('[data-action="confirm-upgrade"]');
     const demolishBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="demolish-building"]');
     if (!slotKey || !titleEl || !levelEl || !previewEl || !prerequisiteEl || !btn) return;
-    prerequisiteEl.textContent = "";
-    prerequisiteEl.classList.add("hidden");
 
     const label = this.slotLabels[slotKey] ?? slotKey;
     titleEl.textContent = label;
     const building = this.buildingForSlot(slotKey);
     const level = building?.level ?? 0;
+    const descEl = this.panel.querySelector('[data-role="build-desc"]');
+    const iconEl = this.panel.querySelector('[data-role="build-icon"]');
+    if (iconEl) iconEl.textContent = label.slice(0, 1);
+    if (descEl) {
+      descEl.textContent =
+        level > 0
+          ? `${label}提供内政、军事或经济加成，升级可解锁更高等级效果。`
+          : `此地可建造${label}，请先确认城主府等级与资源是否充足。`;
+    }
     const now = Date.now();
     const upgrading = (building?.upgrade_finish_at_ms ?? 0) > now;
 
@@ -551,11 +579,19 @@ export class MainCityBuildingPanel {
     );
     previewEl.textContent = costLine.textLine;
     previewEl.innerHTML = costLine.htmlLine;
+    const compareEl = this.panel.querySelector('[data-role="build-compare"]');
+    if (compareEl) {
+      compareEl.innerHTML = `<dt>当前等级</dt><dd>Lv${level}</dd><dt>升级目标</dt><dd>Lv${preview.targetLevel}</dd>`;
+    }
     const prerequisite = buildUpgradePrerequisiteHint(
       preview.buildingCfgId, preview.targetLevel, session.buildings,
     );
     prerequisiteEl.textContent = prerequisite ?? "";
-    prerequisiteEl.classList.toggle("hidden", !prerequisite);
+    const prereqRow = this.panel.querySelector('[data-role="build-prerequisite-row"]');
+    const jumpHall = this.panel.querySelector<HTMLButtonElement>('[data-action="jump-prerequisite-hall"]');
+    const needsHall = !!prerequisite && /城主府/.test(prerequisite);
+    prereqRow?.classList.toggle("hidden", !prerequisite);
+    jumpHall?.classList.toggle("hidden", !needsHall);
     const submitState = this.getSubmitState();
     btn.disabled = buildSubmitButtonDisabled(submitState, preview.canAfford && !prerequisite, false);
     btn.textContent = buildSubmitButtonLabel(submitState);
@@ -1171,6 +1207,10 @@ export class MainCityBuildingPanel {
 
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
+    if (btn?.getAttribute("data-action") === "jump-prerequisite-hall") {
+      this.selectSlot("hall");
+      return;
+    }
     if (btn?.getAttribute("data-action") === "claim-phase-reward") {
       this.onPhaseClaim?.();
       return;

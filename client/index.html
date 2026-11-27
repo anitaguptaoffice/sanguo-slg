@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%226%22%20fill%3D%22%231a1410%22%2F%3E%3Cpath%20d%3D%22M8%2024V8h16v16h-5v-8h-6v8Z%22%20fill%3D%22%23d6b46b%22%2F%3E%3C%2Fsvg%3E" />
-    <title>三国 SLG · H5 骨架</title>
+    <title>热血三国</title>
     <style>
       * { box-sizing: border-box; margin: 0; }
       body { font-family: system-ui, sans-serif; background: #1a1410; color: #f5e6c8; }
@@ -665,6 +665,59 @@
         display: inline-flex; flex-wrap: nowrap; align-items: center; gap: 6px;
         min-height: 44px;
       }
+      .main-city-toolbar .toolbar-more-toggle {
+        flex: 0 0 72px;
+        min-width: 72px;
+        font-weight: 600;
+      }
+      .main-city-toolbar .toolbar-more-drawer {
+        display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+        padding: 4px 8px 6px;
+        border-top: 1px solid #4a3c2a;
+        background: rgba(20, 16, 12, 0.92);
+        max-height: 88px;
+        overflow-y: auto;
+      }
+      .main-city-toolbar .toolbar-more-drawer.hidden { display: none; }
+      .main-city-toolbar .toolbar-more-drawer > button {
+        flex: 0 1 auto;
+        min-width: 72px;
+        padding: 6px 10px;
+        border: 1px solid #5a4a34;
+        border-radius: 4px;
+        background: #2a2218;
+        color: #f5ecd7;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .world-map-detail-card .world-map-detail-head {
+        display: flex; justify-content: space-between; align-items: center; gap: 8px;
+        margin-bottom: 6px;
+      }
+      .world-map-detail-card .world-map-detail-close {
+        background: none; border: none; color: #c8b795; cursor: pointer;
+        font-size: 18px; line-height: 1; padding: 0 4px;
+      }
+      .world-map-detail-card .world-map-detail-meta { color: #d8ccb4; font-size: 12px; margin: 4px 0; }
+      .world-map-detail-card .world-map-detail-tip { color: #e8a87c; font-size: 12px; margin: 6px 0; }
+      .world-map-detail-card .world-map-detail-actions {
+        display: flex; flex-direction: column; gap: 8px; margin-top: 10px;
+      }
+      .world-map-detail-card .world-map-detail-actions-secondary {
+        display: flex; flex-wrap: wrap; gap: 6px;
+      }
+      .world-map-detail-card .world-map-detail-btn--secondary {
+        flex: 1 1 calc(50% - 6px);
+        min-height: 36px;
+        padding: 6px 8px;
+        border: 1px solid #6a5538;
+        border-radius: 4px;
+        background: #2a2218;
+        color: #f4e6c8;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .world-map-detail-card .world-map-detail-btn--primary { margin-top: 2px; }
       .main-city-toolbar .toolbar-btn-hit {
         flex: 0 0 auto;
         display: flex; align-items: center; justify-content: center;

@@ -43,11 +43,19 @@ export function formatRecruitFormInlineHint(
   const itemCfgId = template.recruit_item?.item_cfg_id ?? 0;
   const itemGapItemCfgId =
     itemLine && itemCfgId > 0 ? Math.floor(itemCfgId) : null;
+  if (afford.canAfford) {
+    return {
+      text: "",
+      hasWarn: false,
+      canSubmit: true,
+      itemGapItemCfgId: null,
+    };
+  }
   const text = `校验：${name} — ${secondary}`;
   return {
     text,
-    hasWarn: !afford.canAfford,
-    canSubmit: afford.canAfford,
+    hasWarn: true,
+    canSubmit: false,
     itemGapItemCfgId,
   };
 }

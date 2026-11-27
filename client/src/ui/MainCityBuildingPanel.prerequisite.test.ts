@@ -29,25 +29,27 @@ describe("building hall prerequisites", () => {
       onUpgrade,
       button: root.querySelector<HTMLButtonElement>('[data-action="confirm-upgrade"]')!,
       hint: root.querySelector<HTMLElement>('[data-role="build-prerequisite"]')!,
+      hintRow: root.querySelector<HTMLElement>('[data-role="build-prerequisite-row"]')!,
       update(next: MainCitySession | null, sync = true) { session = next; if (sync) panel.sync(); },
     };
   }
 
   it("disables affordable farm 2→3 at hall 2 with an accessible actionable reason", () => {
-    const { button, hint, onUpgrade } = mount();
+    const { button, hint, hintRow, onUpgrade } = mount();
     expect(button.disabled).toBe(true);
     expect(hint.textContent).toBe("需城主府达到 Lv3（当前 Lv2）；请先升级城主府");
+    expect(hintRow.classList.contains("hidden")).toBe(false);
     expect(button.getAttribute("aria-describedby")).toBe(hint.id);
     button.click();
     expect(onUpgrade).not.toHaveBeenCalled();
   });
 
   it("allows the exact boundary after normal session refresh and clears the warning", () => {
-    const { update, button, hint, onUpgrade } = mount();
+    const { update, button, hint, hintRow, onUpgrade } = mount();
     update(city(3));
     expect(button.disabled).toBe(false);
     expect(hint.textContent).toBe("");
-    expect(hint.classList.contains("hidden")).toBe(true);
+    expect(hintRow.classList.contains("hidden")).toBe(true);
     button.click();
     expect(onUpgrade).toHaveBeenCalledExactlyOnceWith("farm", 2);
   });

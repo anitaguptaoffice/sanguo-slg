@@ -74,7 +74,7 @@ export class ServerSelectScene implements Scene {
     this.hud = ctx.hud;
     this.mountHudChrome();
     this.panel = document.createElement("div");
-    this.panel.className = "server-select-panel";
+    this.panel.className = "server-select-panel product-chrome-server";
     this.panel.id = "server-select-overlay";
     this.panel.setAttribute("role", "dialog");
     this.panel.setAttribute("aria-modal", "true");

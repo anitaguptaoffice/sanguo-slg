@@ -86,7 +86,9 @@ export class MainCitySlotUpgradeOverlay {
 
     for (const slot of this.slots) {
       const building = buildingBySlot(buildings, slot.slot_key);
-      if (!building) {
+      const finish = building?.upgrade_finish_at_ms ?? 0;
+      const upgrading = !!building && finish > nowMs;
+      if (!building || !upgrading) {
         const stale = this.tags.get(slot.slot_key);
         if (stale) {
           stale.remove();
@@ -94,8 +96,6 @@ export class MainCitySlotUpgradeOverlay {
         }
         continue;
       }
-      const finish = building?.upgrade_finish_at_ms ?? 0;
-      const upgrading = finish > nowMs;
       const anchor = upgrading ? this.anchors.get(slot.slot_key) : undefined;
       const ratio = anchor ? upgradeProgressRatio(anchor, nowMs) : null;
       const label = formatSlotOverlayLabel(building, nowMs);

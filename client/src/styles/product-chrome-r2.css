@@ -1,0 +1,788 @@
+/* 后 R5 阶段一 · 成品化 UI token（勿再向 index.html 内联堆叠） */
+
+:root {
+  --pc-bg-deep: #14100c;
+  --pc-bg-panel: linear-gradient(165deg, #2a2218 0%, #1a1410 100%);
+  --pc-border-bronze: #6a5538;
+  --pc-border-gold: #c9a227;
+  --pc-text-primary: #f5e6c8;
+  --pc-text-muted: #b8a68a;
+  --pc-paper-bg: #f5ead4;
+  --pc-paper-border: #b89b6a;
+  --pc-ink: #2b1d11;
+  --pc-ink-muted: #5a4030;
+  --pc-ink-strong: #2b1e12;
+  --pc-ink-secondary: #5c4632;
+  --pc-field-bg: #fbf5e6;
+  --pc-placeholder: #7d684f;
+  --pc-accent-red: #8b1a12;
+  --pc-accent-red-deep: #5c0f0a;
+  --pc-shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --pc-radius-sm: 4px;
+  --pc-radius-md: 8px;
+}
+
+/* —— 顶栏 HUD —— */
+#hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 6px 12px;
+  background: linear-gradient(180deg, rgba(34, 26, 18, 0.96), rgba(20, 16, 12, 0.92));
+  border-bottom: 1px solid var(--pc-border-bronze);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+#hud .hud-city-crest {
+  flex: 1 1 auto;
+  min-width: 140px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pc-text-primary);
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: var(--pc-radius-sm);
+  border: 1px solid rgba(201, 162, 39, 0.45);
+  background: rgba(42, 32, 22, 0.75);
+}
+#hud .hud-group.hud-resource-strip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(106, 85, 56, 0.65);
+  background: rgba(26, 20, 16, 0.85);
+}
+#hud .hud-resource-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--pc-text-primary);
+}
+#hud .hud-resource-item[data-resource="gold"]::before {
+  content: "金";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #e8c547, #a67c1a);
+  color: #2a1808;
+  font-size: 10px;
+  font-weight: 700;
+}
+#hud .hud-status-line {
+  flex: 1 1 100%;
+  font-size: 12px;
+  color: var(--pc-text-muted);
+}
+#hud .hud-context-chip {
+  flex: 0 1 auto;
+  max-width: min(42vw, 320px);
+  margin-left: auto;
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--pc-text-primary);
+  border-radius: var(--pc-radius-sm);
+  border: 1px solid rgba(106, 85, 56, 0.55);
+  background: rgba(26, 20, 16, 0.72);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#layout-frame.layout-narrow #hud {
+  row-gap: 4px;
+}
+#layout-frame.layout-narrow #hud .hud-status-line {
+  display: none;
+}
+
+/* —— 底栏工具栏 —— */
+.main-city-toolbar .toolbar-btn-label {
+  max-width: none !important;
+  width: auto !important;
+  flex: 1 1 auto !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  white-space: nowrap !important;
+  font-size: 12px !important;
+}
+.main-city-toolbar .toolbar-scroll-inner > button {
+  flex: 0 1 auto !important;
+  min-width: 64px;
+  padding: 0 8px !important;
+}
+.main-city-toolbar [data-action="open-world-map"] {
+  min-width: 76px;
+}
+
+/* —— 七槽快捷条：左侧竖 dock（压过 index 横条 left:0 right:0） —— */
+#layout-frame.layout-narrow .main-city-slot-overlay-wrap {
+  position: absolute !important;
+  left: 4px !important;
+  right: auto !important;
+  bottom: auto !important;
+  top: 50% !important;
+  transform: translateY(-50%);
+  z-index: 4;
+  width: max-content;
+  max-width: 52px;
+  max-height: min(58vh, 420px);
+  display: block !important;
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+#layout-frame.layout-narrow:has(.building-panel:not(.hidden))
+  .main-city-slot-overlay-wrap,
+#layout-frame.layout-narrow:has(.military-panel:not(.hidden))
+  .main-city-slot-overlay-wrap,
+#layout-frame.layout-narrow:has(.content-panel:not(.hidden))
+  .main-city-slot-overlay-wrap,
+#layout-frame.layout-narrow:has(.social-panel:not(.hidden)) .main-city-slot-overlay-wrap {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+#layout-frame.layout-narrow .main-city-slot-overlay {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: visible !important;
+  overflow-x: visible !important;
+  max-width: 52px !important;
+  width: max-content;
+  padding: 5px 3px;
+  border-radius: var(--pc-radius-md);
+  border: 1px solid var(--pc-border-bronze);
+  background: rgba(20, 16, 12, 0.9);
+  box-shadow: var(--pc-shadow-panel);
+}
+#layout-frame.layout-narrow .main-city-slot-overlay-inner {
+  display: flex !important;
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch !important;
+  gap: 3px;
+  width: 100%;
+}
+#layout-frame.layout-narrow .main-city-slot-overlay-cell {
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  padding: 4px 2px;
+  border: 1px solid rgba(106, 85, 56, 0.55);
+  border-radius: var(--pc-radius-sm);
+  background: #2a2218;
+  color: var(--pc-text-primary);
+  font-size: 12px;
+  line-height: 1.1;
+  text-align: center;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+#layout-frame.layout-narrow .main-city-slot-overlay-cell.main-city-slot-overlay-cell-selected {
+  border-color: var(--pc-border-gold);
+  outline: none;
+  box-shadow: inset 0 0 0 1px rgba(201, 162, 39, 0.45);
+}
+
+/* —— 通用面板头 —— */
+.product-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--pc-border-bronze);
+}
+.product-panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--pc-text-primary);
+}
+.building-panel.product-building-panel .product-panel-header h3,
+.military-panel[data-military-paper-skin] .product-panel-header h3,
+.battle-report-panel.content-panel .product-panel-header h3,
+.content-panel.product-chrome-panel .product-panel-header h3,
+.social-panel.product-chrome-panel .product-panel-header h3,
+.content-panel .product-panel-header h3 {
+  color: var(--pc-ink-strong) !important;
+  font-weight: 700;
+  text-shadow: none;
+}
+.building-panel.product-building-panel .product-panel-subhint,
+.battle-report-panel .product-panel-subhint,
+.military-panel[data-military-paper-skin] .product-panel-subhint {
+  color: var(--pc-ink-muted);
+}
+.building-panel.product-building-panel .product-panel-close,
+.military-panel[data-military-paper-skin] .product-panel-close,
+.battle-report-panel .product-panel-close {
+  background: var(--pc-paper-bg);
+  color: var(--pc-ink);
+  border-color: var(--pc-paper-border);
+}
+.product-panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.product-panel-close {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--pc-border-bronze);
+  border-radius: var(--pc-radius-sm);
+  background: #2a2218;
+  color: var(--pc-text-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.product-panel-close:hover {
+  color: var(--pc-text-primary);
+  border-color: var(--pc-border-gold);
+}
+.product-panel-subhint {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--pc-text-muted);
+  line-height: 1.45;
+}
+.product-btn-ghost {
+  padding: 6px 12px;
+  border: 1px solid var(--pc-border-bronze);
+  border-radius: var(--pc-radius-sm);
+  background: transparent;
+  color: var(--pc-text-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+.battle-report-panel .product-btn-ghost,
+.building-panel.product-building-panel .product-btn-ghost {
+  border-color: var(--pc-paper-border);
+  background: #ebe0c8;
+  color: var(--pc-ink);
+}
+.product-btn-danger-ghost {
+  padding: 8px 14px;
+  border: 1px solid rgba(180, 60, 48, 0.65);
+  border-radius: var(--pc-radius-sm);
+  background: rgba(60, 20, 16, 0.35);
+  color: #f0b0a0;
+  font-size: 13px;
+  cursor: pointer;
+}
+.product-btn-danger-ghost:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.building-panel.product-building-panel {
+  max-width: min(520px, 92vw);
+}
+.building-panel.product-building-panel .building-detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--pc-paper-border);
+  border-radius: var(--pc-radius-md);
+  background: var(--pc-paper-bg);
+  color: var(--pc-ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.building-detail-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.building-detail-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--pc-radius-sm);
+  border: 1px solid var(--pc-paper-border);
+  background: #ebe0c8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #8b5a1a;
+}
+.building-detail-meta h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  color: var(--pc-ink);
+  font-weight: 700;
+}
+.building-detail-meta p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--pc-ink-muted);
+  line-height: 1.4;
+}
+.building-panel.product-building-panel .building-upgrade-preview {
+  color: var(--pc-ink) !important;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.building-panel.product-building-panel .building-upgrade-preview .resource-deficit {
+  color: #8b2518 !important;
+  font-weight: 600;
+}
+.building-upgrade-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 12px;
+}
+.building-upgrade-compare dt {
+  color: var(--pc-ink-muted);
+}
+.building-upgrade-compare dd {
+  margin: 0;
+  color: var(--pc-ink);
+  font-weight: 600;
+}
+.building-panel-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.building-prerequisite-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #e8a87c;
+}
+
+/* —— 战报 —— */
+.battle-report-panel .battle-report-filters button[data-ui-filter-chip],
+.battle-report-panel .battle-report-filters button[data-action="filter-outcome"],
+.battle-report-panel .battle-report-filters button[data-action="filter-time-window"] {
+  border: 1px solid var(--pc-paper-border);
+  border-radius: var(--pc-radius-sm);
+  background: #ebe0c8;
+  color: var(--pc-ink);
+  min-width: 40px;
+  min-height: 32px;
+  padding: 4px 10px;
+  box-sizing: border-box;
+}
+.battle-report-panel .battle-report-filters button.active,
+.battle-report-panel .panel-filter-chip-bar button.art-filter-chip.active,
+.battle-report-panel button[data-ui-filter-chip].active,
+.battle-report-panel .battle-report-filters button[data-ui-filter-chip].active {
+  outline: none !important;
+  outline-offset: 0 !important;
+  border: 1px solid #9a7a32 !important;
+  box-shadow: inset 0 0 0 1px rgba(154, 122, 50, 0.35) !important;
+  background: rgba(201, 162, 39, 0.28) !important;
+  color: var(--pc-ink) !important;
+}
+.battle-report-panel .battle-report-filters button.art-filter-chip--skinned .art-filter-chip-sprite {
+  opacity: 0;
+}
+.battle-report-panel [data-action="refresh-reports"] {
+  width: auto !important;
+  min-height: auto !important;
+}
+.battle-report-panel .report-detail:empty {
+  display: none;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+}
+.battle-report-panel .report-detail {
+  margin-top: 8px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  color: var(--pc-ink-strong) !important;
+  white-space: normal !important;
+  max-height: none !important;
+  overflow: visible !important;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.battle-report-panel .panel-scroll-body[data-role="battle-report-scroll"] {
+  max-height: min(56vh, 520px);
+  overflow-y: auto;
+}
+.battle-report-panel .report-panel-status:empty {
+  display: none;
+}
+
+/* —— 军事面板 —— */
+.military-panel[data-military-paper-skin] [data-role="march-hint"],
+.military-panel[data-military-paper-skin] [data-role="troops"],
+.military-panel[data-military-paper-skin] .troop-recruit-preview,
+.military-panel[data-military-paper-skin] [data-role="prepared-recruit-status"] {
+  font-size: 12px;
+  color: var(--pc-ink-muted);
+}
+.military-panel[data-military-paper-skin] label {
+  color: var(--pc-ink);
+  font-size: 13px;
+}
+.military-panel[data-military-paper-skin] input,
+.military-panel[data-military-paper-skin] select {
+  background: var(--pc-paper-bg) !important;
+  color: var(--pc-ink) !important;
+  border: 1px solid var(--pc-paper-border) !important;
+  border-radius: var(--pc-radius-sm) !important;
+  padding: 4px 8px !important;
+  box-sizing: border-box;
+}
+.military-panel[data-military-paper-skin] .queue-list,
+.military-panel[data-military-paper-skin] ul.queue-list {
+  background: var(--pc-paper-bg);
+  border: 1px solid var(--pc-paper-border);
+  border-radius: var(--pc-radius-sm);
+  color: var(--pc-ink);
+}
+.military-panel[data-military-paper-skin] button:not(.art-btn-primary):not(.product-panel-close):not(.hidden) {
+  padding: 6px 12px;
+  border: 1px solid var(--pc-paper-border);
+  border-radius: var(--pc-radius-sm);
+  background: linear-gradient(180deg, #f8efd8, #e8d9b8);
+  color: var(--pc-ink);
+  font-size: 12px;
+  cursor: pointer;
+}
+.military-panel[data-military-paper-skin] button:not(.art-btn-primary):not(.product-panel-close):disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* —— 世界大地图 —— */
+.world-map-layer.world-map-scene {
+  background: radial-gradient(ellipse at 50% 0%, #1e2a22 0%, #12100e 55%, #0a0a0a 100%) !important;
+  color: var(--pc-text-primary) !important;
+}
+.world-map-scene .world-map-header-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--pc-border-bronze);
+  border-radius: var(--pc-radius-md);
+  background: linear-gradient(180deg, rgba(42, 32, 22, 0.95), rgba(26, 20, 16, 0.92));
+  box-shadow: var(--pc-shadow-panel);
+}
+.world-map-scene .world-map-header-bar strong {
+  color: #ffe1a0;
+  font-size: 14px;
+}
+.world-map-scene .world-map-header-bar button,
+.world-map-scene .world-map-header-bar input,
+.world-map-scene .world-map-header-bar select {
+  background: #1a1510 !important;
+  color: var(--pc-text-primary) !important;
+  border: 1px solid #5a4a34 !important;
+  border-radius: var(--pc-radius-sm) !important;
+  padding: 4px 8px !important;
+}
+.world-map-scene .world-map-legend-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 8px 12px;
+  border: 1px solid var(--pc-border-bronze);
+  border-radius: var(--pc-radius-md);
+  background: rgba(20, 16, 12, 0.92);
+  font-size: 12px;
+  color: var(--pc-text-muted);
+}
+.world-map-scene .world-map-legend-bar span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.world-map-scene .world-map-legend-bar i {
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.world-map-scene .world-map-status-line {
+  min-height: 18px;
+  font-size: 12px;
+  color: var(--pc-text-muted);
+}
+.world-map-detail-card .world-map-detail-btn--primary.art-btn-primary {
+  background: linear-gradient(180deg, var(--pc-accent-red), var(--pc-accent-red-deep)) !important;
+  color: #ffe8c8 !important;
+  border: 1px solid var(--pc-border-gold) !important;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+.world-map-detail-card .world-map-detail-btn--primary.art-btn-primary:disabled {
+  opacity: 0.5;
+}
+
+/* —— 阶段三：选服 / 核心面板 / 回放 / 音效 —— */
+.main-city-toolbar .toolbar-sound-toggle {
+  min-width: 52px;
+  font-size: 12px;
+}
+.server-select-panel.product-chrome-server h2,
+.server-select-panel.product-chrome-server h3 {
+  color: var(--pc-ink) !important;
+  font-weight: 700;
+}
+.server-select-panel.product-chrome-server label,
+.server-select-panel.product-chrome-server p {
+  color: var(--pc-ink-muted);
+}
+.server-select-panel.product-chrome-server input,
+.server-select-panel.product-chrome-server select {
+  background: var(--pc-paper-bg) !important;
+  color: var(--pc-ink) !important;
+  border: 1px solid var(--pc-paper-border) !important;
+}
+.server-select-panel.product-chrome-server button:not(.art-btn-primary) {
+  border: 1px solid var(--pc-paper-border);
+  background: linear-gradient(180deg, #f8efd8, #e8d9b8);
+  color: var(--pc-ink);
+}
+.server-select-panel.product-chrome-server .server-list li {
+  background: linear-gradient(180deg, #faf3e0, #efe2c4) !important;
+  color: var(--pc-ink) !important;
+  border: 1px solid var(--pc-paper-border);
+  box-shadow: none;
+}
+.server-select-panel.product-chrome-server .server-list li:hover:not(.disabled) {
+  background: linear-gradient(180deg, #fff8ea, #f2e6c6) !important;
+  border-color: #c9a227;
+}
+.server-select-panel.product-chrome-server .server-list li.selected {
+  background: linear-gradient(180deg, #fff4c8, #e4c070) !important;
+  border: 1px solid #c9a227 !important;
+  box-shadow: inset 0 0 0 1px rgba(201, 162, 39, 0.4);
+  color: var(--pc-ink) !important;
+  outline: none !important;
+}
+.server-select-panel.product-chrome-server .server-list li.disabled {
+  background: linear-gradient(180deg, #e8e0d0, #d8cfc0) !important;
+  color: var(--pc-ink-muted) !important;
+}
+.world-map-legend-bar .world-map-legend-swatch {
+  flex-shrink: 0;
+}
+/* —— 阶段五：羊皮纸面板统一强覆盖（盖过 index.html 深色社交/内容样式）—— */
+.content-panel.product-chrome-panel,
+.social-panel.product-chrome-panel {
+  color: var(--pc-ink-strong) !important;
+}
+.content-panel.product-chrome-panel h3,
+.content-panel.product-chrome-panel h4,
+.social-panel.product-chrome-panel h3,
+.social-panel.product-chrome-panel h4 {
+  color: var(--pc-ink-strong) !important;
+}
+.content-panel.product-chrome-panel label,
+.social-panel.product-chrome-panel label,
+.content-panel.product-chrome-panel p,
+.social-panel.product-chrome-panel p,
+.content-panel.product-chrome-panel li,
+.social-panel.product-chrome-panel li,
+.content-panel.product-chrome-panel dt,
+.content-panel.product-chrome-panel dd,
+.content-panel.product-chrome-panel summary,
+.social-panel.product-chrome-panel summary {
+  color: var(--pc-ink-strong);
+}
+.content-panel.product-chrome-panel .product-panel-subhint,
+.content-panel.product-chrome-panel .social-refresh-status,
+.social-panel.product-chrome-panel .social-refresh-status,
+.social-panel.product-chrome-panel [data-role="guild-summary"],
+.social-panel.product-chrome-panel [data-role="guild-chat-hint"],
+.content-panel.product-chrome-panel .queue-panel-hint,
+.content-panel.product-chrome-panel .world-panel-hint,
+.content-panel.product-chrome-panel .mail-inbox-hint {
+  color: var(--pc-ink-secondary) !important;
+}
+.content-panel.product-chrome-panel.quest-panel,
+.content-panel.product-chrome-panel.quest-panel h3,
+.content-panel.product-chrome-panel.quest-panel label {
+  color: var(--pc-ink-strong) !important;
+}
+.content-panel.product-chrome-panel input,
+.content-panel.product-chrome-panel select,
+.content-panel.product-chrome-panel textarea,
+.social-panel.product-chrome-panel input,
+.social-panel.product-chrome-panel select,
+.social-panel.product-chrome-panel textarea {
+  background: var(--pc-field-bg) !important;
+  color: var(--pc-ink-strong) !important;
+  border: 1px solid var(--pc-paper-border) !important;
+  border-radius: var(--pc-radius-sm);
+  box-sizing: border-box;
+}
+.content-panel.product-chrome-panel input::placeholder,
+.social-panel.product-chrome-panel input::placeholder,
+.content-panel.product-chrome-panel textarea::placeholder {
+  color: var(--pc-placeholder) !important;
+  opacity: 1;
+}
+.content-panel.product-chrome-panel button:not(.art-btn-primary):not(.product-panel-close),
+.social-panel.product-chrome-panel button:not(.art-btn-primary):not(.product-panel-close) {
+  border: 1px solid var(--pc-paper-border) !important;
+  background: linear-gradient(180deg, #f8efd8, #e8d9b8) !important;
+  color: var(--pc-ink-strong) !important;
+  border-radius: var(--pc-radius-sm);
+}
+.social-panel.product-chrome-panel .chat-channel-tab {
+  background: var(--pc-field-bg) !important;
+  color: var(--pc-ink-strong) !important;
+  border: 1px solid var(--pc-paper-border) !important;
+}
+.social-panel.product-chrome-panel .chat-channel-tab.active {
+  outline: 2px solid var(--pc-border-gold);
+  background: linear-gradient(180deg, #fff4c8, #e4c070) !important;
+}
+.content-panel.product-chrome-panel .product-btn-ghost,
+.social-panel.product-chrome-panel .product-btn-ghost,
+.battle-report-panel.content-panel.product-chrome-panel .product-btn-ghost {
+  border: 1px solid var(--pc-paper-border) !important;
+  background: linear-gradient(180deg, #f8efd8, #e8d9b8) !important;
+  color: var(--pc-ink-strong) !important;
+}
+.content-panel.product-chrome-panel .social-refresh-status.social-refresh-error {
+  color: #8b2518 !important;
+}
+.military-panel[data-military-paper-skin] .panel-scroll-body {
+  max-height: min(58vh, 520px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.military-panel[data-military-paper-skin] .queue-list-empty,
+.military-panel[data-military-paper-skin] .military-recruit-queue .queue-list-empty {
+  list-style: none;
+  margin: 8px 0;
+  padding: 12px 10px;
+  border: 1px solid var(--pc-paper-border);
+  border-radius: var(--pc-radius-md);
+  background: var(--pc-paper-bg);
+  color: var(--pc-ink);
+  text-align: center;
+}
+.battle-report-replay-stage {
+  margin: 6px 0 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--pc-paper-border);
+  border-radius: var(--pc-radius-md);
+  background: var(--pc-field-bg);
+  color: var(--pc-ink-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.battle-replay-stage-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.battle-replay-stage-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--pc-ink-strong);
+}
+.battle-replay-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0;
+}
+.battle-replay-bar {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: var(--pc-radius-sm);
+  min-width: 40px;
+  box-sizing: border-box;
+}
+.battle-replay-bar--att {
+  background: rgba(139, 37, 24, 0.22);
+  border: 1px solid rgba(139, 37, 24, 0.45);
+}
+.battle-replay-bar--def {
+  background: rgba(44, 90, 120, 0.22);
+  border: 1px solid rgba(44, 90, 120, 0.45);
+}
+.battle-replay-lane {
+  position: relative;
+  height: 22px;
+  margin: 4px 0;
+  border-radius: var(--pc-radius-sm);
+  background: linear-gradient(90deg, #8b2518 0%, #ebe0c8 50%, #2c5a78 100%);
+  opacity: 0.92;
+  border: 1px solid var(--pc-paper-border);
+}
+.battle-replay-caption {
+  margin: 2px 0 4px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--pc-ink-secondary);
+}
+.battle-replay-lane-att,
+.battle-replay-lane-def {
+  position: absolute;
+  top: 3px;
+  width: 24px;
+  height: 22px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.35);
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.battle-replay-lane-att { left: 8px; }
+.battle-replay-lane-def { right: 8px; }
+.battle-replay-lane-ruler {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  color: var(--pc-ink);
+  text-shadow: 0 0 2px #f5ead4;
+}
+.battle-replay-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+.battle-replay-controls .product-btn-ghost {
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  min-height: 28px;
+  line-height: 1.2;
+}
+.battle-replay-controls .battle-replay-speed-btn.active {
+  border-color: #9a7a32 !important;
+  background: linear-gradient(180deg, #fff0b8, #e0c068) !important;
+  color: var(--pc-ink-strong) !important;
+}
+.battle-report-replay-stage--empty .battle-replay-controls {
+  display: none;
+}
+.content-panel[data-center-panel="hero"] .hero-list {
+  border: 1px solid var(--pc-paper-border);
+  border-radius: var(--pc-radius-md);
+  background: rgba(245, 234, 212, 0.65);
+}

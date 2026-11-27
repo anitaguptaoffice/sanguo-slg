@@ -1,3 +1,4 @@
+import "@/styles/product-chrome-r2.css";
 import { GameApp } from "@/engine/GameApp";
 
 const viewportRoot = document.getElementById("game-viewport") as HTMLElement | null;

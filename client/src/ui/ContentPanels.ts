@@ -5,6 +5,7 @@ import { bagUseCapabilityHint } from "@/net/bagUseCapability";
 import { captureActor } from "@/net/actorContext";
 import { renderSuccessfulReadNotice } from "@/net/successfulReadNotice";
 import { captureCenterPanelIntent, openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
+import { productPanelHeaderHtml, wireProductPanelChrome } from "@/ui/panelChromeHeader";
 import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { AssetLoader } from "@/engine/AssetLoader";
@@ -313,6 +314,9 @@ export class ContentPanels {
     this.mount.appendChild(this.questPanel);
     this.mount.appendChild(this.bagPanel);
     this.mount.appendChild(this.shopPanel);
+    wireProductPanelChrome(this.questPanel);
+    wireProductPanelChrome(this.bagPanel);
+    wireProductPanelChrome(this.shopPanel);
     this.bagPanel.addEventListener("center-panel-suspend", () => {
       this.persistBagCategoryScrollPosition();
       this.bagOpenGeneration++;
@@ -769,9 +773,9 @@ export class ContentPanels {
 
   private buildQuestPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel quest-panel hidden";
+    el.className = "content-panel product-chrome-panel quest-panel hidden";
     el.innerHTML = `
-      <h3>任务</h3>
+      ${productPanelHeaderHtml("任务")}
       <label>任务 ID
         <input type="number" data-field="quest-id" min="1001" value="1001" />
       </label>
@@ -786,10 +790,10 @@ export class ContentPanels {
 
   private buildBagPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden";
+    el.className = "content-panel product-chrome-panel hidden";
     el.dataset.centerPanel = "bag";
     el.innerHTML = `
-      <h3>背包</h3>
+      ${productPanelHeaderHtml("背包")}
       <span class="bag-open-source-tag hidden" data-role="bag-open-source-tag" hidden></span>
       <p data-role="bag-hint">「刷新背包」拉取服务端全量；任务领奖后刷新权威背包与钱包，重复回复不叠加奖励。</p>
       <label>道具
@@ -817,10 +821,10 @@ export class ContentPanels {
 
   private buildShopPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden";
+    el.className = "content-panel product-chrome-panel hidden";
     el.dataset.centerPanel = "shop";
     el.innerHTML = `
-      <h3>商城</h3>
+      ${productPanelHeaderHtml("商城")}
       <p data-role="shop-hint">购买回执与当前资产分开显示；状态刷新不会重发购买。</p>
       <p class="panel-feedback" data-role="shop-feedback" role="status" aria-live="polite" hidden></p>
       <button type="button" data-action="reload-shop-state" hidden>重新加载当前状态</button>

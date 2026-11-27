@@ -46,8 +46,9 @@ async function main() {
     record("gateway connected", { detail: `${serverCount} server(s) listed` });
 
     await page.locator(".server-list li").first().click();
-    await page.locator('[data-action="enter-game"]').click();
-    await page.waitForSelector('[data-action="toggle-world"]', { timeout: 45000 });
+    await page.locator('[data-action="enter-game"]:not([disabled])').click();
+    await page.waitForSelector(".main-city-toolbar", { timeout: 45000 });
+    await page.waitForSelector('[data-action="open-world-map"]', { timeout: 15000 });
     record("entered main city", { detail: "toolbar mounted" });
 
     const hudText = (await page.locator("#hud").innerText()).trim();
@@ -86,7 +87,11 @@ async function main() {
       { timeout: 10000 },
     );
 
-    await page.locator('[data-action="toggle-world"]').click();
+    const worldBtn = page.locator('[data-action="toggle-world"]');
+    if (!(await worldBtn.isVisible())) {
+      await page.locator('[data-action="toggle-toolbar-more"]').click();
+    }
+    await worldBtn.click();
     await page.waitForSelector(".world-panel:not(.hidden)", { timeout: 15000 });
     const worldText = (await page.locator(".world-panel").innerText()).trim();
     if (!worldText) throw new Error("world panel rendered empty");

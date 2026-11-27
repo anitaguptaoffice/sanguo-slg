@@ -8,7 +8,7 @@ afterEach(() => roots.splice(0).forEach(root => root.remove()));
 function setup() {
   const root = document.createElement("div"); document.body.append(root); roots.push(root);
   const overlay = new MainCitySlotUpgradeOverlay(root); overlay.attach();
-  const buildings: CityBuilding[] = [{ slot_key: "hall", level: 3, upgrade_finish_at_ms: 0 }];
+  const buildings: CityBuilding[] = [{ slot_key: "hall", level: 3, upgrade_finish_at_ms: 20_000 }];
   const tags = () => [...root.querySelectorAll<HTMLElement>(".main-city-slot-upgrade-tag")];
   return { root, overlay, buildings, tags };
 }
@@ -20,7 +20,7 @@ describe("CLT-RENDERER-LIFECYCLE-001 stable slot-upgrade DOM", () => {
     hall.classList.add("external-completion-pulse");
     const observer = new MutationObserver(() => {});
     observer.observe(overlay.getOverlayLayer()!, { childList: true, attributes: true, characterData: true, subtree: true });
-    for (let frame = 0; frame < 600; frame++) overlay.sync(buildings, 1_000 + frame * 16);
+    for (let frame = 0; frame < 600; frame++) overlay.sync(buildings, 1_000);
     tags().forEach((tag, index) => expect(tag).toBe(initial[index]));
     expect(hall.classList.contains("external-completion-pulse")).toBe(true);
     expect(observer.takeRecords()).toEqual([]); observer.disconnect();
@@ -31,23 +31,25 @@ describe("CLT-RENDERER-LIFECYCLE-001 stable slot-upgrade DOM", () => {
     buildings[0].upgrade_finish_at_ms = 11_000; overlay.sync(buildings, 1_000);
     const label = hall.querySelector(".main-city-slot-upgrade-time")!;
     const fill = hall.querySelector<HTMLElement>(".main-city-slot-upgrade-bar-fill")!;
-    expect(label.textContent).toBe("Lv3 · 0:10"); expect(fill.style.width).toBe("50%");
+    expect(label.textContent).toBe("Lv3 · 0:10"); expect(fill.style.width).toBe("66%");
     overlay.sync(buildings, 6_000);
-    expect(label.textContent).toBe("Lv3 · 0:05"); expect(fill.style.width).toBe("75%");
+    expect(label.textContent).toBe("Lv3 · 0:05"); expect(fill.style.width).toBe("83%");
     buildings[0].level = 4; buildings[0].upgrade_finish_at_ms = 0; overlay.sync(buildings, 11_000);
-    expect(tags().find(el => el.dataset.slotKey === "hall")).toBe(hall);
-    expect(label.textContent).toBe("Lv4"); expect(hall.querySelector(".main-city-slot-upgrade-bar")).toBeNull();
+    expect(tags().find(el => el.dataset.slotKey === "hall")).toBeUndefined();
     overlay.sync([], 12_000); expect(tags()).toHaveLength(0);
   });
   it("ignores a late sync after detach and can attach a fresh layer", () => {
     const { overlay, buildings, tags } = setup(); overlay.sync(buildings, 1_000);
     const oldLayer = overlay.getOverlayLayer()!;
     const observer = new MutationObserver(() => {}); observer.observe(oldLayer, { childList: true, subtree: true });
-    overlay.detach(); buildings[0].level = 4; overlay.sync(buildings, 2_000);
+    overlay.detach();
+    buildings[0].level = 4;
+    buildings[0].upgrade_finish_at_ms = 0;
+    overlay.sync(buildings, 2_000);
     expect(overlay.getOverlayLayer()).toBeUndefined(); expect(observer.takeRecords()).toEqual([]);
     observer.disconnect(); overlay.attach(); overlay.sync(buildings, 2_000);
-    expect(overlay.getOverlayLayer()).not.toBe(oldLayer); expect(tags()).toHaveLength(1);
-    expect(tags().find(el => el.dataset.slotKey === "hall")?.textContent).toBe("Lv4");
+    expect(overlay.getOverlayLayer()).not.toBe(oldLayer);
+    expect(tags()).toHaveLength(0);
   });
   it("keeps highlight selection and repeated attach/detach bounded", () => {
     const { root, overlay, buildings, tags } = setup(); overlay.sync(buildings, 1_000);

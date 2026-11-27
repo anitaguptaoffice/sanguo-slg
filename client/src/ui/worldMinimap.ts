@@ -245,6 +245,21 @@ export function minimapCollapseToggleRect(
   };
 }
 
+/** 小地图标题条（点击进入全屏大地图；不含折叠钮区域）。 */
+export function layoutPointInMinimapHeader(
+  layoutX: number,
+  layoutY: number,
+  collapsed: boolean,
+  narrowLayout = false,
+): boolean {
+  if (collapsed) return false;
+  const rect = resolveMinimapExpandedLayoutRect(narrowLayout);
+  const headerH = 36;
+  if (layoutY < rect.y || layoutY >= rect.y + headerH) return false;
+  if (layoutX < rect.x || layoutX >= rect.x + rect.w - 32) return false;
+  return true;
+}
+
 export function layoutPointInMinimapToggle(
   layoutX: number,
   layoutY: number,
