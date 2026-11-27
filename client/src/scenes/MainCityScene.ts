@@ -31,6 +31,7 @@ import {
   readHudResourceStripExpanded,
   restoreHudResourceStripExpanded,
 } from "@/engine/artResourceHud";
+import { getSoundEngine } from "@/audio/soundEngine";
 import {
   applyLayoutTransform,
   canvasToLayout,
@@ -543,6 +544,7 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="toggle-mail" data-role="mail-toolbar-btn" title="邮件"><span class="toolbar-btn-label">邮件</span></button>
       <button type="button" data-action="open-world-map" title="全屏世界大地图"><span class="toolbar-btn-label">大地图</span></button>
       <button type="button" data-action="toggle-queue" data-role="queue-toolbar-btn" title="队列"><span class="toolbar-btn-label">队列</span></button>
+      <button type="button" data-action="toggle-sound" class="toolbar-sound-toggle" title="游戏音效" aria-pressed="false">音效</button>
       <button type="button" data-action="toggle-toolbar-more" class="toolbar-chrome-btn toolbar-more-toggle" aria-expanded="false" title="更多功能">更多</button>
       </div>
       </div>
@@ -1339,7 +1341,14 @@ export class MainCityScene implements Scene {
       syncToolbarMoreDrawer(this.toolbar, open);
       return;
     }
+    if (action === "toggle-sound") {
+      getSoundEngine().toggleMuted();
+      this.syncSoundToggleUi();
+      getSoundEngine().play("ui-click");
+      return;
+    }
     syncToolbarMoreDrawer(this.toolbar, false);
+    getSoundEngine().play("ui-click");
     if (isToolbarBadgeDeepLinkClick(ev)) {
       if (action === "toggle-chat") {
         const social = hudTodoSocialBadgesFromChatSummary(
@@ -1448,7 +1457,10 @@ export class MainCityScene implements Scene {
       this.heroMail.toggleMail();
       if (!this.heroMail.isMailOpen()) void this.hudTodoBadgePoll.pollOnce();
     }
-    if (action === "open-world-map") this.openWorldMap();
+    if (action === "open-world-map") {
+      getSoundEngine().play("ui-panel");
+      this.openWorldMap();
+    }
     if (action === "toggle-world") this.world.toggle();
     if (action === "toggle-queue") {
       this.queuePanels.toggle();
@@ -1497,9 +1509,15 @@ export class MainCityScene implements Scene {
       if (qid > 0) this.openRecruitQueueAndHighlight(qid);
       return;
     }
-    if (action === "recruit") void this.recruit();
+    if (action === "recruit") {
+      getSoundEngine().play("recruit");
+      void this.recruit();
+    }
     if (action === "retry-prepared-recruit") void this.recruitPrepared(true);
-    if (action === "march") void this.startMarch();
+    if (action === "march") {
+      getSoundEngine().play("march");
+      void this.startMarch();
+    }
     if (action === "clear-march-target") {
       clearMarchTargetFromForm(this.militaryPanel);
       this.clearMinimapWorldGridFocus();
@@ -3343,6 +3361,15 @@ export class MainCityScene implements Scene {
     }
   }
 
+  private syncSoundToggleUi(): void {
+    const btn = this.toolbar?.querySelector<HTMLButtonElement>('[data-action="toggle-sound"]');
+    if (!btn) return;
+    const muted = getSoundEngine().isMuted();
+    btn.textContent = muted ? "静音" : "音效";
+    btn.setAttribute("aria-pressed", muted ? "true" : "false");
+    btn.title = muted ? "点击开启音效" : "点击静音";
+  }
+
   private renderHud(): void {
     const sceneBtn = this.toolbar?.querySelector<HTMLElement>('[data-role="city-scene-btn"]');
     if (sceneBtn) sceneBtn.textContent = this.citySceneMode === "inner" ? "外城" : "内城";
@@ -3362,6 +3389,7 @@ export class MainCityScene implements Scene {
     crest.title = formatKeyBuildingHudLine(s?.buildings, SLOT_LABEL, ["hall", "farm"], now);
     this.hud.appendChild(crest);
     appendHudResourceStrip(this.hud, s?.wallet, this.assets, s?.productionRates);
+    this.syncSoundToggleUi();
     restoreHudResourceStripExpanded(this.hud, resourceStripExpanded);
     this.appendHudCenterTodoBadge();
     const statusParts: string[] = [];

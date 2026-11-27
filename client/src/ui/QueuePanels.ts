@@ -483,7 +483,7 @@ export class QueuePanels {
 
   private buildPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden";
+    el.className = "content-panel product-chrome-panel hidden";
     el.dataset.centerPanel = "queue";
     el.innerHTML = `
       <h3>队列</h3>

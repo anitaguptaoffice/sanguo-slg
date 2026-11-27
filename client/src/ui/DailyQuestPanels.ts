@@ -256,7 +256,7 @@ export class DailyQuestPanels {
 
   private buildPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden";
+    el.className = "content-panel product-chrome-panel hidden";
     el.dataset.centerPanel = "daily";
     el.innerHTML = `
       <h3>日常</h3>

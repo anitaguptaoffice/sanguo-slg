@@ -29,6 +29,11 @@ import {
   worldMapActionDataAction,
   type WorldMapTileActionSpec,
 } from "@/ui/worldMapTileDetailActions";
+import {
+  marchInterpolatedTile,
+  worldMapMarchNeedsAnimation,
+  type WorldMapMarchDrawInput,
+} from "@/net/worldMapMarchInterp";
 
 export type WorldMapDeps = {
   gateway: () => GatewayPort;
@@ -73,14 +78,8 @@ type Tile = {
   in_battle: boolean;
 };
 
-type MarchLine = {
+type MarchLine = WorldMapMarchDrawInput & {
   march_id: number;
-  from_x: number;
-  from_y: number;
-  to_x: number;
-  to_y: number;
-  phase: number;
-  arrive_at_ms: number;
   owner_player_id: number;
 };
 
@@ -116,6 +115,7 @@ export class WorldMapScene {
   private fetchTimer: number | null = null;
   private fetchGeneration = 0;
   private renderQueued = false;
+  private marchAnimFrame = 0;
   private dragging = false;
   private dragMoved = 0;
   private dragLast: { x: number; y: number } | null = null;
@@ -199,6 +199,7 @@ export class WorldMapScene {
     this.hideDetail();
     this.resizeCanvas();
     this.requestRender();
+    this.startMarchAnimationLoop();
     this.scheduleFetch(0);
     void this.refreshSpecialCities();
     this.setStatus("拖拽平移，滚轮或按钮缩放；点击格点查看详情。");
@@ -219,6 +220,7 @@ export class WorldMapScene {
 
   close(): void {
     this.opened = false;
+    this.stopMarchAnimationLoop();
     this.dragging = false;
     this.dragLast = null;
     if (this.fetchTimer != null) {
@@ -431,6 +433,7 @@ export class WorldMapScene {
       if (this.tiles.size > 20000) this.tiles.clear();
       for (const tile of reply.tiles ?? []) this.tiles.set(`${tile.x}:${tile.y}`, tile);
       this.marches = reply.marches ?? [];
+      this.kickMarchAnimationTick();
       if (reply.provinces?.length) {
         this.provinces = reply.provinces;
         this.fillProvinceSelect();
@@ -589,6 +592,29 @@ export class WorldMapScene {
       this.renderQueued = false;
       this.render();
     });
+  }
+
+  private startMarchAnimationLoop(): void {
+    this.kickMarchAnimationTick();
+  }
+
+  private kickMarchAnimationTick(): void {
+    if (!this.opened || this.marchAnimFrame) return;
+    this.marchAnimFrame = requestAnimationFrame(() => {
+      this.marchAnimFrame = 0;
+      if (!this.opened) return;
+      if (worldMapMarchNeedsAnimation(this.marches, Date.now())) {
+        this.requestRender();
+        this.kickMarchAnimationTick();
+      }
+    });
+  }
+
+  private stopMarchAnimationLoop(): void {
+    if (this.marchAnimFrame) {
+      cancelAnimationFrame(this.marchAnimFrame);
+      this.marchAnimFrame = 0;
+    }
   }
 
   private render(): void {
@@ -849,30 +875,56 @@ export class WorldMapScene {
 
   private drawMarches(ctx: CanvasRenderingContext2D, size: { width: number; height: number }): void {
     if (!this.marches.length) return;
+    const nowMs = Date.now();
+    const dashOffset = (nowMs / 40) % 16;
     ctx.save();
-    ctx.setLineDash([6, 4]);
     ctx.lineWidth = 2;
     for (const march of this.marches) {
       const from = projectTile(march.from_x, march.from_y, this.camera, size);
       const to = projectTile(march.to_x, march.to_y, this.camera, size);
-      ctx.strokeStyle = "#ffd166";
+      const interp = marchInterpolatedTile(march, nowMs);
+      const marker = projectTile(interp.x, interp.y, this.camera, size);
+      ctx.strokeStyle = "rgba(255, 209, 102, 0.85)";
+      ctx.setLineDash([8, 6]);
+      ctx.lineDashOffset = -dashOffset;
       ctx.beginPath();
       ctx.moveTo(from.x, from.y);
       ctx.lineTo(to.x, to.y);
       ctx.stroke();
-      const markerX = from.x + (to.x - from.x) * 0.6;
-      const markerY = from.y + (to.y - from.y) * 0.6;
-      this.drawAssetAt(ctx, worldMarchAssetId(march.phase), markerX, markerY + 8, this.camera.zoom * 0.5);
-      const angle = Math.atan2(to.y - from.y, to.x - from.x);
+      if (interp.moving) {
+        ctx.strokeStyle = "#fff3c4";
+        ctx.setLineDash([4, 4]);
+        ctx.lineDashOffset = dashOffset;
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(marker.x, marker.y);
+        ctx.stroke();
+      }
+      const phase = march.phase ?? 2;
+      this.drawAssetAt(ctx, worldMarchAssetId(phase), marker.x, marker.y + 6, this.camera.zoom * 0.52);
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const angle = Math.atan2(dy, dx);
       ctx.setLineDash([]);
       ctx.fillStyle = "#ffd166";
       ctx.beginPath();
-      ctx.moveTo(to.x, to.y);
-      ctx.lineTo(to.x - 9 * Math.cos(angle - 0.4), to.y - 9 * Math.sin(angle - 0.4));
-      ctx.lineTo(to.x - 9 * Math.cos(angle + 0.4), to.y - 9 * Math.sin(angle + 0.4));
+      ctx.moveTo(marker.x + 10 * Math.cos(angle), marker.y + 10 * Math.sin(angle));
+      ctx.lineTo(marker.x + 6 * Math.cos(angle + 2.6), marker.y + 6 * Math.sin(angle + 2.6));
+      ctx.lineTo(marker.x + 6 * Math.cos(angle - 2.6), marker.y + 6 * Math.sin(angle - 2.6));
       ctx.closePath();
       ctx.fill();
-      ctx.setLineDash([6, 4]);
+      if (interp.remainingSec != null && interp.moving) {
+        ctx.font = "11px system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#ffe8b0";
+        const mins = Math.floor(interp.remainingSec / 60);
+        const secs = interp.remainingSec % 60;
+        ctx.fillText(
+          `${mins}:${String(secs).padStart(2, "0")}`,
+          marker.x,
+          marker.y - 14,
+        );
+      }
     }
     ctx.restore();
   }

@@ -509,3 +509,145 @@
 .world-map-detail-card .world-map-detail-btn--primary.art-btn-primary:disabled {
   opacity: 0.5;
 }
+
+/* —— 阶段三：选服 / 核心面板 / 回放 / 音效 —— */
+.main-city-toolbar .toolbar-sound-toggle {
+  min-width: 52px;
+  font-size: 12px;
+}
+.server-select-panel.product-chrome-server h2,
+.server-select-panel.product-chrome-server h3 {
+  color: var(--pc-ink) !important;
+  font-weight: 700;
+}
+.server-select-panel.product-chrome-server label,
+.server-select-panel.product-chrome-server p {
+  color: var(--pc-ink-muted);
+}
+.server-select-panel.product-chrome-server input,
+.server-select-panel.product-chrome-server select {
+  background: var(--pc-paper-bg) !important;
+  color: var(--pc-ink) !important;
+  border: 1px solid var(--pc-paper-border) !important;
+}
+.server-select-panel.product-chrome-server button:not(.art-btn-primary) {
+  border: 1px solid var(--pc-paper-border);
+  background: linear-gradient(180deg, #f8efd8, #e8d9b8);
+  color: var(--pc-ink);
+}
+.content-panel.product-chrome-panel h3,
+.content-panel.product-chrome-panel h4 {
+  color: var(--pc-ink) !important;
+}
+.content-panel.product-chrome-panel input,
+.content-panel.product-chrome-panel select,
+.content-panel.product-chrome-panel textarea {
+  background: var(--pc-paper-bg) !important;
+  color: var(--pc-ink) !important;
+  border: 1px solid var(--pc-paper-border) !important;
+}
+.content-panel.product-chrome-panel button:not(.art-btn-primary):not(.product-panel-close) {
+  border: 1px solid var(--pc-paper-border);
+  background: linear-gradient(180deg, #f8efd8, #e8d9b8);
+  color: var(--pc-ink);
+  border-radius: var(--pc-radius-sm);
+}
+.military-panel[data-military-paper-skin] .panel-scroll-body {
+  max-height: min(58vh, 520px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.military-panel[data-military-paper-skin] .queue-list-empty,
+.military-panel[data-military-paper-skin] .military-recruit-queue .queue-list-empty {
+  list-style: none;
+  margin: 8px 0;
+  padding: 12px 10px;
+  border: 1px solid var(--pc-paper-border);
+  border-radius: var(--pc-radius-md);
+  background: var(--pc-paper-bg);
+  color: var(--pc-ink);
+  text-align: center;
+}
+.battle-report-replay-stage {
+  margin: 10px 0 12px;
+  padding: 10px;
+  border: 1px solid var(--pc-paper-border);
+  border-radius: var(--pc-radius-md);
+  background: var(--pc-paper-bg);
+  color: var(--pc-ink);
+}
+.battle-replay-stage-title {
+  font-weight: 700;
+  font-size: 14px;
+}
+.battle-replay-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+}
+.battle-replay-bar {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: var(--pc-radius-sm);
+  min-width: 40px;
+  box-sizing: border-box;
+}
+.battle-replay-bar--att {
+  background: rgba(139, 37, 24, 0.22);
+  border: 1px solid rgba(139, 37, 24, 0.45);
+}
+.battle-replay-bar--def {
+  background: rgba(44, 90, 120, 0.22);
+  border: 1px solid rgba(44, 90, 120, 0.45);
+}
+.battle-replay-lane {
+  position: relative;
+  height: 28px;
+  margin: 8px 0;
+  border-radius: var(--pc-radius-sm);
+  background: linear-gradient(90deg, #8b2518 0%, #ebe0c8 50%, #2c5a78 100%);
+  opacity: 0.9;
+}
+.battle-replay-lane-att,
+.battle-replay-lane-def {
+  position: absolute;
+  top: 3px;
+  width: 24px;
+  height: 22px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.35);
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.battle-replay-lane-att { left: 8px; }
+.battle-replay-lane-def { right: 8px; }
+.battle-replay-lane-ruler {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  color: var(--pc-ink);
+  text-shadow: 0 0 2px #f5ead4;
+}
+.battle-replay-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.battle-replay-controls .battle-replay-speed-btn.active {
+  border-color: #9a7a32;
+  background: rgba(201, 162, 39, 0.35);
+}
+.battle-report-replay-stage--empty .battle-replay-controls {
+  display: none;
+}
+.content-panel[data-center-panel="hero"] .hero-list {
+  border: 1px solid var(--pc-paper-border);
+  border-radius: var(--pc-radius-md);
+  background: rgba(245, 234, 212, 0.65);
+}

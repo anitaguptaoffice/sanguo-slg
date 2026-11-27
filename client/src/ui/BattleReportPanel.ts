@@ -1,6 +1,7 @@
 import { captureActor } from "@/net/actorContext";
 import { captureCenterPanelIntent, openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import { wireProductPanelChrome } from "@/ui/panelChromeHeader";
+import { mountBattleReportReplayStage, type BattleReportReplayMount } from "@/ui/battleReportReplayStage";
 import type { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
 import {
@@ -176,6 +177,7 @@ export class BattleReportPanel {
   private selectedReportId = 0;
   private detailText = "";
   private detailRounds: BattleReportDetailView["rounds"] = [];
+  private replayMount: BattleReportReplayMount | null = null;
   private detailView: BattleReportDetailView | undefined;
   private detailSummary: BattleReportSummary | undefined;
   private detailResult = "";
@@ -354,7 +356,7 @@ export class BattleReportPanel {
 
   private buildPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden battle-report-panel";
+    el.className = "content-panel product-chrome-panel hidden battle-report-panel";
     el.dataset.centerPanel = "battle-report";
     el.tabIndex = -1;
     el.innerHTML = `
@@ -668,6 +670,8 @@ export class BattleReportPanel {
     detailEl.removeAttribute("role");
     detailEl.removeAttribute("aria-label");
     detailEl.removeAttribute("tabindex");
+    this.replayMount?.dispose();
+    this.replayMount = null;
     detailEl.textContent = "";
     if (!this.selectedReportId || this.detailLoading) return;
     if (this.detailError) return;
@@ -860,6 +864,10 @@ export class BattleReportPanel {
         summaryBlock.appendChild(roundHint);
       }
       detailEl.appendChild(summaryBlock);
+    }
+
+    if (this.detailRounds?.length) {
+      this.replayMount = mountBattleReportReplayStage(detailEl, this.detailRounds ?? []);
     }
 
     const pre = document.createElement("pre");

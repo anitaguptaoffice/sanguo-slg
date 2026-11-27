@@ -352,7 +352,7 @@ export class WorldPanels {
 
   private buildPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden world-panel";
+    el.className = "content-panel product-chrome-panel hidden world-panel";
     el.dataset.centerPanel = "world";
     el.innerHTML = `
       <h3>世界</h3>

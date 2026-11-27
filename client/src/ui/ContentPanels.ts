@@ -769,7 +769,7 @@ export class ContentPanels {
 
   private buildQuestPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel quest-panel hidden";
+    el.className = "content-panel product-chrome-panel quest-panel hidden";
     el.innerHTML = `
       <h3>任务</h3>
       <label>任务 ID
@@ -786,7 +786,7 @@ export class ContentPanels {
 
   private buildBagPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden";
+    el.className = "content-panel product-chrome-panel hidden";
     el.dataset.centerPanel = "bag";
     el.innerHTML = `
       <h3>背包</h3>
@@ -817,7 +817,7 @@ export class ContentPanels {
 
   private buildShopPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden";
+    el.className = "content-panel product-chrome-panel hidden";
     el.dataset.centerPanel = "shop";
     el.innerHTML = `
       <h3>商城</h3>

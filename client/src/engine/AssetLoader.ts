@@ -8,6 +8,12 @@ import {
 
 export const ART_MANIFEST_URL = "assets/art/v1/manifest.json";
 const OPTIONAL_IMAGE_DEADLINE_MS = 15_000;
+const CRITICAL_ASSET_ID_RE =
+  /^(mc\.bg\.|ui\.panel\.(default|military)|res\.icon\.(food|wood|stone|iron)|ui\.icon\.toolbar\.)/;
+
+function isCriticalAssetId(assetId: string): boolean {
+  return CRITICAL_ASSET_ID_RE.test(assetId);
+}
 
 export type PlaceholderAsset = { id: string; color: string; label: string };
 
@@ -74,10 +80,20 @@ export class AssetLoader {
       const previous = toLoad.get(variant.path);
       toLoad.set(variant.path, { variant, required: required || (previous?.required ?? false) });
     };
+    const assetCriticalByPath = new Map<string, boolean>();
     for (const asset of manifest.assets) {
       const v = pickScaleVariant(asset.variants, this.devicePixelRatio);
       const optionalItem = asset.kind === "icon" && /^item\.icon\.[0-9]+\.v1$/.test(asset.id);
-      if (v) add(v, !optionalItem);
+      const assetCritical = isCriticalAssetId(asset.id);
+      if (v) {
+        add(v, !optionalItem);
+        if (v.path) {
+          assetCriticalByPath.set(
+            v.path,
+            assetCriticalByPath.get(v.path) === true || assetCritical,
+          );
+        }
+      }
       if (asset.button_states) {
         for (const states of Object.values(asset.button_states)) {
           const sv = pickScaleVariant(states, this.devicePixelRatio);
@@ -85,12 +101,16 @@ export class AssetLoader {
         }
       }
     }
-    const loads: Promise<void>[] = [];
-    for (const { variant, required } of toLoad.values()) {
+    const firstWave: Promise<void>[] = [];
+    const secondWave: Promise<void>[] = [];
+    for (const [path, { variant, required }] of toLoad.entries()) {
       const load = this.loadImage(variant.path, variant, packBase, viteBase, required);
-      loads.push(required ? load : load.catch(() => undefined));
+      const prioritized = required || assetCriticalByPath.get(path) === true;
+      const wrapped = required ? load : load.catch(() => undefined);
+      (prioritized ? firstWave : secondWave).push(wrapped);
     }
-    await Promise.all(loads);
+    await Promise.all(firstWave);
+    await Promise.all(secondWave);
   }
 
   private loadImage(

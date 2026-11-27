@@ -1723,7 +1723,7 @@ export class HeroMailPanels {
 
   private buildHeroPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden";
+    el.className = "content-panel product-chrome-panel hidden";
     el.dataset.centerPanel = "hero";
     el.innerHTML = `
       <h3>将领</h3>
@@ -1732,7 +1732,7 @@ export class HeroMailPanels {
       <p class="march-form-error-sibling hidden" data-role="hero-list-form-error" role="alert"></p>
       <details class="hero-recruit-host" data-role="hero-recruit-host" open>
         <summary class="hero-recruit-host-summary">招募 / 客栈</summary>
-        <p data-role="hero-hint">将领列表 / 详情 / 招募；模板与消耗来自招募模板列表。</p>
+        <p data-role="hero-hint">在此查看麾下将领、招募新将与客栈访贤。</p>
         <button type="button" data-action="refresh-templates">刷新招募模板</button>
         <label>招募模板
           <select data-field="template-select"><option value="">（先刷新模板）</option></select>
