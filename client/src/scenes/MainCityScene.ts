@@ -35,6 +35,7 @@ import {
   applyLayoutTransform,
   canvasToLayout,
   isNarrowLayoutViewport,
+  NARROW_LAYOUT_ROOT_CLASS,
   type LayoutViewport,
 } from "@/engine/layoutViewport";
 import { resolveMinimapExpandedLayoutRect } from "@/ui/worldMinimap";
@@ -3368,10 +3369,19 @@ export class MainCityScene implements Scene {
     if (troopHint !== "无") statusParts.push(`驻城 ${troopHint}`);
     if (this.status) statusParts.push(this.status);
     if (statusParts.length) {
-      const statusLine = document.createElement("span");
-      statusLine.className = "hud-group hud-status-line";
-      statusLine.textContent = statusParts.join(" · ");
-      this.hud.appendChild(statusLine);
+      const narrowHud = this.layoutFrame?.classList.contains(NARROW_LAYOUT_ROOT_CLASS);
+      if (narrowHud) {
+        const chip = document.createElement("span");
+        chip.className = "hud-group hud-context-chip";
+        chip.textContent = statusParts.join(" · ");
+        chip.title = chip.textContent;
+        this.hud.appendChild(chip);
+      } else {
+        const statusLine = document.createElement("span");
+        statusLine.className = "hud-group hud-status-line";
+        statusLine.textContent = statusParts.join(" · ");
+        this.hud.appendChild(statusLine);
+      }
     }
     if (this.marchArrivalHudReminder) {
       const wrap = document.createElement("span");

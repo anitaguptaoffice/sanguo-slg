@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
 
-const OUT = resolve(process.argv[2] || "/opt/cursor/artifacts/post-r5-phase1-r2");
+const OUT = resolve(process.argv[2] || "/opt/cursor/artifacts/post-r5-phase1-r3");
 const BASE = process.env.VITE_BASE_URL || "http://127.0.0.1:5273";
 const CHROMIUM = process.env.CHROMIUM_PATH || "/tmp/sanguo-playwright/chromium_headless_shell-1148/chrome-linux/headless_shell";
 
