@@ -1,5 +1,6 @@
 import { captureActor } from "@/net/actorContext";
 import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
+import { productPanelHeaderHtml, wireProductPanelChrome } from "@/ui/panelChromeHeader";
 import type { AssetLoader } from "@/engine/AssetLoader";
 import {
   applyPanelStateChrome,
@@ -110,6 +111,7 @@ export class WorldPanels {
     this.ownedFieldsOwner = null;
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
+    wireProductPanelChrome(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
   }
 
@@ -355,7 +357,7 @@ export class WorldPanels {
     el.className = "content-panel product-chrome-panel hidden world-panel";
     el.dataset.centerPanel = "world";
     el.innerHTML = `
-      <h3>世界</h3>
+      ${productPanelHeaderHtml("世界")}
       <p class="world-panel-hint" data-role="world-hint">玩家城池与坐标（非大地图）；点选可将坐标填入出征目标，并在下方信息卡扫读格点上下文。</p>
       <aside class="world-tile-info ${WORLD_TILE_INFO_CARD_CLASS} hidden" data-role="world-tile-info" aria-live="polite">
         <h4>格点信息</h4>

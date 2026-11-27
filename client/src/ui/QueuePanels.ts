@@ -73,6 +73,7 @@ import {
   type RecruitQueueEntry,
 } from "@/net/queueState";
 import { createCenterPanelFocusTrap, type CenterPanelFocusTrap } from "@/ui/centerPanelFocusTrap";
+import { productPanelHeaderHtml, wireProductPanelChrome } from "@/ui/panelChromeHeader";
 import { TODO_SCROLL_TARGET_ATTR, scrollCenterTodoTarget } from "@/ui/centerTodoScroll";
 import {
   PANEL_STATE_LOADING_MESSAGE,
@@ -161,6 +162,7 @@ export class QueuePanels {
     this.buildListError = null;
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
+    wireProductPanelChrome(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
     this.panel.addEventListener("keydown", this.onListKeyDown);
     this.focusTrap = createCenterPanelFocusTrap(this.panel, () => this.closeFromKeyboard());
@@ -486,7 +488,7 @@ export class QueuePanels {
     el.className = "content-panel product-chrome-panel hidden";
     el.dataset.centerPanel = "queue";
     el.innerHTML = `
-      <h3>队列</h3>
+      ${productPanelHeaderHtml("队列")}
       <p class="queue-panel-overview" data-role="queue-overview"></p>
       <p class="${QUEUE_NEXT_FINISH_PREVIEW_CLASS} hidden" data-role="queue-next-finish-preview" data-action="${QUEUE_NEXT_FINISH_PREVIEW_ACTION}" role="button" tabindex="0" hidden></p>
       <div class="queue-build-matrix" data-role="queue-build-matrix" aria-label="七槽建造状态"></div>

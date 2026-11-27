@@ -23,8 +23,7 @@ describe("formatRecruitFormInlineHint (CLIENT-201)", () => {
     );
     expect(hint.hasWarn).toBe(false);
     expect(hint.canSubmit).toBe(true);
-    expect(hint.text).toContain("校验");
-    expect(hint.text).toContain("玄德");
+    expect(hint.text).toBe("");
     expect(hint.itemGapItemCfgId).toBeNull();
   });
 

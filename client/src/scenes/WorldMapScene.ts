@@ -147,14 +147,14 @@ export class WorldMapScene {
       </div>
       <div class="world-map-status world-map-status-line" data-role="world-map-status"></div>
       <div class="world-map-legend world-map-legend-bar">
-        <span><i style="background:#8fbf5f"></i>平地</span>
-        <span><i style="background:#3f7a45"></i>森林</span>
-        <span><i style="background:#8a8070"></i>山地</span>
-        <span><i style="background:#4f8fbf"></i>湖泊</span>
-        <span><i style="background:#d8c07a"></i>荒漠</span>
-        <span><i style="background:#5f6f4f"></i>沼泽</span>
-        <span><i style="background:#c8a24a"></i>城池</span>
-        <span><i style="background:#c0392b"></i>黄巾</span>
+        <span><i class="world-map-legend-swatch" data-legend-color="#8fbf5f"></i>平地</span>
+        <span><i class="world-map-legend-swatch" data-legend-color="#3f7a45"></i>森林</span>
+        <span><i class="world-map-legend-swatch" data-legend-color="#8a8070"></i>山地</span>
+        <span><i class="world-map-legend-swatch" data-legend-color="#4f8fbf"></i>湖泊</span>
+        <span><i class="world-map-legend-swatch" data-legend-color="#d8c07a"></i>荒漠</span>
+        <span><i class="world-map-legend-swatch" data-legend-color="#5f6f4f"></i>沼泽</span>
+        <span><i class="world-map-legend-swatch" data-legend-color="#c8a24a"></i>城池</span>
+        <span><i class="world-map-legend-swatch" data-legend-color="#c0392b"></i>黄巾</span>
       </div>
       <aside class="world-map-detail hidden" data-role="world-map-detail"></aside>
     `;
@@ -252,9 +252,18 @@ export class WorldMapScene {
     this.canvas.style.cssText = "display:block;width:100%;height:100%;cursor:grab;touch-action:none;";
     this.statusEl.style.cssText = "min-height:18px;color:#c8b795;";
     legend.style.cssText = "display:flex;flex-wrap:wrap;gap:10px;color:#c8b795;font-size:12px;";
-    legend.querySelectorAll("i").forEach((el) => {
-      (el as HTMLElement).style.cssText =
-        "display:inline-block;width:10px;height:10px;margin-right:3px;border-radius:2px;vertical-align:middle;";
+    legend.querySelectorAll("i.world-map-legend-swatch").forEach((el) => {
+      const swatch = el as HTMLElement;
+      const fill = swatch.dataset.legendColor ?? "#888888";
+      swatch.style.display = "inline-block";
+      swatch.style.width = "10px";
+      swatch.style.height = "10px";
+      swatch.style.marginRight = "3px";
+      swatch.style.borderRadius = "2px";
+      swatch.style.verticalAlign = "middle";
+      swatch.style.background = fill;
+      swatch.style.border = "1px solid rgba(0,0,0,0.28)";
+      swatch.style.boxShadow = "inset 0 0 0 1px rgba(255,255,255,0.15)";
     });
     this.detail.style.cssText =
       "position:absolute;right:16px;top:64px;width:min(280px,calc(100% - 32px));max-height:min(70%,calc(100% - 80px));overflow:auto;padding:10px;" +

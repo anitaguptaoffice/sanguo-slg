@@ -535,6 +535,30 @@
   background: linear-gradient(180deg, #f8efd8, #e8d9b8);
   color: var(--pc-ink);
 }
+.server-select-panel.product-chrome-server .server-list li {
+  background: linear-gradient(180deg, #faf3e0, #efe2c4) !important;
+  color: var(--pc-ink) !important;
+  border: 1px solid var(--pc-paper-border);
+  box-shadow: none;
+}
+.server-select-panel.product-chrome-server .server-list li:hover:not(.disabled) {
+  background: linear-gradient(180deg, #fff8ea, #f2e6c6) !important;
+  border-color: #c9a227;
+}
+.server-select-panel.product-chrome-server .server-list li.selected {
+  background: linear-gradient(180deg, #fff4c8, #e4c070) !important;
+  border: 1px solid #c9a227 !important;
+  box-shadow: inset 0 0 0 1px rgba(201, 162, 39, 0.4);
+  color: var(--pc-ink) !important;
+  outline: none !important;
+}
+.server-select-panel.product-chrome-server .server-list li.disabled {
+  background: linear-gradient(180deg, #e8e0d0, #d8cfc0) !important;
+  color: var(--pc-ink-muted) !important;
+}
+.world-map-legend-bar .world-map-legend-swatch {
+  flex-shrink: 0;
+}
 .content-panel.product-chrome-panel h3,
 .content-panel.product-chrome-panel h4 {
   color: var(--pc-ink) !important;

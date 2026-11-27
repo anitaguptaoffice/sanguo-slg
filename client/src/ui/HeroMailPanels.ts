@@ -183,6 +183,7 @@ import {
   formatRecruitFormInlineHint,
   syncRecruitFormInlineHintDisplay,
 } from "@/net/recruitFormInlineHint";
+import { productPanelHeaderHtml, wireProductPanelChrome } from "@/ui/panelChromeHeader";
 import {
   buildRecruitSuccessFeedback,
   focusRecruitedHeroListRow,
@@ -535,6 +536,8 @@ export class HeroMailPanels {
     this.heroPanel.addEventListener("change", (ev) => this.onHeroChange(ev));
     this.mailPanel.addEventListener("change", (ev) => this.onMailChange(ev));
     this.heroPanel.addEventListener("keydown", this.onHeroListKeyDown);
+    wireProductPanelChrome(this.heroPanel);
+    wireProductPanelChrome(this.mailPanel);
     this.heroFocusTrap = createCenterPanelFocusTrap(this.heroPanel, () => this.closeHeroFromKeyboard());
   }
 
@@ -1726,8 +1729,10 @@ export class HeroMailPanels {
     el.className = "content-panel product-chrome-panel hidden";
     el.dataset.centerPanel = "hero";
     el.innerHTML = `
-      <h3>将领</h3>
-      <button type="button" data-action="refresh-heroes">刷新列表</button>
+      ${productPanelHeaderHtml("将领", {
+        extraActionsHtml:
+          '<button type="button" class="product-btn-ghost" data-action="refresh-heroes">刷新列表</button>',
+      })}
       <p class="hero-list-refresh-status hidden" data-role="hero-list-refreshed-at" aria-label="列表上次刷新"></p>
       <p class="march-form-error-sibling hidden" data-role="hero-list-form-error" role="alert"></p>
       <details class="hero-recruit-host" data-role="hero-recruit-host" open>
@@ -1859,10 +1864,10 @@ export class HeroMailPanels {
 
   private buildMailPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel mail-inbox-panel hidden";
+    el.className = "content-panel product-chrome-panel mail-inbox-panel hidden";
     el.dataset.centerPanel = "mail";
     el.innerHTML = `
-      <h3>邮件</h3>
+      ${productPanelHeaderHtml("邮件")}
       <p class="product-panel-subhint mail-inbox-hint" data-role="mail-hint">点选邮件可阅读全文；含附件时可一键领取。</p>
       <div class="mail-battle-category-bar panel-filter-chip-bar" data-role="mail-battle-category-bar" role="tablist" aria-label="邮件战报与系统分类">
         ${MAIL_BATTLE_CATEGORY_TABS.map(
