@@ -11,6 +11,10 @@
   --pc-paper-border: #b89b6a;
   --pc-ink: #2b1d11;
   --pc-ink-muted: #5a4030;
+  --pc-ink-strong: #2b1e12;
+  --pc-ink-secondary: #5c4632;
+  --pc-field-bg: #fbf5e6;
+  --pc-placeholder: #7d684f;
   --pc-accent-red: #8b1a12;
   --pc-accent-red-deep: #5c0f0a;
   --pc-shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.45);
@@ -207,8 +211,10 @@
 .building-panel.product-building-panel .product-panel-header h3,
 .military-panel[data-military-paper-skin] .product-panel-header h3,
 .battle-report-panel.content-panel .product-panel-header h3,
+.content-panel.product-chrome-panel .product-panel-header h3,
+.social-panel.product-chrome-panel .product-panel-header h3,
 .content-panel .product-panel-header h3 {
-  color: var(--pc-ink) !important;
+  color: var(--pc-ink-strong) !important;
   font-weight: 700;
   text-shadow: none;
 }
@@ -398,6 +404,23 @@
   margin: 0;
   border: none;
 }
+.battle-report-panel .report-detail {
+  margin-top: 8px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  color: var(--pc-ink-strong) !important;
+  white-space: normal !important;
+  max-height: none !important;
+  overflow: visible !important;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.battle-report-panel .panel-scroll-body[data-role="battle-report-scroll"] {
+  max-height: min(56vh, 520px);
+  overflow-y: auto;
+}
 .battle-report-panel .report-panel-status:empty {
   display: none;
 }
@@ -559,22 +582,87 @@
 .world-map-legend-bar .world-map-legend-swatch {
   flex-shrink: 0;
 }
+/* —— 阶段五：羊皮纸面板统一强覆盖（盖过 index.html 深色社交/内容样式）—— */
+.content-panel.product-chrome-panel,
+.social-panel.product-chrome-panel {
+  color: var(--pc-ink-strong) !important;
+}
 .content-panel.product-chrome-panel h3,
-.content-panel.product-chrome-panel h4 {
-  color: var(--pc-ink) !important;
+.content-panel.product-chrome-panel h4,
+.social-panel.product-chrome-panel h3,
+.social-panel.product-chrome-panel h4 {
+  color: var(--pc-ink-strong) !important;
+}
+.content-panel.product-chrome-panel label,
+.social-panel.product-chrome-panel label,
+.content-panel.product-chrome-panel p,
+.social-panel.product-chrome-panel p,
+.content-panel.product-chrome-panel li,
+.social-panel.product-chrome-panel li,
+.content-panel.product-chrome-panel dt,
+.content-panel.product-chrome-panel dd,
+.content-panel.product-chrome-panel summary,
+.social-panel.product-chrome-panel summary {
+  color: var(--pc-ink-strong);
+}
+.content-panel.product-chrome-panel .product-panel-subhint,
+.content-panel.product-chrome-panel .social-refresh-status,
+.social-panel.product-chrome-panel .social-refresh-status,
+.social-panel.product-chrome-panel [data-role="guild-summary"],
+.social-panel.product-chrome-panel [data-role="guild-chat-hint"],
+.content-panel.product-chrome-panel .queue-panel-hint,
+.content-panel.product-chrome-panel .world-panel-hint,
+.content-panel.product-chrome-panel .mail-inbox-hint {
+  color: var(--pc-ink-secondary) !important;
+}
+.content-panel.product-chrome-panel.quest-panel,
+.content-panel.product-chrome-panel.quest-panel h3,
+.content-panel.product-chrome-panel.quest-panel label {
+  color: var(--pc-ink-strong) !important;
 }
 .content-panel.product-chrome-panel input,
 .content-panel.product-chrome-panel select,
-.content-panel.product-chrome-panel textarea {
-  background: var(--pc-paper-bg) !important;
-  color: var(--pc-ink) !important;
+.content-panel.product-chrome-panel textarea,
+.social-panel.product-chrome-panel input,
+.social-panel.product-chrome-panel select,
+.social-panel.product-chrome-panel textarea {
+  background: var(--pc-field-bg) !important;
+  color: var(--pc-ink-strong) !important;
+  border: 1px solid var(--pc-paper-border) !important;
+  border-radius: var(--pc-radius-sm);
+  box-sizing: border-box;
+}
+.content-panel.product-chrome-panel input::placeholder,
+.social-panel.product-chrome-panel input::placeholder,
+.content-panel.product-chrome-panel textarea::placeholder {
+  color: var(--pc-placeholder) !important;
+  opacity: 1;
+}
+.content-panel.product-chrome-panel button:not(.art-btn-primary):not(.product-panel-close),
+.social-panel.product-chrome-panel button:not(.art-btn-primary):not(.product-panel-close) {
+  border: 1px solid var(--pc-paper-border) !important;
+  background: linear-gradient(180deg, #f8efd8, #e8d9b8) !important;
+  color: var(--pc-ink-strong) !important;
+  border-radius: var(--pc-radius-sm);
+}
+.social-panel.product-chrome-panel .chat-channel-tab {
+  background: var(--pc-field-bg) !important;
+  color: var(--pc-ink-strong) !important;
   border: 1px solid var(--pc-paper-border) !important;
 }
-.content-panel.product-chrome-panel button:not(.art-btn-primary):not(.product-panel-close) {
-  border: 1px solid var(--pc-paper-border);
-  background: linear-gradient(180deg, #f8efd8, #e8d9b8);
-  color: var(--pc-ink);
-  border-radius: var(--pc-radius-sm);
+.social-panel.product-chrome-panel .chat-channel-tab.active {
+  outline: 2px solid var(--pc-border-gold);
+  background: linear-gradient(180deg, #fff4c8, #e4c070) !important;
+}
+.content-panel.product-chrome-panel .product-btn-ghost,
+.social-panel.product-chrome-panel .product-btn-ghost,
+.battle-report-panel.content-panel.product-chrome-panel .product-btn-ghost {
+  border: 1px solid var(--pc-paper-border) !important;
+  background: linear-gradient(180deg, #f8efd8, #e8d9b8) !important;
+  color: var(--pc-ink-strong) !important;
+}
+.content-panel.product-chrome-panel .social-refresh-status.social-refresh-error {
+  color: #8b2518 !important;
 }
 .military-panel[data-military-paper-skin] .panel-scroll-body {
   max-height: min(58vh, 520px);
@@ -593,22 +681,29 @@
   text-align: center;
 }
 .battle-report-replay-stage {
-  margin: 10px 0 12px;
-  padding: 10px;
+  margin: 6px 0 8px;
+  padding: 8px 10px;
   border: 1px solid var(--pc-paper-border);
   border-radius: var(--pc-radius-md);
-  background: var(--pc-paper-bg);
-  color: var(--pc-ink);
+  background: var(--pc-field-bg);
+  color: var(--pc-ink-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.battle-replay-stage-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .battle-replay-stage-title {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
+  color: var(--pc-ink-strong);
 }
 .battle-replay-bars {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin: 8px 0;
+  gap: 4px;
+  margin: 4px 0;
 }
 .battle-replay-bar {
   font-size: 11px;
@@ -627,11 +722,18 @@
 }
 .battle-replay-lane {
   position: relative;
-  height: 28px;
-  margin: 8px 0;
+  height: 22px;
+  margin: 4px 0;
   border-radius: var(--pc-radius-sm);
   background: linear-gradient(90deg, #8b2518 0%, #ebe0c8 50%, #2c5a78 100%);
-  opacity: 0.9;
+  opacity: 0.92;
+  border: 1px solid var(--pc-paper-border);
+}
+.battle-replay-caption {
+  margin: 2px 0 4px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--pc-ink-secondary);
 }
 .battle-replay-lane-att,
 .battle-replay-lane-def {
@@ -661,11 +763,20 @@
 .battle-replay-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+.battle-replay-controls .product-btn-ghost {
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  min-height: 28px;
+  line-height: 1.2;
 }
 .battle-replay-controls .battle-replay-speed-btn.active {
-  border-color: #9a7a32;
-  background: rgba(201, 162, 39, 0.35);
+  border-color: #9a7a32 !important;
+  background: linear-gradient(180deg, #fff0b8, #e0c068) !important;
+  color: var(--pc-ink-strong) !important;
 }
 .battle-report-replay-stage--empty .battle-replay-controls {
   display: none;
