@@ -127,10 +127,10 @@ export class WorldMapScene {
 
   attach(): void {
     this.layer = document.createElement("div");
-    this.layer.className = "world-map-layer hidden";
+    this.layer.className = "world-map-layer world-map-scene hidden";
     this.layer.dataset.role = "world-map-layer";
     this.layer.innerHTML = `
-      <div class="world-map-header" data-role="world-map-header">
+      <div class="world-map-header world-map-header-bar" data-role="world-map-header">
         <strong>世界大地图</strong>
         <span class="world-map-coords" data-role="world-map-coords"></span>
         <label>X <input type="number" min="0" max="499" data-field="jump-x" /></label>
@@ -145,8 +145,8 @@ export class WorldMapScene {
       <div class="world-map-canvas-wrap" data-role="world-map-canvas-wrap">
         <canvas data-role="world-map-canvas"></canvas>
       </div>
-      <div class="world-map-status" data-role="world-map-status"></div>
-      <div class="world-map-legend">
+      <div class="world-map-status world-map-status-line" data-role="world-map-status"></div>
+      <div class="world-map-legend world-map-legend-bar">
         <span><i style="background:#8fbf5f"></i>平地</span>
         <span><i style="background:#3f7a45"></i>森林</span>
         <span><i style="background:#8a8070"></i>山地</span>
@@ -775,12 +775,35 @@ export class WorldMapScene {
       return;
     }
 
-    // Wild level: only the more valuable tiles keep a label at 1× to limit noise.
-    if (tile.level >= 5 || this.camera.zoom >= 2) {
-      ctx.fillStyle = tile.level >= 8 ? "#f4e6c8" : "rgba(20,16,10,0.65)";
-      ctx.font = "10px system-ui, sans-serif";
+    const session = this.deps.getSession();
+    const isOwnCapital =
+      session &&
+      tile.x === session.cityX &&
+      tile.y === session.cityY;
+    if (isOwnCapital) {
+      ctx.strokeStyle = "#ffe566";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(point.x, point.y - halfH);
+      ctx.lineTo(point.x + halfW, point.y);
+      ctx.lineTo(point.x, point.y + halfH);
+      ctx.lineTo(point.x - halfW, point.y);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      ctx.fillStyle = "rgba(255, 230, 140, 0.92)";
+      ctx.font = "bold 10px system-ui, sans-serif";
+      ctx.fillText("主城", point.x, point.y - halfH - 6);
+    }
+    const minLevelLabel =
+      this.camera.zoom >= MAX_ZOOM ? 1 : this.camera.zoom >= 1.5 ? 6 : 9;
+    const selectedHere =
+      this.selected?.x === tile.x && this.selected?.y === tile.y;
+    if (tile.level >= minLevelLabel || selectedHere) {
+      ctx.fillStyle = tile.level >= 8 ? "#f4e6c8" : "rgba(232, 220, 200, 0.55)";
+      ctx.font = "9px system-ui, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(`Lv${tile.level}`, point.x, point.y + 3);
+      ctx.fillText(`Lv${tile.level}`, point.x, point.y + halfH - 4);
     }
     if (tile.max_level > tile.level) {
       ctx.fillStyle = "rgba(255,255,255,0.55)";

@@ -171,7 +171,7 @@ export function formatSlotBuildingCaption(
   nowMs = Date.now(),
 ): SlotBuildingCaption {
   const lv = building?.level ?? 0;
-  const title = `${slotLabel} Lv${lv}`;
+  const title = `${slotLabel} · Lv${lv}`;
   const levelLine = `Lv${lv}`;
   const rem = formatUpgradeRemaining(building?.upgrade_finish_at_ms, nowMs);
   const upgradeLine = rem ?? (building?.upgrade_finish_at_ms && building.upgrade_finish_at_ms > nowMs

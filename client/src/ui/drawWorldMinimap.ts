@@ -91,10 +91,12 @@ export function drawWorldMinimap(
 
   c2d.fillStyle = "rgba(245, 230, 200, 0.85)";
   c2d.font = "11px system-ui";
-  c2d.fillText("世界（只读）", rect.x + 8, rect.y + 16);
-  c2d.fillStyle = "rgba(245, 230, 200, 0.55)";
-  c2d.font = "9px system-ui";
-  c2d.fillText(MINIMAP_DEST_ETA_LEGEND, rect.x + 8, rect.y + 30);
+  c2d.fillStyle = "rgba(255, 225, 160, 0.95)";
+  c2d.font = "600 12px 'Noto Sans SC', system-ui, sans-serif";
+  c2d.fillText("世界地图", rect.x + 8, rect.y + 16);
+  c2d.fillStyle = "rgba(184, 166, 138, 0.9)";
+  c2d.font = "10px system-ui, sans-serif";
+  c2d.fillText("点此进入 · 点格查看行军", rect.x + 8, rect.y + 30);
   drawMinimapCollapseGlyph(c2d, rect.x + rect.w - 22, rect.y + 6);
 
   const scale = computeMinimapScaleBar(bounds, rect, opts.view);

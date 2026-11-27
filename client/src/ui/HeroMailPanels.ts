@@ -1863,7 +1863,7 @@ export class HeroMailPanels {
     el.dataset.centerPanel = "mail";
     el.innerHTML = `
       <h3>邮件</h3>
-      <p class="mail-inbox-hint" data-role="mail-hint">content.v1 收件箱；点开自动标已读，有附件可一键领取。</p>
+      <p class="product-panel-subhint mail-inbox-hint" data-role="mail-hint">点选邮件可阅读全文；含附件时可一键领取。</p>
       <div class="mail-battle-category-bar panel-filter-chip-bar" data-role="mail-battle-category-bar" role="tablist" aria-label="邮件战报与系统分类">
         ${MAIL_BATTLE_CATEGORY_TABS.map(
           (tab) =>

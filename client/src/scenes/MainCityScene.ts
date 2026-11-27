@@ -257,6 +257,7 @@ import {
   findMarchIdForMinimapDestClick,
   type MinimapWorldPoint,
   layoutPointInMinimapMap,
+  layoutPointInMinimapHeader,
   layoutPointInMinimapToggle,
   minimapLayoutToWorld,
   formatMinimapCollapsedSelectedMarchStatus,
@@ -265,13 +266,13 @@ import {
   writeMinimapCollapsedToSession,
   type MinimapView,
 } from "@/ui/worldMinimap";
+import { drawBuiltSlotPlaque, drawUnbuiltSlotFoundation } from "@/engine/mainCitySlotPlaque";
 import {
   buildingBySlot,
   formatKeyBuildingHudLine,
   formatSlotBuildingCaption,
   formatWalletGainBrief,
   hasActiveBuildingUpgrade,
-  KEY_BUILDING_SLOTS,
 } from "@/net/hudFormat";
 import { MainCityDomesticSlotStrip } from "@/ui/MainCityDomesticSlotStrip";
 import { MainCitySlotUpgradeOverlay } from "@/ui/MainCitySlotUpgradeOverlay";
@@ -532,7 +533,6 @@ export class MainCityScene implements Scene {
     this.toolbar.innerHTML = `
       <div class="toolbar-scroll" data-role="toolbar-scroll">
       <div class="toolbar-scroll-inner">
-      <button type="button" data-action="return-server-select" title="断开当前连接并返回选服；已提交的操作不会撤销">返回选服</button>
       <button type="button" data-action="toggle-city-scene" data-role="city-scene-btn" title="切换内城/外城">外城</button>
       <button type="button" data-action="refresh" title="刷新状态">刷新</button>
       <button type="button" data-action="toggle-military" data-role="military-toolbar-btn" title="军事"><span class="toolbar-btn-label">军事</span></button>
@@ -546,6 +546,7 @@ export class MainCityScene implements Scene {
       </div>
       </div>
       <div class="toolbar-more-drawer hidden" data-role="toolbar-more-drawer" aria-label="更多功能">
+        <button type="button" data-action="return-server-select" title="断开当前连接并返回选服；已提交的操作不会撤销">返回选服</button>
         <button type="button" data-action="upgrade-farm" title="升级农田">升级农田</button>
         <button type="button" data-action="toggle-chat" data-role="chat-toolbar-btn"><span class="toolbar-btn-label">聊天</span></button>
         <button type="button" data-action="toggle-guild" data-role="guild-toolbar-btn"><span class="toolbar-btn-label">军团</span></button>
@@ -562,7 +563,12 @@ export class MainCityScene implements Scene {
     this.militaryPanel.className = "military-panel hidden";
     this.militaryPanel.dataset.centerPanel = "military";
     this.militaryPanel.innerHTML = `
-      <h3>军事</h3>
+      <div class="product-panel-header">
+        <h3>军事</h3>
+        <div class="product-panel-header-actions">
+          <button type="button" class="product-panel-close" data-action="close-military-panel" aria-label="关闭军事面板">×</button>
+        </div>
+      </div>
       <button type="button" class="march-queue-banner hidden" data-role="march-queue-banner"></button>
       <div class="march-form-readonly-strip hidden" data-role="march-form-readonly-strip" aria-live="polite">
         <p class="march-form-readonly-strip-line" data-role="march-form-readonly-strip-line"></p>
@@ -1463,6 +1469,10 @@ export class MainCityScene implements Scene {
     const btn = target.closest("button");
     if (!btn) return;
     const action = btn.getAttribute("data-action");
+    if (action === "close-military-panel") {
+      toggleCenterPanel(this.militaryPanel);
+      return;
+    }
     if (action === MARCH_QUEUE_BANNER_OPEN_INTEL_ACTION) {
       const marchId = Number(btn.getAttribute("data-march-id"));
       if (marchId > 0) this.openMarchIntelPanelHighlight(marchId);
@@ -2144,6 +2154,13 @@ export class MainCityScene implements Scene {
     }
 
     if (ev.type !== "pointerdown") return;
+
+    if (layoutPointInMinimapHeader(layout.x, layout.y, this.minimapCollapsed, this.isNarrowLayout())) {
+      this.openWorldMap();
+      this.status = "已打开全屏世界大地图";
+      this.renderHud();
+      return;
+    }
 
     if (layoutPointInMinimapToggle(layout.x, layout.y, this.minimapCollapsed, this.isNarrowLayout())) {
       this.minimapCollapsed = !this.minimapCollapsed;
@@ -3336,25 +3353,25 @@ export class MainCityScene implements Scene {
     }
     const p = s?.player;
     const troopHint = s?.garrisonStatus === "ready" ? formatTroopStacks(s.cityTroops) : "待同步";
-    const groups: string[] = [
-      `${s?.cityName ?? "主城"} · ${p?.display_name ?? "君主"} Lv${p?.level ?? 1}`,
-    ];
-    if (this.walletGainBrief) groups.push(this.walletGainBrief);
-    groups.push(formatKeyBuildingHudLine(s?.buildings, SLOT_LABEL, ["hall", "farm"], now));
-    if (troopHint !== "无") groups.push(`兵 ${troopHint}`);
-    if (this.status) groups.push(this.status);
-
     const resourceStripExpanded = readHudResourceStripExpanded(this.hud);
     this.hud.replaceChildren();
+    const crest = document.createElement("span");
+    crest.className = "hud-city-crest";
+    crest.textContent = `${s?.cityName ?? "主城"} · ${p?.display_name ?? "君主"} Lv${p?.level ?? 1}`;
+    crest.title = formatKeyBuildingHudLine(s?.buildings, SLOT_LABEL, ["hall", "farm"], now);
+    this.hud.appendChild(crest);
     appendHudResourceStrip(this.hud, s?.wallet, this.assets, s?.productionRates);
     restoreHudResourceStripExpanded(this.hud, resourceStripExpanded);
     this.appendHudCenterTodoBadge();
-    for (const text of groups) {
-      const span = document.createElement("span");
-      span.className =
-        text === this.walletGainBrief ? "hud-group hud-wallet-gain" : "hud-group";
-      span.textContent = text;
-      this.hud.appendChild(span);
+    const statusParts: string[] = [];
+    if (this.walletGainBrief) statusParts.push(this.walletGainBrief);
+    if (troopHint !== "无") statusParts.push(`驻城 ${troopHint}`);
+    if (this.status) statusParts.push(this.status);
+    if (statusParts.length) {
+      const statusLine = document.createElement("span");
+      statusLine.className = "hud-group hud-status-line";
+      statusLine.textContent = statusParts.join(" · ");
+      this.hud.appendChild(statusLine);
     }
     if (this.marchArrivalHudReminder) {
       const wrap = document.createElement("span");
@@ -4092,19 +4109,7 @@ export class MainCityScene implements Scene {
       const topY = display.y + ga.y - ay;
       c2d.drawImage(pack.img, topX, topY, display.w, display.h);
     } else {
-      // R2-S1 unbuilt slots are hotspot plaques, not opaque placeholder boxes.
-      const w = Math.min(display.w, 150);
-      const x = display.x + (display.w - w) / 2;
-      const y = display.y + display.h / 2 - 14;
-      c2d.fillStyle = "rgba(26, 20, 16, 0.72)";
-      c2d.fillRect(x, y, w, 28);
-      c2d.strokeStyle = "rgba(210, 184, 138, 0.5)";
-      c2d.strokeRect(x, y, w, 28);
-      c2d.fillStyle = "#f5e6c8";
-      c2d.font = "13px system-ui";
-      c2d.textAlign = "center";
-      c2d.fillText(slot.label, x + w / 2, y + 19);
-      c2d.textAlign = "start";
+      drawUnbuiltSlotFoundation(c2d, display.x, display.y, display.w, display.h, slot.label);
     }
     const now = Date.now();
     const caption = formatSlotBuildingCaption(
@@ -4113,19 +4118,8 @@ export class MainCityScene implements Scene {
       building,
       now,
     );
-    if (pack && KEY_BUILDING_SLOTS.has(slot.slot_key)) {
-      c2d.fillStyle = "rgba(26, 20, 16, 0.72)";
-      c2d.fillRect(display.x, display.y - 4, Math.min(display.w, 120), 22);
-      c2d.fillStyle = "#f5e6c8";
-      c2d.font = "12px system-ui";
-      c2d.fillText(caption.title, display.x + 6, display.y + 14);
-    }
-    if (building) {
-      c2d.fillStyle = "#f5e6c8";
-      c2d.font = "13px system-ui";
-      if (!KEY_BUILDING_SLOTS.has(slot.slot_key)) {
-        c2d.fillText(caption.levelLine, display.x + 8, display.y + display.h - 12);
-      }
+    if (building && (building.level ?? 0) > 0) {
+      drawBuiltSlotPlaque(c2d, display.x, display.y, display.w, caption.title);
     }
   }
 

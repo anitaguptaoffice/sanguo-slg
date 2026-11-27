@@ -1,0 +1,360 @@
+/* 后 R5 阶段一 · 成品化 UI token（勿再向 index.html 内联堆叠） */
+
+:root {
+  --pc-bg-deep: #14100c;
+  --pc-bg-panel: linear-gradient(165deg, #2a2218 0%, #1a1410 100%);
+  --pc-border-bronze: #6a5538;
+  --pc-border-gold: #c9a227;
+  --pc-text-primary: #f5e6c8;
+  --pc-text-muted: #b8a68a;
+  --pc-accent-red: #8b1a12;
+  --pc-accent-red-deep: #5c0f0a;
+  --pc-shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --pc-radius-sm: 4px;
+  --pc-radius-md: 8px;
+}
+
+/* —— 顶栏 HUD —— */
+#hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 6px 12px;
+  background: linear-gradient(180deg, rgba(34, 26, 18, 0.96), rgba(20, 16, 12, 0.92));
+  border-bottom: 1px solid var(--pc-border-bronze);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+#hud .hud-city-crest {
+  flex: 1 1 auto;
+  min-width: 140px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pc-text-primary);
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: var(--pc-radius-sm);
+  border: 1px solid rgba(201, 162, 39, 0.45);
+  background: rgba(42, 32, 22, 0.75);
+}
+#hud .hud-group.hud-resource-strip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(106, 85, 56, 0.65);
+  background: rgba(26, 20, 16, 0.85);
+}
+#hud .hud-resource-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--pc-text-primary);
+}
+#hud .hud-resource-item[data-resource="gold"]::before {
+  content: "金";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #e8c547, #a67c1a);
+  color: #2a1808;
+  font-size: 10px;
+  font-weight: 700;
+}
+#hud .hud-status-line {
+  flex: 1 1 100%;
+  font-size: 12px;
+  color: var(--pc-text-muted);
+}
+
+/* —— 底栏工具栏 —— */
+.main-city-toolbar .toolbar-btn-label {
+  max-width: none !important;
+  width: auto !important;
+  flex: 1 1 auto !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  white-space: nowrap !important;
+  font-size: 12px !important;
+}
+.main-city-toolbar .toolbar-scroll-inner > button {
+  flex: 0 1 auto !important;
+  min-width: 64px;
+  padding: 0 8px !important;
+}
+.main-city-toolbar [data-action="open-world-map"] {
+  min-width: 76px;
+}
+
+/* —— 七槽快捷条：左侧竖 dock —— */
+.main-city-slot-overlay-wrap {
+  position: absolute;
+  left: 8px;
+  top: 52%;
+  transform: translateY(-50%);
+  z-index: 2;
+  max-height: 55%;
+  pointer-events: auto;
+}
+.main-city-slot-overlay {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 4px;
+  border-radius: var(--pc-radius-md);
+  border: 1px solid var(--pc-border-bronze);
+  background: rgba(20, 16, 12, 0.88);
+  box-shadow: var(--pc-shadow-panel);
+}
+.main-city-slot-overlay-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.main-city-slot-overlay-cell {
+  min-width: 40px;
+  padding: 6px 8px;
+  border: 1px solid rgba(106, 85, 56, 0.5);
+  border-radius: var(--pc-radius-sm);
+  background: #2a2218;
+  color: var(--pc-text-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+.main-city-slot-overlay-cell-selected {
+  border-color: var(--pc-border-gold);
+  box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.4);
+}
+
+/* —— 通用面板头 —— */
+.product-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--pc-border-bronze);
+}
+.product-panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--pc-text-primary);
+}
+.product-panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.product-panel-close {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--pc-border-bronze);
+  border-radius: var(--pc-radius-sm);
+  background: #2a2218;
+  color: var(--pc-text-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.product-panel-close:hover {
+  color: var(--pc-text-primary);
+  border-color: var(--pc-border-gold);
+}
+.product-panel-subhint {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--pc-text-muted);
+  line-height: 1.45;
+}
+.product-btn-ghost {
+  padding: 6px 12px;
+  border: 1px solid var(--pc-border-bronze);
+  border-radius: var(--pc-radius-sm);
+  background: transparent;
+  color: var(--pc-text-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+.product-btn-danger-ghost {
+  padding: 8px 14px;
+  border: 1px solid rgba(180, 60, 48, 0.65);
+  border-radius: var(--pc-radius-sm);
+  background: rgba(60, 20, 16, 0.35);
+  color: #f0b0a0;
+  font-size: 13px;
+  cursor: pointer;
+}
+.product-btn-danger-ghost:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.building-panel.product-building-panel .building-detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--pc-border-bronze);
+  border-radius: var(--pc-radius-md);
+  background: var(--pc-bg-panel);
+}
+.building-detail-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.building-detail-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--pc-radius-sm);
+  border: 1px solid var(--pc-border-gold);
+  background: #1a1410;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: var(--pc-border-gold);
+}
+.building-detail-meta h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  color: var(--pc-text-primary);
+}
+.building-detail-meta p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--pc-text-muted);
+  line-height: 1.4;
+}
+.building-upgrade-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 12px;
+}
+.building-upgrade-compare dt {
+  color: var(--pc-text-muted);
+}
+.building-upgrade-compare dd {
+  margin: 0;
+  color: var(--pc-text-primary);
+  font-weight: 600;
+}
+.building-panel-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.building-prerequisite-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #e8a87c;
+}
+
+/* —— 战报 —— */
+.battle-report-panel .panel-filter-chip-bar button.art-filter-chip.active,
+.battle-report-panel button[data-ui-filter-chip].active {
+  outline: none;
+  border: 1px solid var(--pc-border-gold) !important;
+  box-shadow: none !important;
+  background: rgba(201, 162, 39, 0.22) !important;
+}
+.battle-report-panel [data-action="refresh-reports"] {
+  width: auto !important;
+  min-height: auto !important;
+}
+.battle-report-panel .report-detail:empty {
+  display: none;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+}
+.battle-report-panel .report-panel-status:empty {
+  display: none;
+}
+
+/* —— 军事面板 —— */
+.military-panel [data-role="march-hint"],
+.military-panel [data-role="troops"] {
+  font-size: 12px;
+  color: var(--pc-text-muted);
+}
+
+/* —— 世界大地图 —— */
+.world-map-layer.world-map-scene {
+  background: radial-gradient(ellipse at 50% 0%, #1e2a22 0%, #12100e 55%, #0a0a0a 100%) !important;
+  color: var(--pc-text-primary) !important;
+}
+.world-map-scene .world-map-header-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--pc-border-bronze);
+  border-radius: var(--pc-radius-md);
+  background: linear-gradient(180deg, rgba(42, 32, 22, 0.95), rgba(26, 20, 16, 0.92));
+  box-shadow: var(--pc-shadow-panel);
+}
+.world-map-scene .world-map-header-bar strong {
+  color: #ffe1a0;
+  font-size: 14px;
+}
+.world-map-scene .world-map-header-bar button,
+.world-map-scene .world-map-header-bar input,
+.world-map-scene .world-map-header-bar select {
+  background: #1a1510 !important;
+  color: var(--pc-text-primary) !important;
+  border: 1px solid #5a4a34 !important;
+  border-radius: var(--pc-radius-sm) !important;
+  padding: 4px 8px !important;
+}
+.world-map-scene .world-map-legend-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 8px 12px;
+  border: 1px solid var(--pc-border-bronze);
+  border-radius: var(--pc-radius-md);
+  background: rgba(20, 16, 12, 0.92);
+  font-size: 12px;
+  color: var(--pc-text-muted);
+}
+.world-map-scene .world-map-legend-bar span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.world-map-scene .world-map-legend-bar i {
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.world-map-scene .world-map-status-line {
+  min-height: 18px;
+  font-size: 12px;
+  color: var(--pc-text-muted);
+}
+.world-map-detail-card .world-map-detail-btn--primary.art-btn-primary {
+  background: linear-gradient(180deg, var(--pc-accent-red), var(--pc-accent-red-deep)) !important;
+  color: #ffe8c8 !important;
+  border: 1px solid var(--pc-border-gold) !important;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+.world-map-detail-card .world-map-detail-btn--primary.art-btn-primary:disabled {
+  opacity: 0.5;
+}

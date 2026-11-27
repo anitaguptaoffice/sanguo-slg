@@ -31,8 +31,7 @@ describe("appendHudResourceStrip", () => {
     const strip = hud.querySelector('[data-role="hud-resources"]');
     expect(strip).toBeTruthy();
     expect(strip?.querySelectorAll("img.hud-resource-icon").length).toBe(4);
-    expect(strip?.textContent).toContain("9");
-    expect(strip?.textContent).toMatch(/币/);
+    expect(strip?.querySelector('[data-resource="gold"] .hud-resource-amount')?.textContent).toBe("9");
   });
 
   it("wires resource sweep on hover/focus and omits permanent production row", () => {
@@ -77,6 +76,6 @@ describe("appendHudResourceStrip", () => {
     const strip = hud.querySelector('[data-role="hud-resources"]');
     expect(strip?.querySelector("img")).toBeNull();
     expect(strip?.textContent).toContain("粮 1");
-    expect(strip?.textContent).toContain("币 2");
+    expect(strip?.querySelector('[data-resource="gold"] .hud-resource-amount')?.textContent).toBe("2");
   });
 });

@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
 
-const OUT = resolve(process.argv[2] || "/opt/cursor/artifacts/post-r5-phase1/after");
+const OUT = resolve(process.argv[2] || "/opt/cursor/artifacts/post-r5-phase1-r2");
 const BASE = process.env.VITE_BASE_URL || "http://127.0.0.1:5273";
 const CHROMIUM = process.env.CHROMIUM_PATH || "/tmp/sanguo-playwright/chromium_headless_shell-1148/chrome-linux/headless_shell";
 
@@ -26,6 +26,10 @@ await page.locator(".main-city-toolbar").waitFor({ timeout: 180000 });
 const manifest = [];
 manifest.push(await shots(page, "main-city", { width: 1280, height: 720 }));
 manifest.push(await shots(page, "main-city", { width: 1600, height: 900 }));
+await page.locator('[data-action="toggle-city-scene"]').click();
+await page.waitForTimeout(600);
+manifest.push(await shots(page, "outer-city", { width: 1600, height: 900 }));
+await page.locator('[data-action="toggle-city-scene"]').click();
 const more = page.locator('[data-action="toggle-toolbar-more"]');
 if (await more.count()) await more.click();
 const farm = page.locator('[data-action="upgrade-farm"]').first();
@@ -38,6 +42,10 @@ await page.locator('[data-role="world-map-canvas"]').click({ position: { x: 420,
 await page.locator('[data-role="world-map-detail"]:not(.hidden)').waitFor({ timeout: 15000 }).catch(() => {});
 manifest.push(await shots(page, "world-map-tile-detail", { width: 1600, height: 900 }));
 await page.locator('[data-action="world-map-close"]').click();
+await page.locator('[data-action="toggle-military"]').click();
+await page.locator('.military-panel:visible').first().waitFor({ timeout: 10000 }).catch(() => {});
+manifest.push(await shots(page, "military-dispatch", { width: 1280, height: 720 }));
+await page.locator('[data-action="close-military-panel"]').click().catch(() => {});
 await page.locator('[data-action="toggle-reports"]').click();
 await page.locator('[data-center-panel="battle-report"]:visible').first().waitFor({ timeout: 10000 }).catch(() => {});
 manifest.push(await shots(page, "battle-report-panel", { width: 1280, height: 720 }));

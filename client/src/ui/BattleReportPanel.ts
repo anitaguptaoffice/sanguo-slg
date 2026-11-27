@@ -1,5 +1,6 @@
 import { captureActor } from "@/net/actorContext";
 import { captureCenterPanelIntent, openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
+import { wireProductPanelChrome } from "@/ui/panelChromeHeader";
 import type { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
 import {
@@ -218,6 +219,7 @@ export class BattleReportPanel {
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
     this.panel.addEventListener("change", (ev) => this.onChange(ev));
     this.panel.addEventListener("keydown", this.onKeyDownBound);
+    wireProductPanelChrome(this.panel);
   }
 
   detach(): void {
@@ -356,8 +358,14 @@ export class BattleReportPanel {
     el.dataset.centerPanel = "battle-report";
     el.tabIndex = -1;
     el.innerHTML = `
-      <h3>战报</h3>
-      <p data-role="report-hint">military.v1 战报列表；筛选仅在客户端生效，点击条目加载详情。</p>
+      <div class="product-panel-header">
+        <h3>战报</h3>
+        <div class="product-panel-header-actions">
+          <button type="button" class="product-btn-ghost" data-action="refresh-reports">刷新</button>
+          <button type="button" class="product-panel-close" data-action="close-panel" aria-label="关闭战报">×</button>
+        </div>
+      </div>
+      <p class="product-panel-subhint" data-role="report-hint">点选条目查看详细战况；可按胜负与时间筛选。</p>
       <div class="battle-report-filters panel-filter-chip-bar" role="group" aria-label="战报结果筛选">
         <span>筛选：</span>
         <div class="battle-report-outcome-chip-group" role="group" aria-label="胜负筛选">
@@ -376,7 +384,6 @@ export class BattleReportPanel {
         <button type="button" class="hidden" data-action="clear-location-filter">清除格点筛选</button>
       </div>
       <div class="battle-report-outcome-summary" data-role="report-outcome-summary" aria-label="当前时间范围胜负统计" hidden></div>
-      <button type="button" data-action="refresh-reports">刷新列表</button>
       <button type="button" data-action="load-more-reports" data-role="load-more" hidden>${BATTLE_REPORT_LOAD_MORE_LABEL}</button>
       <button type="button" data-action="retry-list" data-role="retry-list" hidden>重试加载列表</button>
       <p class="report-panel-status" data-role="report-list-status"></p>
