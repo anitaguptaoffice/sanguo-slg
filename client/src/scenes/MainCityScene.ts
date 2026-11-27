@@ -214,6 +214,7 @@ import {
 import { buildHudCenterTodoCounts, hudTodoSocialBadgesFromChatSummary } from "@/net/hudTodoBadges";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
 import { syncToolbarAriaExpanded } from "@/ui/toolbarAriaExpanded";
+import { isToolbarMoreDrawerOpen, syncToolbarMoreDrawer } from "@/ui/mainCityToolbarMore";
 import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
 import { applyMinimapBattleReplayPulse } from "@/ui/minimapBattleReplayPulse";
 import { syncMinimapMarchStackBadgeClass } from "@/ui/minimapMarchStack";
@@ -533,24 +534,27 @@ export class MainCityScene implements Scene {
       <div class="toolbar-scroll-inner">
       <button type="button" data-action="return-server-select" title="断开当前连接并返回选服；已提交的操作不会撤销">返回选服</button>
       <button type="button" data-action="toggle-city-scene" data-role="city-scene-btn" title="切换内城/外城">外城</button>
-      <button type="button" data-action="upgrade-farm" title="升级农田">升级</button>
       <button type="button" data-action="refresh" title="刷新状态">刷新</button>
       <button type="button" data-action="toggle-military" data-role="military-toolbar-btn" title="军事"><span class="toolbar-btn-label">军事</span></button>
       <button type="button" data-action="toggle-reports" data-role="reports-toolbar-btn"><span class="toolbar-btn-label">战报</span></button>
       <button type="button" data-action="toggle-marches" data-role="marches-toolbar-btn">行军</button>
-      <button type="button" data-action="toggle-chat" data-role="chat-toolbar-btn"><span class="toolbar-btn-label">聊天</span></button>
-      <button type="button" data-action="toggle-guild" data-role="guild-toolbar-btn"><span class="toolbar-btn-label">军团</span></button>
-      <button type="button" data-action="toggle-rank">排行</button>
-      <button type="button" data-action="toggle-quest">任务</button>
-      <button type="button" data-action="toggle-daily" data-role="daily-toolbar-btn" title="日常"><span class="toolbar-btn-label">日常</span></button>
-      <button type="button" data-action="toggle-bag" title="背包"><span class="toolbar-btn-label">背包</span></button>
-      <button type="button" data-action="toggle-shop" title="商城"><span class="toolbar-btn-label">商城</span></button>
       <button type="button" data-action="toggle-hero" title="将领"><span class="toolbar-btn-label">将领</span></button>
       <button type="button" data-action="toggle-mail" data-role="mail-toolbar-btn" title="邮件"><span class="toolbar-btn-label">邮件</span></button>
       <button type="button" data-action="open-world-map" title="全屏世界大地图"><span class="toolbar-btn-label">大地图</span></button>
-      <button type="button" data-action="toggle-world" title="世界"><span class="toolbar-btn-label">世界</span></button>
       <button type="button" data-action="toggle-queue" data-role="queue-toolbar-btn" title="队列"><span class="toolbar-btn-label">队列</span></button>
+      <button type="button" data-action="toggle-toolbar-more" class="toolbar-chrome-btn toolbar-more-toggle" aria-expanded="false" title="更多功能">更多</button>
       </div>
+      </div>
+      <div class="toolbar-more-drawer hidden" data-role="toolbar-more-drawer" aria-label="更多功能">
+        <button type="button" data-action="upgrade-farm" title="升级农田">升级农田</button>
+        <button type="button" data-action="toggle-chat" data-role="chat-toolbar-btn"><span class="toolbar-btn-label">聊天</span></button>
+        <button type="button" data-action="toggle-guild" data-role="guild-toolbar-btn"><span class="toolbar-btn-label">军团</span></button>
+        <button type="button" data-action="toggle-rank">排行</button>
+        <button type="button" data-action="toggle-quest">任务</button>
+        <button type="button" data-action="toggle-daily" data-role="daily-toolbar-btn" title="日常"><span class="toolbar-btn-label">日常</span></button>
+        <button type="button" data-action="toggle-bag" title="背包"><span class="toolbar-btn-label">背包</span></button>
+        <button type="button" data-action="toggle-shop" title="商城"><span class="toolbar-btn-label">商城</span></button>
+        <button type="button" data-action="toggle-world" title="世界"><span class="toolbar-btn-label">世界</span></button>
       </div>
     `;
     wrapToolbarButtonsForHit(this.toolbar);
@@ -653,7 +657,12 @@ export class MainCityScene implements Scene {
     this.worldMap = new WorldMapScene(parent, {
       gateway: () => this.gateway,
       getSession: () => this.session,
-      onMarchTarget: (x, y) => this.prefillMarchTargetFromWorld(x, y),
+      onMarchTarget: (x, y, purpose) => this.prefillMarchTargetFromWorld(x, y, purpose),
+      onOpenWorldAtTile: (x, y) => {
+        this.world.openAndFocusTile(x, y);
+        this.status = `已在「世界」面板定位格点 (${x}, ${y})`;
+        this.renderHud();
+      },
       assets: this.assets,
     });
     this.worldMap.attach();
@@ -1318,6 +1327,12 @@ export class MainCityScene implements Scene {
       if (this.toolbar.contains(btn)) this.returnToServers?.();
       return;
     }
+    if (action === "toggle-toolbar-more") {
+      const open = !isToolbarMoreDrawerOpen(this.toolbar);
+      syncToolbarMoreDrawer(this.toolbar, open);
+      return;
+    }
+    syncToolbarMoreDrawer(this.toolbar, false);
     if (isToolbarBadgeDeepLinkClick(ev)) {
       if (action === "toggle-chat") {
         const social = hudTodoSocialBadgesFromChatSummary(
@@ -1656,7 +1671,7 @@ export class MainCityScene implements Scene {
     this.renderHud();
   }
 
-  private prefillMarchTargetFromWorld(x: number, y: number): void {
+  private prefillMarchTargetFromWorld(x: number, y: number, marchPurpose?: number): void {
     this.openMilitaryPanel();
     const xInput = this.field("to-x") as HTMLInputElement | null;
     const yInput = this.field("to-y") as HTMLInputElement | null;
@@ -1667,6 +1682,13 @@ export class MainCityScene implements Scene {
     if (yInput) {
       yInput.value = String(y);
       yInput.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    if (marchPurpose != null && Number.isFinite(marchPurpose) && marchPurpose > 0) {
+      const purposeSelect = this.field("march-purpose") as HTMLSelectElement | null;
+      if (purposeSelect) {
+        purposeSelect.value = String(marchPurpose);
+        purposeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      }
     }
     setMarchTargetFieldHighlight(this.militaryPanel, true);
     this.status = `出征目标已从大地图设为 (${x}, ${y})`;

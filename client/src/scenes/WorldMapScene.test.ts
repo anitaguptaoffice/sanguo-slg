@@ -145,7 +145,7 @@ describe("WorldMapScene", () => {
       expect(detail.textContent).toContain("黄巾营寨");
     });
     (parent.querySelector('[data-action="world-map-march"]') as HTMLButtonElement).click();
-    expect(onMarchTarget).toHaveBeenCalledWith(60, 60);
+    expect(onMarchTarget).toHaveBeenCalledWith(60, 60, 1);
     expect(scene.isOpen()).toBe(false);
   });
 

@@ -24,11 +24,18 @@ import {
   worldResourceAssetId,
   worldTileAssetId,
 } from "./worldMapArt";
+import {
+  buildWorldMapTileActionSpecs,
+  worldMapActionDataAction,
+  type WorldMapTileActionSpec,
+} from "@/ui/worldMapTileDetailActions";
 
 export type WorldMapDeps = {
   gateway: () => GatewayPort;
   getSession: () => MainCitySession | null;
-  onMarchTarget: (x: number, y: number) => void;
+  onMarchTarget: (x: number, y: number, marchPurpose?: number) => void;
+  /** 采集/野地管理等次要入口：回主城并打开「世界」面板定位格点。 */
+  onOpenWorldAtTile?: (x: number, y: number) => void;
   /** Optional R1-S6 art; procedural shapes remain the fallback. */
   assets?: AssetLoader;
 };
@@ -114,6 +121,7 @@ export class WorldMapScene {
   private dragLast: { x: number; y: number } | null = null;
   private pointerId: number | null = null;
   private opened = false;
+  private onKeyDown: ((ev: KeyboardEvent) => void) | null = null;
 
   constructor(private readonly parent: HTMLElement, private readonly deps: WorldMapDeps) {}
 
@@ -194,6 +202,19 @@ export class WorldMapScene {
     this.scheduleFetch(0);
     void this.refreshSpecialCities();
     this.setStatus("拖拽平移，滚轮或按钮缩放；点击格点查看详情。");
+    if (!this.onKeyDown) {
+      this.onKeyDown = (ev: KeyboardEvent) => {
+        if (!this.opened || ev.key !== "Escape") return;
+        if (!this.detail.classList.contains("hidden")) {
+          ev.preventDefault();
+          this.hideDetail();
+          return;
+        }
+        ev.preventDefault();
+        this.close();
+      };
+      window.addEventListener("keydown", this.onKeyDown);
+    }
   }
 
   close(): void {
@@ -234,8 +255,9 @@ export class WorldMapScene {
         "display:inline-block;width:10px;height:10px;margin-right:3px;border-radius:2px;vertical-align:middle;";
     });
     this.detail.style.cssText =
-      "position:absolute;right:16px;top:64px;width:260px;max-height:70%;overflow:auto;padding:10px;" +
+      "position:absolute;right:16px;top:64px;width:min(280px,calc(100% - 32px));max-height:min(70%,calc(100% - 80px));overflow:auto;padding:10px;" +
       "background:#241d16ee;border:1px solid #6a5538;border-radius:8px;box-shadow:0 6px 18px #0008;";
+    this.detail.classList.add("world-map-detail-card");
   }
 
   private onResize = (): void => {
@@ -278,15 +300,26 @@ export class WorldMapScene {
         break;
       }
       case "world-map-zoom-in":
-        this.setZoom(this.camera.zoom === MIN_ZOOM ? MAX_ZOOM : MIN_ZOOM);
+        this.setZoom(Math.min(MAX_ZOOM, this.camera.zoom + 0.5));
         break;
       case "world-map-zoom-out":
-        this.setZoom(this.camera.zoom === MAX_ZOOM ? MIN_ZOOM : MAX_ZOOM);
+        this.setZoom(Math.max(MIN_ZOOM, this.camera.zoom - 0.5));
         break;
-      case "world-map-march":
-        this.deps.onMarchTarget(this.selected?.x ?? this.camera.centerX, this.selected?.y ?? this.camera.centerY);
+      case "world-map-march": {
+        const purpose = Number(target.getAttribute("data-march-purpose"));
+        const x = this.selected?.x ?? this.camera.centerX;
+        const y = this.selected?.y ?? this.camera.centerY;
+        this.deps.onMarchTarget(x, y, Number.isFinite(purpose) && purpose > 0 ? purpose : undefined);
         this.close();
         break;
+      }
+      case "world-map-open-world": {
+        const x = this.selected?.x ?? this.camera.centerX;
+        const y = this.selected?.y ?? this.camera.centerY;
+        this.deps.onOpenWorldAtTile?.(x, y);
+        this.close();
+        break;
+      }
     }
   };
 
@@ -494,6 +527,17 @@ export class WorldMapScene {
     close?.addEventListener("click", () => this.hideDetail());
   }
 
+  private renderTileActionButton(spec: WorldMapTileActionSpec, tileX: number, tileY: number): string {
+    const dataAction = worldMapActionDataAction(spec.kind);
+    const purpose =
+      spec.marchPurpose != null ? ` data-march-purpose="${spec.marchPurpose}"` : "";
+    const className =
+      spec.variant === "primary"
+        ? "world-map-detail-btn world-map-detail-btn--primary art-btn-primary art-btn-primary-full"
+        : "world-map-detail-btn world-map-detail-btn--secondary";
+    return `<button type="button" class="${className}" data-action="${dataAction}"${purpose}>${spec.label}</button>`;
+  }
+
   private showDetail(detail: TileDetail): void {
     const tile = detail.tile;
     const viewer = this.deps.getSession()?.player.player_id ?? 0;
@@ -502,20 +546,27 @@ export class WorldMapScene {
         ? `${tile.owner_name || "未知领主"}${tile.owner_player_id === viewer ? "（己方）" : ""} · ${tile.owner_city_id}`
         : "无主";
     const npc = tile.npc_kind === 1 ? "黄巾营寨" : "普通野地";
-    const actions = (detail.actions ?? [])
-      .map((action) => `<button type="button" disabled>${action}</button>`)
-      .join(" ");
+    const ownCity = tile.owner_player_id === viewer && tile.owner_city_id > 0;
+    const { primary, secondary } = buildWorldMapTileActionSpecs(detail.actions ?? [], {
+      ownCity,
+      npcHuangjin: tile.npc_kind === 1,
+    });
+    const secondaryHtml = secondary
+      .map((spec) => this.renderTileActionButton(spec, tile.x, tile.y))
+      .join("");
     this.detail.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+      <div class="world-map-detail-head">
         <strong>${terrainLabel(tile.terrain)} Lv${tile.level}</strong>
-        <button type="button" data-action="world-map-detail-close" style="background:none;border:none;color:#c8b795;cursor:pointer;">×</button>
+        <button type="button" class="world-map-detail-close" data-action="world-map-detail-close" aria-label="关闭">×</button>
       </div>
-      <p>坐标 (${tile.x}, ${tile.y}) · ${tile.province_name || `州郡 ${tile.province_id}`}</p>
-      <p>${npc} · 归属：${owner}</p>
-      <p>守军档位 ${detail.garrison_tier} · 产量加成 ${detail.resource_bonus_percent}% · 距主城 ${detail.distance_from_capital}</p>
-      ${tile.npc_kind === 1 ? "<p style='color:#e8a87c'>黄巾营寨：可讨伐掠夺。</p>" : ""}
-      <p style="display:flex;flex-wrap:wrap;gap:4px;">${actions}</p>
-      <button type="button" data-action="world-map-march" style="width:100%;margin-top:6px;background:#6a4f2a;color:#f4e6c8;border:1px solid #a07c46;border-radius:4px;padding:4px;">出征到此格 (${tile.x}, ${tile.y})</button>
+      <p class="world-map-detail-meta">坐标 (${tile.x}, ${tile.y}) · ${tile.province_name || `州郡 ${tile.province_id}`}</p>
+      <p class="world-map-detail-meta">${npc} · 归属：${owner}</p>
+      <p class="world-map-detail-meta">守军档位 ${detail.garrison_tier} · 产量加成 ${detail.resource_bonus_percent}% · 距主城 ${detail.distance_from_capital}</p>
+      ${tile.npc_kind === 1 ? '<p class="world-map-detail-tip">黄巾营寨：主操作为出征讨伐，亦可先侦察。</p>' : ""}
+      <div class="world-map-detail-actions">
+        ${this.renderTileActionButton(primary, tile.x, tile.y)}
+        ${secondaryHtml ? `<div class="world-map-detail-actions-secondary">${secondaryHtml}</div>` : ""}
+      </div>
     `;
     this.detail.classList.remove("hidden");
     const close = this.detail.querySelector('[data-action="world-map-detail-close"]');
